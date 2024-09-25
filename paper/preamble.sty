@@ -1,0 +1,374 @@
+\ProvidesPackage{preamble}
+\RequirePackage{xargs}
+
+%% Multi-line math spacing
+
+\newcommand{\spaceheight}{0pt}
+\newenvironment{spacing}[1][\spaceheight]{\setlength{\jot}{#1}}{\ignorespacesafterend}
+\newenvironment{squeeze}[1]{\addtolength{\jot}{#1}}{\ignorespacesafterend}
+\newenvironment{contiguous}[1][\linewidth]
+{\center\minipage{#1}}
+{\endminipage\endcenter\ignorespacesafterend}
+
+\newcommand{\ruleskip}{0.5ex}
+\newcommand{\bigruleskip}{1ex}
+\newcommand{\defskip}{0.5ex}
+
+\newcommand{\qqquad}{\qquad\quad}
+\newcommand{\qqqquad}{\qquad\qquad}
+
+%% Phrase shorthands
+
+\newcommand{\etal}{{\em et al. \/}}
+\newcommand{\etc}[1][]{{\em etc.#1}}
+\newcommand{\ie}{{\em i.e., \/}}
+\newcommand{\Ie}{{\em I.e., \/}}
+\newcommand{\viz}{{\em viz., \/}}
+\newcommand{\eg}{{\em e.g., \/}}
+\newcommand{\Eg}{{\em E.g., \/}}
+\newcommand{\ala}{\`a la \/}
+\newcommand{\aka}{{\em a.k.a \/}}
+
+%% Rewriting notation
+
+\newcommand{\from}{\leftarrow}
+\newcommand{\gives}{\Rightarrow}
+\newcommand{\takes}{\Leftarrow}
+
+\newcommand{\vect}[2][]{{\vv{#2}}^{#1}}
+\newcommand{\many}[2][]{#2\overset{{}_{#1}}{...}}
+
+\newcommand{\asub}[2]{{#2}/{#1}}
+\newcommand{\smallsubs}[1]{{[{#1}]}}
+\newcommand{\smallsubst}[2]{\smallsubs{\asub{#1}{#2}}}
+\newcommand{\bigsubs}[1]{{\left[{#1}\right]}}
+\newcommand{\bigsubst}[2]{\bigsubs{\asub{#1}{#2}}}
+\newcommand{\subs}{\smallsubs}
+\newcommand{\subst}{\smallsubst}
+
+\newcommand{\hole}{\square}
+
+\newcommand{\apart}{\mathrel{\#}}
+
+%% Explicit substitution
+
+\newcommand{\abind}[2]{{#1}:={#2}}
+\newcommand{\smallbinds}[1]{{[{#1}]}}
+\newcommand{\smallbind}[2]{\smallbinds{\abind{#1}{#2}}}
+\newcommand{\bigbinds}[1]{{\left[{#1}\right]}}
+\newcommand{\bigbind}[2]{\bigsubs{\abind{#1}{#2}}}
+\newcommand{\binds}{\smallbinds}
+\newcommand{\bind}{\smallbind}
+
+\newcommand{\adefn}[2]{{#1}\mapsto{#2}}
+\newcommand{\smalldefns}[1]{{\{{#1}\}}}
+\newcommand{\smalldefn}[2]{\smalldefns{\adefn{#1}{#2}}}
+\newcommand{\bigdefns}[1]{{\left\{{#1}\right\}}}
+\newcommand{\bigdefn}[2]{\bigdefns{\adefn{#1}{#2}}}
+\newcommand{\defns}{\smalldefns}
+\newcommand{\defn}{\smalldefn}
+
+%% Denotational semantics notation
+
+\newcommand{\bbrak}[1]{\llbracket{#1}\rrbracket}
+\newcommand{\Bbrak}[1]{\left\llbracket{#1}\right\rrbracket}
+\newcommand{\Abrak}[1]{\langle\!\langle{#1}\rangle\!\rangle}
+\newcommand{\trans}{\densmall}
+\newcommand{\den}{\densmall}
+\newcommandx{\denbig}[3][1,3]{{\Bbrak{#2}^{#1}_{#3}}}
+\newcommandx{\densmall}[3][1,3]{{\bbrak{#2}^{#1}_{#3}}}
+
+\newcommand{\comp}{\circ}
+
+%% Type theory notation
+
+\newcommand{\mt}{\bullet}
+\newcommand{\stoup}{\mathrel{;}}
+\newcommand{\sstoup}{\mathrel{{;}{;}}}
+\newcommand{\wstoup}{\stoup}
+\newcommand{\softstoup}{\mathrel{{;}{;}}}
+\newcommand{\hardstoup}{\mathrel{;}}
+
+\newcommand{\checked}{\Leftarrow}
+
+%% Syntax Styles
+
+\newcommand{\keywordstyle}[1]{\operatorname{\mathbf{#1}}}
+\newcommand{\newkeyword}[2]{\newcommand{#1}{\keywordstyle{#2}}}
+\newcommand{\renewkeyword}[2]{\renewcommand{#1}{\keywordstyle{#2}}}
+
+\newcommand{\operationstyle}[1]{\operatorname{#1}}
+% \newcommand{\operationstyle}[1]{\operatorname{\mathsf{#1}}}
+\newcommand{\newoperation}[2]{\newcommand{#1}{\operationstyle{#2}}}
+\newcommand{\renewoperation}[2]{\renewcommand{#1}{\operationstyle{#2}}}
+
+%% Pure Functional Syntax
+
+\newkeyword{\Let}{let}
+\newkeyword{\Rec}{rec}
+\newkeyword{\Val}{val}
+\newkeyword{\In}{in}
+\newkeyword{\Where}{where}
+\newkeyword{\Case}{case}
+\newkeyword{\Of}{of}
+\newkeyword{\Match}{match}
+\newkeyword{\With}{with}
+\newkeyword{\Class}{class}
+
+\newoperation{\Inl}{inl}
+\newoperation{\Inr}{inr}
+\newoperation{\Fst}{fst}
+\newoperation{\Snd}{snd}
+
+\newoperation{\Pair}{pair}
+\newoperation{\Split}{split}
+
+\newcommand{\ccomment}[1]{\text{\it -{}- #1}}
+
+%% Join points
+
+\let\join\Join
+
+\renewkeyword{\Join}{join}
+\newkeyword{\Fun}{fun}
+\newkeyword{\Jump}{jump}
+
+%% Sequent calculus
+
+\newcommand{\cmid}{\mathbin{\|}}
+\newcommand{\cut}[2]{\braket{#1 \cmid #2}}
+\newcommand{\rmu}{{\reflectbox{$\mu$}}}
+\newcommand{\tmu}{{\tilde{\mu}}}
+\newcommand{\tlam}{{\rlap{\hspace{3.5pt}\raisebox{-2.5pt}{$\widetilde{}$}}\lambda}}
+% \newcommand{\tlam}{{\tilde{\lambda}}}
+\newcommand{\rlam}{{\reflectbox{$\lambda$}}}
+
+%% CBPV Syntax
+
+\newcommand{\CBPV}{{\mathit{CBPV}}}
+
+\newoperation{\LazyTy}{Lazy}
+\newoperation{\Thunk}{thunk}
+\newoperation{\Force}{force}
+\newkeyword{\Return}{return}
+\newkeyword{\Do}{do}
+
+\newcommand{\valty}[1]{#1}
+\newcommand{\compty}[1]{\underline{#1}}
+\newoperation{\Uf}{U}
+\newoperation{\Ff}{F}
+
+\newcommand{\valvar}[1]{#1}
+\newcommand{\compvar}[1]{\overline{#1}}
+
+%% CU Syntax
+
+\newcommand{\CU}{{\mathit{CU}}}
+
+\newcommand{\poslbl}[1]{#1}
+\newcommand{\neglbl}[1]{\overline{#1}}
+
+\newoperation{\Stack}{stack}
+\newoperation{\Throw}{throw}
+
+\newcommand{\lsquareparenthesis}
+{%
+  \mathopen{%
+    \sbox0{$()$}%
+    \setlength{\unitlength}{\dimexpr\ht0+\dp0}%
+    \raisebox{-\dp0}{%
+      \begin{picture}(.48,1)
+        \linethickness{\fontdimen8\textfont3}
+        \roundcap
+        \put(0,0){\raisebox{\depth}{$($}}
+        \polyline(0.36,0)(0,0)(0,1)(0.36,1)
+      \end{picture}%
+    }%
+  }%
+}
+\newcommand{\rsquareparenthesis}
+{%
+  \mathclose{%
+    \sbox0{$()$}%
+    \setlength{\unitlength}{\dimexpr\ht0+\dp0}%
+    \raisebox{-\dp0}{%
+      \begin{picture}(.48,1)
+      \linethickness{\fontdimen8\textfont3}
+      \roundcap
+      \put(-0.06,0){\raisebox{\depth}{$)$}}
+      \polyline(0,0)(0.36,0)(0.36,1)(0,1)
+      \end{picture}%
+    }%
+  }%
+}
+\newcommand{\stck}[1]{{\llparenthesis{#1}\rrparenthesis}}
+\newcommand{\thrw}[1]{{\lsquareparenthesis{#1}\rsquareparenthesis}}
+
+\newcommand{\Contra}{\Perp}
+
+%% Other syntax
+
+\newcommand{\lamstar}{\lambda^{\!*}}
+
+\newkeyword{\Self}{self}
+\newkeyword{\Next}{next}
+\newkeyword{\Try}{try}
+\newkeyword{\Fail}{fail}
+\newkeyword{\Close}{close}
+\newkeyword{\Cases}{cases}
+
+\newcommand{\CBUV}{{\mathit{CBUV}}}
+
+\newcommand{\anti}{\overline}
+
+\newcommand{\mathquestiondown}{{\text{?`}}}
+\newcommand{\mathexclaimdown}{{\text{!`}}}
+\newcommand{\unoc}{\mathop{\mathexclaimdown}}
+\newcommand{\unwn}{\mathop{\mathquestiondown}}
+
+\newcommand{\zero}{{\mathtt{0}}}
+\newcommand{\one}{{\mathtt{1}}}
+
+\newoperation{\OK}{OK}
+
+\newkeyword{\Type}{type}
+
+\newkeyword{\Delay}{delay}
+\newkeyword{\Alloc}{alloc}
+\newkeyword{\Move}{move}
+
+\newoperation{\Struct}{struct}
+\newoperation{\Embed}{embed}
+\newoperation{\StructTy}{Struct}
+% \newcommand{\structbox}[1]{\oc #1}
+% \newcommand{\structbox}[1]{\Struct #1}
+\newoperation{\Boxed}{box}
+\newoperation{\BoxTy}{Box}
+\newkeyword{\Unbox}{unbox}
+\newkeyword{\As}{as}
+\newoperation{\Value}{val}
+\newoperation{\ValTy}{Val}
+\newoperation{\Refr}{ref}
+\newoperation{\RefrTy}{Ref}
+% \newcommand{\valaddr}[1]{\mathop{\mathexclaimdown} #1}
+\newcommand{\valaddr}[1]{\Value #1}
+\newcommand{\objcode}[1]{\Code #1}
+
+\newkeyword{\Stored}{Stored}
+
+\newoperation{\Call}{call}
+% \newcommand{\callbox}[1]{\wn #1}
+\newcommand{\callbox}[1]{\Call #1}
+\newoperation{\Message}{msg}
+\newoperation{\Send}{send}
+\newoperation{\Recv}{recv}
+\newoperation{\Await}{await}
+\newoperation{\Resume}{resume}
+\newoperation{\Enter}{enter}
+\newoperation{\Proc}{proc}
+\newoperation{\ProcTy}{Proc}
+\newoperation{\Exit}{exit}
+\newoperation{\End}{end}
+% \newcommand{\evaladdr}[1]{\mathop{\mathexclaimdown} #1}
+\newcommand{\evaladdr}[1]{\Eval #1}
+\newcommand{\matchcode}[1]{\Match #1}
+\newkeyword{\Ret}{ret}
+\newkeyword{\Rets}{ret}
+\newoperation{\RetTy}{Ret}
+\newoperation{\Frame}{frame}
+\newoperation{\Use}{use}
+
+\newoperation{\Constructor}{const}
+\newoperation{\Destructor}{dest}
+
+\newoperation{\Clos}{clos}
+\newoperation{\ClosTy}{Clos}
+\newoperation{\Cont}{cont}
+\newoperation{\Wait}{wait}
+\newoperation{\Apply}{apply}
+\newoperation{\Eval}{eval}
+
+\newoperation{\EvalTy}{Eval}
+
+\newkeyword{\Pat}{pat}
+\newkeyword{\Copat}{copat}
+\newkeyword{\Atomic}{atomic}
+\newkeyword{\Complex}{cplx}
+% \newkeyword{\Val}{val}
+\newkeyword{\Comp}{comp}
+\newkeyword{\Code}{code}
+
+\newoperation{\Atom}{atom}
+\newoperation{\Ptr}{ptr}
+\newoperation{\Addr}{addr}
+\newoperation{\Deref}{deref}
+\newcommand{\addrof}[1]{\& #1}
+\newcommand{\deref}[1]{*#1}
+
+\newoperation{\IntTy}{Int}
+\newoperation{\NatTy}{Nat}
+\newoperation{\Int}{int}
+\newoperation{\FloatTy}{Float}
+\newoperation{\Float}{flt}
+\newoperation{\TypeIx}{Type}
+\newoperation{\TypeRep}{ty}
+\newcommand{\TyIx}{\TypeIx}
+\newcommand{\TyR}{\TypeRep}
+
+\newoperation{\Subr}{sub}
+
+\newoperation{\Run}{run}
+\newoperation{\Void}{void}
+\newoperation{\VoidTy}{Void}
+
+\newoperation{\More}{more}
+\newoperation{\MoreTy}{More}
+
+\newoperation{\Memo}{memo}
+\newoperation{\Remember}{remember}
+\newoperation{\Save}{save}
+\newoperation{\Tape}{Tape}
+\newoperation{\Start}{start}
+\newoperation{\Play}{play}
+\newoperation{\Pause}{pause}
+
+\newoperation{\Later}{Later}
+\newoperation{\Todo}{todo}
+\newoperation{\Done}{done}
+\newkeyword{\Now}{now}
+
+\newoperation{\Num}{Num}
+\newoperation{\Bool}{Bool}
+\newoperation{\True}{True}
+\newoperation{\False}{False}
+\newkeyword{\If}{if}
+\newkeyword{\Then}{then}
+\newkeyword{\Else}{else}
+\newkeyword{\Data}{data}
+\newoperation{\String}{String}
+\newoperation{\List}{List}
+\newoperation{\Nil}{Nil}
+\newoperation{\Cons}{Cons}
+\newoperation{\Maybe}{Maybe}
+\newoperation{\Nothing}{Nothing}
+\newoperation{\Just}{Just}
+\newoperation{\Tree}{Tree}
+\newoperation{\Branch}{Branch}
+\newoperation{\Leaf}{Leaf}
+
+\newoperation{\Final}{terminal}
+
+%% Coloring
+
+\newcommand{\hi}[2][black!15]{{%
+\setlength{\fboxsep}{1pt}\kern-1pt%
+\mathchoice%
+{\colorbox{#1}{$\displaystyle#2$}}%
+{\colorbox{#1}{$\textstyle#2$}}%
+{\colorbox{#1}{$\scriptstyle#2$}}%
+{\colorbox{#1}{$\scriptscriptstyle#2$}}\kern-1pt}%
+}%
+\newcommand{\hitxt}[2][yellow!15]{{%
+\setlength{\fboxsep}{1pt}\kern-1pt%
+\colorbox{#1}{#2}%
+}}

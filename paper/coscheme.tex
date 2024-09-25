@@ -1,0 +1,342 @@
+% This is samplepaper.tex, a sample chapter demonstrating the
+% LLNCS macro package for Springer Computer Science proceedings;
+% Version 2.21 of 2022/01/12
+%
+
+\documentclass[runningheads]{llncs}
+%
+\usepackage[T1]{fontenc}
+% T1 fonts will be used to generate the final print and online PDFs,
+% so please use T1 fonts in your manuscript whenever possible.
+% Other font encondings may result in incorrect characters.
+%
+\usepackage{graphicx}
+% Used for displaying a sample figure. If possible, figure files should
+% be included in EPS format.
+\usepackage{xcolor}
+
+% llncs.cls clashes with amsthm.
+% Save the LNCS proof environment defined by the class
+\let\lncsproof\proof \let\lncsendproof\endproof \let\lncsqed\qed
+% Remove the definitions in order to load amsthm
+\let\proof\relax\let\endproof\relax
+% Load AMS styles
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+% restore the LNCS class defined proof
+\let\proof\lncsproof \let\endproof\lncsendproof \let\qed\lncsqed
+
+\usepackage{stmaryrd}
+\usepackage{braket}
+
+\usepackage{hyperref}
+\usepackage{cleveref}
+
+\usepackage{preamble}
+
+% If you use the hyperref package, please uncomment the following two lines
+% to display URLs in blue roman font according to Springer's eBook style:
+\usepackage{color}
+\renewcommand\UrlFont{\color{blue}\rmfamily}
+\urlstyle{rm}
+
+\begin{document}
+%
+\title{CoScheme: Compositional Copatterns in Scheme}
+%
+%\titlerunning{Abbreviated paper title}
+% If the paper title is too long for the running head, you can set
+% an abbreviated paper title here
+%
+\author{Paul Downen\inst{1}\orcidID{0000-0003-0165-9387}}
+%
+\authorrunning{P. Downen}
+% First names are abbreviated in the running head.
+% If there are more than two authors, 'et al.' is used.
+%
+\institute{University of Massachusetts Lowell, Lowell MA 01854, USA \\
+\email{Paul\_Downen@uml.edu}}
+%
+\maketitle              % typeset the header of the contribution
+%
+\begin{abstract}
+The abstract should briefly summarize the contents of the paper in
+150--250 words.
+
+\keywords{Codata \and Copatterns \and Scheme \and Macros \and Composition \and Expression Problem.}
+\end{abstract}
+%
+%
+%
+\section{Introduction}
+
+\section{Key Idea}
+
+\section{Translating Composable Copatterns}
+
+Base language:
+\begin{alignat*}{3}
+  \mathit{Term} &\ni{}& M, N &&
+  &::= x
+  \mid K
+  \mid M ~ N
+  % \mid \lambda x. M
+  \mid \lamstar B
+  \mid \Self = M \In B
+  \\
+  \mathit{Template} &\ni{}& B &&
+  &::= O; B
+  \mid \Else x \to M
+  % \mid \Fail
+  \\
+  \mathit{Extension} &\ni{}& O &&
+  &::= \varepsilon
+  \mid O; O'
+  \mid Q \to O
+  \mid \Try x \to B
+\end{alignat*}
+
+Big-step (co)patterns:
+\begin{align*}
+  \mathit{Copattern} &\ni{}& Q &&
+  &::= \hole
+  \mid Q ~ P
+  \mid Q \Try x
+  \mid Q \Match P \gets M
+  \mid Q \If M
+  \\
+  \mathit{Pattern} &\ni{}& P &&
+  &::= x
+  \mid K ~ \many{P}
+\end{align*}
+
+Small-step (co)patterns:
+\begin{alignat*}{3}
+  \mathit{Copattern} &\ni{}& Q &&
+  &::= \hole ~ x
+  % \mid \hole \Try x
+  \mid \hole \Match P \gets M
+  \\
+  \mathit{Pattern} &\ni{}& P &&
+  &::= x
+  \mid K ~ \many{x}
+\end{alignat*}
+
+Flattening (co)patterns
+\begin{align*}
+  \hole \to O &= O \\
+  (Q \Try x) \to O &= Q \to (\Try x \to (O; (\Else s \to x~s))) \\
+  (Q ~ P) \to O &= Q \to (\hole ~ x) \to (\hole \Match P \gets x) \to O \\
+  (Q \Match P \gets M) \to O &= Q \to (\hole \Match P \gets M) \to O \\
+  (\hole \Match K~\many[i]{P_i} \gets M) \to O
+  &=
+  (\hole \Match K~\many[i]{x_i} \gets M) \to
+  \many[i]{(\hole \Match P_i \gets x_i) \to}~
+  O
+  \\
+  (Q \If M) \to O &= Q \to (\hole \Match \True \gets M) \to O
+\end{align*}
+
+Other template/extension shorthands:
+\begin{align*}
+  Q[x] \to O
+  &=
+  Q \to (x \to O)
+  \\
+  x \to O
+  &=
+  \Try \mathit{next} \to
+  \Else x \to
+  \Self = x \In
+  O; \Else \mathit{self} \to \mathit{next} ~ \mathit{self}
+  \\
+  % \Cases O &= O; \Fail
+  % \\
+  \Do M &= \Try \_ \to \Else \_ \to M
+\end{align*}
+
+
+Translating terms (\eg usable codata objects, $s : Codata$):
+\begin{align*}
+  \den{x} &= x
+  \\
+  \den{K} &= K
+  \\
+  \den{M~N} &= \den{M} ~ \den{N}
+  \\
+  \den{\lamstar B}
+  &=
+  \Rec \mathit{self} = \lambda x. \den{B}~\mathit{self}~x
+  \\
+  \den{\Self = M \In B}
+  &=
+  \den{B} ~ \den{M}
+\end{align*}
+
+Translating templates as functions from a ``self'' object ($s : Codata$) to
+another usable codata object ($Codata \to Codata'$):
+\begin{align*}
+  % \den{\Fail}
+  % &=
+  % \lambda s.~ \mathit{fail} ~ s
+  % &
+  % &=
+  % \mathit{fail}
+  % \\
+  \den{O; B}
+  &=
+  \lambda s.~ \den{O} ~ \den{B} ~ s
+  &
+  &=
+  \den{O} ~ \den{B}
+  \\
+  \den{\Else x \to M}
+  &=
+  \lambda x.~ \den{M}
+\end{align*}
+
+Translating extensions ($Template \to Template'$) as functions from a ``base''
+template ($b : Codata \to Codata'$) and a ``self'' object ($s : Codata$) to
+another usable codata object.
+\begin{align*}
+  \den{\varepsilon}
+  &=
+  \lambda b. \lambda s.~ b ~ s
+  &
+  &=
+  \lambda b. b
+  \\
+  \den{O; O'}
+  &=
+  \lambda b. \lambda s.~ \den{O}~(\den{O'}~b) ~ s
+  &
+  &=
+  \den{O} \comp \den{O'}
+  \\
+  \den{\Try x \to B}
+  &=
+  \lambda x. \lambda s.~ \den{B} ~ s
+  &
+  &=
+  \lambda x.~ \den{B}
+  \\
+  \den{\hole ~ x \to O}
+  &=
+  \lambda b. \lambda s.~(\lambda x. \den{O} ~ (\lambda s'. b ~ s' ~ x) ~ s)
+  \\
+  \den{\hole \Match P \gets M \to O}
+  &=
+  \lambda b. \lambda s.~
+  \begin{aligned}[t]
+    &\Match M \With \\
+    &\quad P \to \den{O}~b~s \\
+    &\quad \_ \to b ~ s
+  \end{aligned}
+  &
+  &=
+  \begin{aligned}[t]
+    &\Match M \With \\
+    &\quad P \to \den{O} \\
+    &\quad \_ \to \den{\varepsilon}
+  \end{aligned}
+\end{align*}
+
+\section{Macro Definition}
+
+\section{Correctness}
+
+Should be able to prove soundness ($M = N$ implies $\den{M} = \den{N}$) of some
+equalities:
+\begin{itemize}
+\item Identity/associativity laws of composition.
+  \begin{align*}
+    \varepsilon; O &= O = O; \varepsilon
+    &
+    (O_1; O_2); O_3 &= O_1; (O_2; O_3)
+    \\
+    \varepsilon; B &= B
+    &
+    (O_1; O_2); B &= O_1; (O_2; B)
+  \end{align*}
+\item Cancelling uneeded alternatives.
+  \begin{align*}
+    \Do M; O &= \Do M
+    &
+    \Do M; B &= \Do M
+  \end{align*}
+\item Distributing/factoring copattern prefixes.
+  \begin{align*}
+    Q \to (O; O')
+    &=
+    (Q \to O); (Q \to O')
+    \\
+    Q[x] \to (O; O'); B
+    &=
+    (Q[x] \to O); (Q[x] \to O'); B
+  \end{align*}
+\item Renaming recursive self.
+  \begin{align*}
+    (\Self = V \In \Else x \to M) &= M\subst{x}{V}
+    &
+    (\Else x \to \Self = x \In B) &= B
+  \end{align*}
+\item Unfolding/inlining recursive self.
+  \begin{align*}
+    \lambda(\Else x \to B) &= \lambda B\subst{x}{(\lambda \Else x \to B)}
+  \end{align*}
+\item Applying a simple, non-matching lambda to an argument.
+  \begin{align*}
+    \lambda(\hole~x \to \Do M; B) ~ V
+    &=
+    M\subst{x}{V}
+  \end{align*}
+\item Applying a pattern-matching lambda to an argument that matches the
+  first pattern.  Same for a known non-matching argument.
+  \begin{align*}
+    \lambda(\hole~(K~\many{x}) \to \Do M; B) ~ (K~\many{V})
+    &=
+    M\subs{\many{\asub{x}{V}}}
+    \\
+    \lambda(\hole~(K'~\many{x}) \to O; B) ~ (K~\many{V})
+    &=
+    \lambda B ~ (K~\many{V})
+    &(\text{if } K &\neq K')
+  \end{align*}
+\item Applying a copattern-matching lambda in a context $Q$ that matches the
+  first copattern $Q$ (\ie $Q \in \mathit{Copattern} \cap \mathit{Context}$).
+  Same for a context $Q \in \mathit{Copattern} \cap \mathit{Context}$ that is
+  known to be apart from the first copattern $Q'$ (written $Q \apart Q'$).
+  \begin{align*}
+    Q[\lambda(Q \to \Do M; B)] &= M
+    \\
+    Q[\lambda(Q' \to O; B)] &= Q[\lambda B]
+    &(\text{if } Q &\apart Q')
+  \end{align*}
+\end{itemize}
+
+\section{Related and Future Work}
+
+\section{Conclusion}
+
+\begin{credits}
+\subsubsection{\ackname}
+% 
+This material is based upon work supported by the National Science Foundation
+under Grant No. 2245516.
+
+\subsubsection{\discintname}
+%
+The authors have no competing interests to declare that are
+relevant to the content of this article.
+\end{credits}
+%
+% ---- Bibliography ----
+%
+% BibTeX users should specify bibliography style 'splncs04'.
+% References will then be sorted and formatted in the correct style.
+%
+\bibliographystyle{splncs04}
+\bibliography{refs}
+
+\end{document}

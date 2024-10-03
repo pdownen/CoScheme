@@ -29,6 +29,7 @@
 
 \usepackage{stmaryrd}
 \usepackage{braket}
+\usepackage{proof}
 
 \usepackage{hyperref}
 \usepackage{cleveref}
@@ -75,245 +76,580 @@ The abstract should briefly summarize the contents of the paper in
 
 \section{Translating Composable Copatterns}
 
-Base language:
-\begin{alignat*}{3}
-  \mathit{Term} &\ni{}& M, N &&
+\begin{figure}
+\centering
+\begin{alignat*}{2}
+  \mathit{Term} &\ni{}& M, N
   &::= x
-  \mid K
   \mid M ~ N
-  % \mid \lambda x. M
-  \mid \lamstar B
-  \mid \Self = M \In B
+  \mid \lambda x. M
+  \mid K
+  \mid \Match M \With \set{\many{P \to N}}
+  \mid \Rec x = M
   \\
-  \mathit{Template} &\ni{}& B &&
-  &::= O; B
-  \mid \Else x \to M
-  % \mid \Fail
-  \\
-  \mathit{Extension} &\ni{}& O &&
-  &::= \varepsilon
-  \mid O; O'
-  \mid Q \to O
-  \mid \Try x \to B
-\end{alignat*}
-
-Big-step (co)patterns:
-\begin{align*}
-  \mathit{Copattern} &\ni{}& Q &&
-  &::= \hole
-  \mid Q ~ P
-  \mid Q \Try x
-  \mid Q \Match P \gets M
-  \mid Q \If M
-  \\
-  \mathit{Pattern} &\ni{}& P &&
+  \mathit{Pattern} &\ni{}& P
   &::= x
   \mid K ~ \many{P}
-\end{align*}
-
-Small-step (co)patterns:
-\begin{alignat*}{3}
-  \mathit{Copattern} &\ni{}& Q &&
-  &::= \hole ~ x
-  % \mid \hole \Try x
-  \mid \hole \Match P \gets M
-  \\
-  \mathit{Pattern} &\ni{}& P &&
-  &::= x
-  \mid K ~ \many{x}
 \end{alignat*}
 
-Flattening (co)patterns
-\begin{align*}
-  \hole \to O &= O \\
-  (Q \Try x) \to O &= Q \to (\Try x \to (O; (\Else s \to x~s))) \\
-  (Q ~ P) \to O &= Q \to (\hole ~ x) \to (\hole \Match P \gets x) \to O \\
-  (Q \Match P \gets M) \to O &= Q \to (\hole \Match P \gets M) \to O \\
-  (\hole \Match K~\many[i]{P_i} \gets M) \to O
-  &=
-  (\hole \Match K~\many[i]{x_i} \gets M) \to
-  \many[i]{(\hole \Match P_i \gets x_i) \to}~
-  O
+\caption{Target language: pure $\lambda$-calculus with pattern-matching and recursion.}
+\label{fig:target-syntax}
+\end{figure}
+
+\begin{figure}
+\centering
+
+\begin{alignat*}{2}
+  \mathit{Term} &\ni{}& M, N
+  &::= \dots
+  \mid \lamstar B
+  \mid \Template B
+  \mid \Extension O
   \\
-  (Q \If M) \to O &= Q \to (\hole \Match \True \gets M) \to O
+  \mathit{Template} &\ni{}& B
+  &::= \varepsilon
+  \mid O; B
+  \mid \Continue x \to M
+  \\
+  \mathit{Extension} &\ni{}& O
+  &::= \varepsilon
+  \mid O; O'
+  \mid Q[x] ~ O
+  \mid \lambda P.~ O
+  % \mid \If M ~ O
+  \mid \Match P \gets M ~ O
+  \mid \Nest O
+  \mid \Try x \to B
+  \\
+  \mathit{Copattern} &\ni{}& Q
+  &::= \hole
+  \mid Q ~ P
+  \\
+  \mathit{Pattern} &\ni{}& P
+  &::= x
+  \mid K ~ \many{P}
+\end{alignat*}
+
+Syntactic sugar:
+\begin{align*}
+  \Else \to M
+  &=
+  \Continue \_ \to M
+  \\
+  \Do M
+  &=
+  \Try \_ \to \Else \to M
+  \\
+  (= M)
+  &=
+  \Do M
+  \\
+  \If M ~ O
+  &=
+  \Match \True \gets M ~ O
+  \\
+  \Let x = M ~ O
+  &=
+  \Match x \gets M ~ O
 \end{align*}
+\caption{Source language: target extended with nested copatterns,
+  self-referential objects, recursion templates, and composable extensions.}
+\label{fig:source-syntax}
+\end{figure}
 
-Other template/extension shorthands:
+\begin{figure}
+\centering
+Translating new terms:  
 \begin{align*}
-  Q[x] \to O
-  &=
-  Q \to (x \to O)
-  \\
-  x \to O
-  &=
-  \Try \mathit{next} \to
-  \Else x \to
-  \Self = x \In
-  O; \Else \mathit{self} \to \mathit{next} ~ \mathit{self}
-  \\
-  % \Cases O &= O; \Fail
-  % \\
-  \Do M &= \Try \_ \to \Else \_ \to M
-\end{align*}
-
-
-Translating terms (\eg usable codata objects, $s : Codata$):
-\begin{align*}
-  \den{x} &= x
-  \\
-  \den{K} &= K
-  \\
-  \den{M~N} &= \den{M} ~ \den{N}
-  \\
   \den{\lamstar B}
   &=
-  \Rec \mathit{self} = \lambda x. \den{B}~\mathit{self}~x
+  \Rec \mathit{self} = T\den{B} ~ (\lambda x. \mathit{self} ~ x)
   \\
-  \den{\Self = M \In B}
+  \den{\Template B}
   &=
-  \den{B} ~ \den{M}
+  T\den{B}
+  \\
+  \den{\Extension O}
+  &=
+  E\den{O}
+  \\
+  \den{M}
+  &=
+  \text{by induction}
+  &\text{otherwise}
+\end{align*}
+Translating templates:
+\begin{align*}
+  T\den{\varepsilon}
+  &=
+  \mathit{fail}
+  \\
+  T\den{O; B}
+  &=
+  E\den{O} ~ T\den{B}
+  \\
+  T\den{\Continue x \to M}
+  &=
+  \lambda x. \den{M}
 \end{align*}
 
-Translating templates as functions from a ``self'' object ($s : Codata$) to
-another usable codata object ($Codata \to Codata'$):
+Translating copattern-matching and pattern-matching functions:
 \begin{align*}
-  % \den{\Fail}
-  % &=
-  % \lambda s.~ \mathit{fail} ~ s
-  % &
-  % &=
-  % \mathit{fail}
-  % \\
-  \den{O; B}
+  E\den{(Q[x] ~ P) ~ O}
   &=
-  \lambda s.~ \den{O} ~ \den{B} ~ s
-  &
-  &=
-  \den{O} ~ \den{B}
+  E\den{Q[x] ~ (\lambda P. O)}
   \\
-  \den{\Else x \to M}
+  E\den{x ~ O}
   &=
-  \lambda x.~ \den{M}
+  \lambda x. E\den{O} ~ x
+  \\
+  E\den{\lambda P. O}
+  &=
+  E\den{\lambda x. \Match P \gets x ~ O}
+  &(\text{if} P \notin \mathit{Variable})
 \end{align*}
 
-Translating extensions ($Template \to Template'$) as functions from a ``base''
-template ($b : Codata \to Codata'$) and a ``self'' object ($s : Codata$) to
-another usable codata object.
+Translating other extensions:
 \begin{align*}
-  \den{\varepsilon}
-  &=
-  \lambda b. \lambda s.~ b ~ s
-  &
+  E\den{\varepsilon}
   &=
   \lambda b. b
   \\
-  \den{O; O'}
+  E\den{O; O'}
   &=
-  \lambda b. \lambda s.~ \den{O}~(\den{O'}~b) ~ s
-  &
-  &=
-  \den{O} \comp \den{O'}
+  E\den{O} \comp E\den{O'}
   \\
-  \den{\Try x \to B}
+  E\den{\lambda x. O}
   &=
-  \lambda x. \lambda s.~ \den{B} ~ s
-  &
-  &=
-  \lambda x.~ \den{B}
+  \lambda b. \lambda s. (\lambda x. E\den{O} ~ (\lambda s'. b ~ s' ~ x) ~ s)
   \\
-  \den{\hole ~ x \to O}
+  E\den{\Match P \gets M ~ O}
   &=
-  \lambda b. \lambda s.~(\lambda x. \den{O} ~ (\lambda s'. b ~ s' ~ x) ~ s)
+  \Match \den{M} \With \set{P \to E\den{O}; \_ \to \lambda b. b}
   \\
-  \den{\hole \Match P \gets M \to O}
+  E\den{\Nest O}
   &=
-  \lambda b. \lambda s.~
-  \begin{aligned}[t]
-    &\Match M \With \\
-    &\quad P \to \den{O}~b~s \\
-    &\quad \_ \to b ~ s
-  \end{aligned}
-  &
+  \lambda b. \lambda s. \Rec s' = E\den{O} ~ (\lambda \_. b ~ s) ~ (\lambda x. s' ~ x)
+  \\
+  E\den{\Try x \to B}
   &=
-  \begin{aligned}[t]
-    &\Match M \With \\
-    &\quad P \to \den{O} \\
-    &\quad \_ \to \den{\varepsilon}
-  \end{aligned}
+  \lambda x. T\den{B}
 \end{align*}
+\caption{Translating copattern-based source code to the target language.}
+\label{fig:translation}
+\end{figure}
+
 
 \section{Macro Definition}
 
 \section{Correctness}
 
-Should be able to prove soundness ($M = N$ implies $\den{M} = \den{N}$) of some
-equalities:
-\begin{itemize}
-\item Identity/associativity laws of composition.
+\begin{figure}
+\centering
+  
+\begin{alignat*}{2}
+  \mathit{Value} &\ni{}& V, W
+  &::= x
+  \mid \lambda x. M
+  \mid K~\many{V}
+  \\
+  \mathit{EvalCxt} &\ni{}& E
+  &::= \hole
+  \mid E ~ M
+  \mid V ~ E
+  \mid \Match E \With \set{\many{P \to N}}
+  \mid \Rec x = E
+\end{alignat*}
+
+Operational axioms:
+\begin{align*}
+  (\lambda x. M) ~ V
+  &=
+  M\subst{x}{V}
+  % \\
+  % \begin{aligned}
+  %   &\Match V \With \\
+  %   &\qquad\set{\many[i]{P_i \to N_i}}
+  % \end{aligned}
+  % &=
+  % N_k\subst{BV(P_k)}{\many{W}}
+  % &
+  % \begin{aligned}
+  %   (&\text{if } && V = P_k\subst{BV(P_k)}{\many{W}} \\
+  %   &\text{and } &&\forall 1 \leq j < k, \\
+  %   &&&\not\exists \many{W'}, V = P_j\subst{BV(P_j)}{\many{W'}})
+  % \end{aligned}
+  \\
+  \begin{aligned}
+    &\Match V \With \\
+    &\qquad
+    \begin{aligned}[t]
+    \{~ &P \to N; \\
+    &\many{P' \to N'}~\}
+    \end{aligned}
+  \end{aligned}
+  &=
+  N\subst{BV(P)}{\many{W}}
+  &(\text{if } \exists \many{W},~ V &= P\subst{BV(P)}{\many{W}})
+  \\
+  \begin{aligned}
+    &\Match V \With \\
+    &\qquad
+    \begin{aligned}[t]
+    \{~ &P \to N; \\
+    &\many{P' \to N'}~\}
+    \end{aligned}
+  \end{aligned}
+  &=
+  \begin{aligned}
+    &\Match V \With \\
+    &\qquad \set{\many{P' \to N'}}
+  \end{aligned}
+  &(\text{if}\!\not\exists \many{W},~ V &= P\subst{BV(P)}{\many{W}})
+  \\
+  \Rec x = V
+  &=
+  V\subst{x}{(\Rec x = V)}
+\end{align*}
+
+Observational axioms:
+\begin{align*}
+  (\lambda x. E[x]) ~ M
+  &=
+  E[M]
+  \\
+  E\left[
+    \begin{aligned}
+      &\Match M \With \\
+      &\qquad\set{\many{P \to N}}
+    \end{aligned}
+  \right]
+  &=
+  \begin{aligned}
+    &\Match M \With \\
+    &\qquad \set{\many{P \to E[N]}}
+  \end{aligned}
+  &(\text{if } BV(P) \cap FV(E) = \emptyset)
+\end{align*}
+\caption{Untyped equational axioms of the target language.}
+\label{fig:target-equality}
+\end{figure}
+
+\begin{figure}
+\centering
+
+\begin{align*}
+  \mathit{NonRecTemplate} &\ni{}& B_{nr}
+  &::= O_{nr}; B_{nr}
+  \mid \Else \to M
+  \\
+  \mathit{NonRecExtension} &\ni{}& O_{nr}
+  &::= \varepsilon
+  \mid O_{nr}; O'_{nr}
+  \mid Q[\_] ~ O_{nr}
+  \mid \lambda P. O_{nr}
+  \\
+  &&&\phantom{:=}
+  \mid \Match P \gets M ~ O_{nr}
+  \mid \Nest O
+  \mid \Try x \to B_{nr}
+  \\
+  \mathit{RecCxt} &\ni{}& R
+  &::= \hole
+  \mid R; O
+  \mid O; R
+  \mid Q[x] ~ R
+  \mid \lambda P. R
+  \mid \Match P \gets M ~ O
+  \mid \Try x \to R
+\end{align*}
+
+Identity, associativity, and annihilation laws of composition:
+\begin{align*}
+  \varepsilon; O &= O = O; \varepsilon
+  &
+  (O_1; O_2); O_3 &= O_1; (O_2; O_3)
+  &
+  \Do M; O &= \do M
+  \\
+  \varepsilon; B &= B
+  &
+  (O_1; O_2); B &= O_1; (O_2; B)
+  &
+  \Do M; B &= \do M
+\end{align*}
+
+% Decomposing patterns and copatterns:
+% \begin{align*}
+%   (Q[x] ~ P) ~ O
+%   &=
+%   Q[x] ~ (\lambda P. O)
+%   &
+%   \_ ~ O
+%   &=
+%   O
+%   &
+%   \lambda P. O
+%   &=
+%   \lambda x. (\Match P \gets x ~ O)
+% \end{align*}
+
+% Factoring out recursion ($x \neq y$ and $x \notin BV(P)$):
+% \begin{align*}
+%   \lambda y. (x ~ O)
+%   &=
+%   x ~ (\lambda y. O)
+%   &
+%   \Match P \gets M ~ (x ~ O)
+%   &=
+%   x ~ (\Match P \gets M ~ O)
+%   \\
+%   (x ~ O); O'
+%   &=
+%   x ~ (O; O')
+%   &
+%   O; (x ~ O')
+%   &=
+%   x ~ (O; O')
+% \end{align*}
+
+Instantiating templates, extensions, and recursive $\lamstar$:
+\begin{align*}
+  (\Extension O) ~ V
+  &=
+  \Template{} (O; \Continue x \to (V ~ x))
+  \\
+  (\Template R[Q[x] ~ O]) ~ V
+  &=
+  (\Template R[Q[\_] ~ O\subst{x}{V}]) ~ V
+  \\
+  (\Template R[\Continue x \to M]) ~ V
+  &=
+  (\Template R[\Else \to M\subst{x}{V}]) ~ V
+  \\
+  (\Template B_{nr}) ~ V
+  &=
+  (\Template B_{nr}) ~ W
+  \\
+  (\Template \varepsilon) ~ V
+  &=
+  \mathit{fail}~V
+  \\
+  \lamstar B
+  &=
+  (\Template B) ~ (\lambda x. (\lamstar B) ~ x)
+\end{align*}
+
+Pattern and copattern matching:
+\begin{align*}
+  \Match P \gets P\subst{\many{x}}{\many{V}} ~ O
+  &=
+  O\subst{\many{x}}{\many{V}}
+  \\
+  \Match{} (K~\many{P}) \gets (K'~\many{V}) ~ O
+  &=
+  \varepsilon
+  \\
+  (\Template{} (\lambda P. \Do M); B) ~ V ~ P\subst{\many{x}}{\many{W}}
+  &=
+  M\subst{\many{x}}{\many{W}}
+  \\
+  (\Template{} (\lambda (K~\many{x}). O); B) ~ V ~ (K'~\many{V})
+  &=
+  (\Template B) ~ V ~ (K' ~ \many{V})
+  &(\text{if } K \neq K')
+  \\
+  Q[(\Template{} (Q[y] = M); B) ~ V]\subst{\many{x}}{\many{W}}
+  &=
+  M\subst{y}{V}\subst{\many{x}}{\many{W}}
+  \\
+  C[(\Template{} (Q[y] ~ O); B) ~ V]
+  &=
+  C[(\Template B) ~ V]
+  &(\text{if } Q \apart C)
+  \\
+  (\Template \Continue x \to M) ~ V
+  &=
+  M\subst{x}{V}
+\end{align*}
+
+Copattern context apartness ($Q \apart C$):
+\begin{align*}
+  \infer
+  {\hole ~ \many[i]{P_i} ~ (K~\many{P}) \apart \hole ~ \many[i]{V_i} ~ (K'~\many{W})}
+  {K \neq K' & |\many[i]{P_i}| = |\many[i]{V_i}|}
+  \qqqquad
+  \infer
+  {Q ~ P \apart C}
+  {Q \apart C}
+\end{align*}
+
+\caption{Some equalities of copattern extensions.}
+\label{fig:source-equality}
+\end{figure}
+
+\begin{proposition}[Soundness]
+  The equational axioms given in \cref{fig:source-equality} are sound with
+  respect to the translation in \cref{fig:translation},
   \begin{align*}
-    \varepsilon; O &= O = O; \varepsilon
-    &
-    (O_1; O_2); O_3 &= O_1; (O_2; O_3)
+    M &= M' &&\implies & \den{M} &= \den{M'} \\
+    B &= B' &&\implies & T\den{B} &= T\den{B'} \\
+    O &= O' &&\implies & E\den{O} &= E\den{O'}
+  \end{align*}
+  up to the equational theory of the target language in
+  \cref{fig:source-equality}.
+\end{proposition}
+
+\section{Optimizing Away Administrative Reductions}
+
+\begin{figure}
+\centering
+Translating new terms:  
+\begin{align*}
+  I\den{\lamstar B}
+  &=
+  \Rec \mathit{self} = T\den{B}(\lambda x. \mathit{self} ~ x)
+  \\
+  I\den{\Template B}
+  &=
+  T\den{B}()
+  \\
+  I\den{\Extension O}
+  &=
+  E\den{O}()
+  \\
+  I\den{M}
+  &=
+  \text{by induction}
+  &\text{otherwise}
+\end{align*}
+Translating templates:
+\begin{align*}
+  T\den{\varepsilon}(\many{V})
+  &=
+  \mathit{fail}~\many{V}
+  \\
+  T\den{O; B}(\many{V})
+  &=
+  E\den{O}(T\den{B}, \many{V})
+  \\
+  T\den{\Continue x \to M}()
+  &=
+  \lambda x. I\den{M}
+  \\
+  T\den{\Continue x \to M}(V)
+  &=
+  I\den{M}\subst{x}{V}
+\end{align*}
+
+Translating copattern-matching and pattern-matching functions:
+\begin{align*}
+  E\den{(Q[x] ~ P) ~ O}(\many{V})
+  &=
+  E\den{Q[x] ~ (\lambda P. O)}(\many{V})
+  \\
+  E\den{x ~ O}()
+  &=
+  \lambda x. E\den{O}(x)
+  \\
+  E\den{x ~ O}(W, \many{V})
+  &=
+  E\den{O}(W, \many{V})\subst{x}{W}
+  \\
+  E\den{\lambda P. O}(\many{V})
+  &=
+  E\den{\lambda x. \Match P \gets x ~ O}(\many{V})
+  &(\text{if } P \notin \mathit{Variable})
+\end{align*}
+
+Translating other extensions:
+\begin{align*}
+  E\den{\varepsilon}()
+  &=
+  \lambda b. b
+  \\
+  E\den{\varepsilon}(W, \many{V})
+  &=
+  W(\many{V})
+  \\
+  E\den{O; O'}()
+  &=
+  E\den{O}() \comp E\den{O'}()
+  \\
+  E\den{O; O'}(W)
+  &=
+  E\den{O}() ~ E\den{O'}(W)
+  \\
+  E\den{O; O'}(W, V)
+  &=
+  (\lambda s. E\den{O}(s, V)) ~ E\den{O'}(W)
+  \\
+  E\den{\lambda x. O}()
+  &=
+  \lambda b. \lambda s. (\lambda x. E\den{O}((\lambda s'. b ~ s' ~ x), s))
+  \\
+  E\den{\lambda x. O}(W)
+  &=
+  \lambda s. (\lambda x. E\den{O}((\lambda s'. W(s', x)), s))
+  \\
+  E\den{\lambda x. O}(W, V)
+  &=
+  \lambda x. E\den{O}((\lambda s'. W(s', x)), V)
+  \\
+  E\den{\Match P \gets M ~ O}(\many{V})
+  &=
+  \Match I\den{M} \With
+  \set{P \to E\den{O}(\many{V}); \_ \to E\den{\varepsilon}(\many{V})}
+  \\
+  E\den{\Nest O}()
+  &=
+  \lambda b. \lambda s. \Rec s' = E\den{O}((\lambda \_. b ~ s), (\lambda x. s' ~ x))
+  \\
+  E\den{\Nest O}(W)
+  &=
+  \lambda s. \Rec s' = E\den{O}((\lambda \_. W(s)), (\lambda x. s' ~ x))
+  \\
+  E\den{\Nest O}(W, V)
+  &=
+  \Rec s' = E\den{O}((\lambda \_. W(V)), (\lambda x. s' ~ x))
+  \\
+  E\den{\Try x \to B}()
+  &=
+  \lambda x. T\den{B}()
+  \\
+  E\den{\Try x \to B}(W, \many{V})
+  &=
+  T\den{B}(\many{V})\subst{x}{W}
+\end{align*}
+
+Inlining administrative $\lambda$-abstractions:
+\begin{align*}
+  (\lambda x. M)(W, \many{V})
+  &=
+  M(\many{V})\subst{x}{W}
+  \\
+  M(\many{V})
+  &=
+  M ~ \many{V}
+  &
+  \text{otherwise}
+\end{align*}
+
+\caption{Inlining version of the translation.}
+\label{fig:inline-translation}
+\end{figure}
+
+\begin{proposition}
+  Up to the equational theory of the target language in
+  \cref{fig:target-equality},
+  \begin{align*}
+    I\den{M} &= \den{M}
     \\
-    \varepsilon; B &= B
-    &
-    (O_1; O_2); B &= O_1; (O_2; B)
-  \end{align*}
-\item Cancelling uneeded alternatives.
-  \begin{align*}
-    \Do M; O &= \Do M
-    &
-    \Do M; B &= \Do M
-  \end{align*}
-\item Distributing/factoring copattern prefixes.
-  \begin{align*}
-    Q \to (O; O')
-    &=
-    (Q \to O); (Q \to O')
+    T\den{B}(\many{V}) &= T\den{B} ~ \many{V}
     \\
-    Q[x] \to (O; O'); B
-    &=
-    (Q[x] \to O); (Q[x] \to O'); B
-  \end{align*}
-\item Renaming recursive self.
-  \begin{align*}
-    (\Self = V \In \Else x \to M) &= M\subst{x}{V}
-    &
-    (\Else x \to \Self = x \In B) &= B
-  \end{align*}
-\item Unfolding/inlining recursive self.
-  \begin{align*}
-    \lambda(\Else x \to B) &= \lambda B\subst{x}{(\lambda \Else x \to B)}
-  \end{align*}
-\item Applying a simple, non-matching lambda to an argument.
-  \begin{align*}
-    \lambda(\hole~x \to \Do M; B) ~ V
-    &=
-    M\subst{x}{V}
-  \end{align*}
-\item Applying a pattern-matching lambda to an argument that matches the
-  first pattern.  Same for a known non-matching argument.
-  \begin{align*}
-    \lambda(\hole~(K~\many{x}) \to \Do M; B) ~ (K~\many{V})
-    &=
-    M\subs{\many{\asub{x}{V}}}
-    \\
-    \lambda(\hole~(K'~\many{x}) \to O; B) ~ (K~\many{V})
-    &=
-    \lambda B ~ (K~\many{V})
-    &(\text{if } K &\neq K')
-  \end{align*}
-\item Applying a copattern-matching lambda in a context $Q$ that matches the
-  first copattern $Q$ (\ie $Q \in \mathit{Copattern} \cap \mathit{Context}$).
-  Same for a context $Q \in \mathit{Copattern} \cap \mathit{Context}$ that is
-  known to be apart from the first copattern $Q'$ (written $Q \apart Q'$).
-  \begin{align*}
-    Q[\lambda(Q \to \Do M; B)] &= M
-    \\
-    Q[\lambda(Q' \to O; B)] &= Q[\lambda B]
-    &(\text{if } Q &\apart Q')
-  \end{align*}
-\end{itemize}
+    E\den{O}(\many{V}) &= E\den{O} ~ \many{V}
+  \end{align*}  
+\end{proposition}
 
 \section{Related and Future Work}
 

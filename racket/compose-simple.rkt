@@ -2,7 +2,7 @@
 
 (provide define* λ* override-λ* define-object object meta
          extension apply-extension template apply-template
-         chain comatch try always-do guard match-guard
+         chain nest comatch try always-do guard match-guard
          try-λ try-case-λ try-match-λ try-apply-remember try-apply-forget
          empty-extension empty-template choose commit merge
          introspect plug closed-cases selfless with-self self-modify)
@@ -37,35 +37,51 @@
 
 ;; empty-template : Template
 ;; nothing is defined
-(define (empty-template self) (error "comatch: no clause matching context"))
+(define (empty-template self) (error (format "comatch: no clause matching context for ~a" self)))
+
+;; empty-object : Codata
+;; I don't exist
+(define empty-object (λ args (error "empty-object: called with arguments ~a" args)))
 
 ;; extend-template : Extension -> Template -> Template
-;; add more methods to a Template, but avoid fixing ones "self" to allow for future extensions
-(define (extend-template extension next) (extension next))
+;; add more methods to a Template, and override any duplicates, but avoid fixing its "self" to allow for future extensions
+(define (extend-template ext next) (ext next))
+
+;; surround-object : Template -> Codata -> Codata
+;; introduce new behvaior around a Codata object, only using that object when the Template recurses in on itself.
+(define (surround-object tmpl obj) (tmpl obj))
+
+;; handle-with : Template -> Extension -> Template
+;; handle all the cases where the extension falls through by continuing on with the given handler.
+(define (handle-with handler ext) (ext handler))
+
+;; resume-as : Codata -> Template -> Codata
+;; run a template 
+(define (resume-as self tmpl) (tmpl self))
 
 ;; Extension composition is just ordinary function composition
 
 ;; introspect : Template -> Codata
 ;; know thyself
-(define (introspect template)
-  (letrec [(self (template (λ args (apply self args))))]
+(define (introspect tmpl)
+  (letrec [(self (tmpl (λ args (apply self args))))]
     self))
+
+;; selfless : Template -> Codata
+;; doesn't care about itself
+(define (selfless tmpl) (tmpl empty-object))
 
 ;; closed-cases : Extension -> Template
 ;; closes off an open-ended extension to get a template with a fixed number of cases by terminating the sequence of potential copattern match with a failure.
-(define (closed-cases extension) (extension empty-template))
+(define (closed-cases ext) (ext empty-template))
 
 ;; plug : Extension -> Codata
 ;; plug an open-ended extension to get a usable object of the expected Codata type. First, extend the empty base template to close off the possibility of future extensions, and then plug in itself for its "self" to enable recursion
-(define (plug extension) (introspect (closed-cases extension)))
-
-;; selfless : Value -> Template
-;; make a selfless template that returns a final value and does not refer to itself
-(define (selfless value) (lambda (self) value))
+(define (plug ext) (introspect (closed-cases ext)))
 
 ;; choose : Template -> Extension
 ;; make an extension which definitively chooses this template and ignores all remaining copattern-matching alternatives
-(define (choose template) (lambda (next) template))
+(define (choose tmpl) (lambda (next) tmpl))
 
 ;; commit : Value -> Extension
 ;; commit to a final answer in the middle of copattern matching by throwing away the remaining possibilities that could be tried.
@@ -75,11 +91,19 @@
 ;; merge any number of extensions into a single one that chooses between the matching alternative based on the context of its call-site.
 (define merge compose)
 
-(define (with-self new-self ext)
-  (try next old-self (apply-extension ext (λ(_) (next old-self)) new-self)))
-
 (define (self-modify new-self ext)
   (try next old-self (apply-extension ext next new-self)))
+
+(define (with-self new-self ext)
+  (try next old-self (apply-extension ext (non-rec (next old-self)) new-self)))
+
+(define (nest ext)
+  (try next there
+   (letrec ([here (apply-extension
+                   ext
+                   (non-rec (next there))
+                   (λ args (apply here args)))])
+     here)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;
@@ -102,6 +126,17 @@
 (define-syntax-rule
   (always-do expr)
   (try _ _ expr))
+
+(define-syntax continue
+  (syntax-rules ()
+    [(continue tmpl)
+     tmpl]
+    [(continue self expr)
+     (λ(self) expr)]))
+
+(define-syntax-rule
+  (non-rec expr)
+  (continue _ expr))
 
 ;; guard : Bool -> Extension -> Extension
 ;; Test the given boolean expression: if it is true, run the given extension, and if it is false, fall through to the next option.  To ensure a predictable evaluation order, this is defined as a macro so that the expression which returns the success extension only runs when the check is true.
@@ -208,29 +243,27 @@
      (try next self
           (apply (apply-extension ext (λ(self) (λ _ (next self))) self) arg ... rest))]))
 
-;; comatch : Copattern -> Extension -> Extension
-;; Expand out the copattern expression of an extension to do copattern-matching. The first argument is a flag `initial` or `nested`.
-;; `initial` means that this is the *first* operation that the object itself tries to do, so that the second "self" parameter to the extension is *exactly* the same value as the object itself. Thus, this second parameter can be bound as-is to the name in the head of the copattern.
-;; `nested` here means that other operations could have come first, so that the second "self" parameter to the extension might be *different* from the view of the object at this point in time. Thus, the head of the copattern is bound to a new recursive object that reflects its current state.
-;; Note1: a nested comatch as the first operations is equivalent in behavior to an initial comatch. However, the generated code is different, potentially with different cost.
-;; Note2: using an initial comatch after some other operations (especially λ-abstractions) gives access to the *original* "self" of the overall object rather than the view from this point. This could be either intentional or confusing behavior, hence the explicit distinction between comatch initial versus comatch nested.
+;;;;;;;;;;;;;;;;;;;;;
+;; Big-step Macros ;;
+;;;;;;;;;;;;;;;;;;;;;
+
+;; initial-comatch : Copattern -> Extension -> Extension
+;; Expand out the copattern expression of an extension to do copattern-matching.
+;; Note: using an initial comatch after some other operations (especially λ-abstractions) gives access to the *original* "self" of the overall object rather than the view from this point. This could be either intentional or confusing behavior. To properly view the self in a copattern-match after being nested within other operations, use `comatch`.
 (define-syntax (comatch stx)
-  (syntax-case stx (initial nested apply _)
-    [(comatch mode (apply copat args) ext)
+  (syntax-case stx (apply _)
+    [(comatch (apply copat args) ext)
      (identifier? #'args)
-     #'(comatch mode copat (try-case-λ args ext))]
-    [(comatch mode (apply copat arg1 arg ... rest) ext)
-     #'(comatch mode copat (try-λ(arg ... . rest) ext))]
-    [(comatch mode (copat arg ... . end) ext)
-     #'(comatch mode copat (try-λ(arg ... . end) ext))]
-    [(comatch mode _ ext)
+     #'(comatch copat (try-case-λ args ext))]
+    [(comatch (apply copat arg1 arg ... rest) ext)
+     #'(comatch copat (try-λ(arg ... . rest) ext))]
+    [(comatch (copat arg ... . end) ext)
+     #'(comatch copat (try-λ(arg ... . end) ext))]
+    [(comatch _ ext)
      #'ext]
-    [(comatch initial name ext)
+    [(comatch name ext)
      (identifier? #'name)
-     #'(try next name (apply-extension ext next name))]
-    [(comatch nested name ext)
-     (identifier? #'name)
-     #'(try next self (letrec ([name (apply-extension ext next self)]) name))]))
+     #'(try next name (apply-extension ext next name))]))
 
 
 (define-syntax chain
@@ -247,14 +280,14 @@
 
 (define-syntax-rule
   (extension [copat step ...] ...)
-  (merge [chain (comatch initial copat) step ...] ...))
+  (merge [chain (comatch copat) step ...] ...))
 
 (define-syntax template
-  (syntax-rules (else)
-    [(template clause ... [else self default])
-     ((extension clause ...) (λ(self) default))]
+  (syntax-rules (continue else)
+    [(template clause ... [continue . default])
+     ((extension clause ...) (continue . default))]
     [(template clause ... [else default])
-     ((extension clause ...) default)]
+     ((extension clause ...) (non-rec default))]
     [(template clause ...)
      (closed-cases (extension clause ...))]))
 
@@ -267,6 +300,9 @@
   (apply-extension ext next self)
   ((ext next) self))
 
+;;;;;;;;;;;;;;;;;;;;;;
+;; Meta Programming ;;
+;;;;;;;;;;;;;;;;;;;;;;
 
 ;; unplug : Extension -> Extension
 ;; The 'unplug method remembers an extension, so you can ask the object for it later
@@ -295,7 +331,9 @@
 
 (define default-object-modifier (make-parameter meta))
 
-;; Top-level and entry-point macros
+;;;;;;;;;;;;;;;;;
+;; Main Macros ;;
+;;;;;;;;;;;;;;;;;
 
 (define-syntax-rule
   (λ* clause ...)
@@ -303,7 +341,7 @@
 
 (define-syntax-rule
   (override-λ* old clause ...)
-  (λ* clause ... [else _ old]))
+  (λ* clause ... [else old]))
 
 (define-syntax (define* stx)
   (syntax-case stx (apply)

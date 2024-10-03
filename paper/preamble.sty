@@ -113,7 +113,13 @@
 \newkeyword{\Of}{of}
 \newkeyword{\Match}{match}
 \newkeyword{\With}{with}
-\newkeyword{\Class}{class}
+
+\newkeyword{\If}{if}
+\newkeyword{\Then}{then}
+\newkeyword{\Else}{else}
+\newkeyword{\Otherwise}{otherwise}
+\newoperation{\True}{True}
+\newoperation{\False}{False}
 
 \newoperation{\Inl}{inl}
 \newoperation{\Inr}{inr}
@@ -135,7 +141,7 @@
 
 %% Sequent calculus
 
-\newcommand{\cmid}{\mathbin{\|}}
+\newcommand{\cmid}{\mathbin{|\!\!|}}
 \newcommand{\cut}[2]{\braket{#1 \cmid #2}}
 \newcommand{\rmu}{{\reflectbox{$\mu$}}}
 \newcommand{\tmu}{{\tilde{\mu}}}
@@ -208,155 +214,38 @@
 
 %% Other syntax
 
+\newcommand{\compo}{\mathbin{\|}}
+
+\newkeyword{\Define}{define}
+
 \newcommand{\lamstar}{\lambda^{\!*}}
 
+\newcommand{\Definestar}{\Define^*}
+
+\newkeyword{\Comatch}{comatch}
 \newkeyword{\Self}{self}
 \newkeyword{\Next}{next}
 \newkeyword{\Try}{try}
+\newkeyword{\Handle}{handle}
+\newkeyword{\Continue}{continue}
+\newkeyword{\Restart}{restart}
+\newkeyword{\Start}{start}
+\newkeyword{\Resume}{resume}
 \newkeyword{\Fail}{fail}
-\newkeyword{\Close}{close}
+\newkeyword{\End}{end}
+\newkeyword{\Closed}{closed}
 \newkeyword{\Cases}{cases}
+\newkeyword{\Merge}{merge}
+\newkeyword{\Template}{template}
+\newkeyword{\Extension}{extension}
+\newkeyword{\Include}{include}
+\newkeyword{\Initial}{initial}
+\newkeyword{\Nested}{nested}
+\newkeyword{\Nest}{nest}
+\newkeyword{\Forget}{forget}
+\newkeyword{\Finally}{finally}
+\newkeyword{\Finish}{Finish}
 
-\newcommand{\CBUV}{{\mathit{CBUV}}}
-
-\newcommand{\anti}{\overline}
-
-\newcommand{\mathquestiondown}{{\text{?`}}}
-\newcommand{\mathexclaimdown}{{\text{!`}}}
-\newcommand{\unoc}{\mathop{\mathexclaimdown}}
-\newcommand{\unwn}{\mathop{\mathquestiondown}}
-
-\newcommand{\zero}{{\mathtt{0}}}
-\newcommand{\one}{{\mathtt{1}}}
-
-\newoperation{\OK}{OK}
-
-\newkeyword{\Type}{type}
-
-\newkeyword{\Delay}{delay}
-\newkeyword{\Alloc}{alloc}
-\newkeyword{\Move}{move}
-
-\newoperation{\Struct}{struct}
-\newoperation{\Embed}{embed}
-\newoperation{\StructTy}{Struct}
-% \newcommand{\structbox}[1]{\oc #1}
-% \newcommand{\structbox}[1]{\Struct #1}
-\newoperation{\Boxed}{box}
-\newoperation{\BoxTy}{Box}
-\newkeyword{\Unbox}{unbox}
-\newkeyword{\As}{as}
-\newoperation{\Value}{val}
-\newoperation{\ValTy}{Val}
-\newoperation{\Refr}{ref}
-\newoperation{\RefrTy}{Ref}
-% \newcommand{\valaddr}[1]{\mathop{\mathexclaimdown} #1}
-\newcommand{\valaddr}[1]{\Value #1}
-\newcommand{\objcode}[1]{\Code #1}
-
-\newkeyword{\Stored}{Stored}
-
-\newoperation{\Call}{call}
-% \newcommand{\callbox}[1]{\wn #1}
-\newcommand{\callbox}[1]{\Call #1}
-\newoperation{\Message}{msg}
-\newoperation{\Send}{send}
-\newoperation{\Recv}{recv}
-\newoperation{\Await}{await}
-\newoperation{\Resume}{resume}
-\newoperation{\Enter}{enter}
-\newoperation{\Proc}{proc}
-\newoperation{\ProcTy}{Proc}
-\newoperation{\Exit}{exit}
-\newoperation{\End}{end}
-% \newcommand{\evaladdr}[1]{\mathop{\mathexclaimdown} #1}
-\newcommand{\evaladdr}[1]{\Eval #1}
-\newcommand{\matchcode}[1]{\Match #1}
-\newkeyword{\Ret}{ret}
-\newkeyword{\Rets}{ret}
-\newoperation{\RetTy}{Ret}
-\newoperation{\Frame}{frame}
-\newoperation{\Use}{use}
-
-\newoperation{\Constructor}{const}
-\newoperation{\Destructor}{dest}
-
-\newoperation{\Clos}{clos}
-\newoperation{\ClosTy}{Clos}
-\newoperation{\Cont}{cont}
-\newoperation{\Wait}{wait}
-\newoperation{\Apply}{apply}
-\newoperation{\Eval}{eval}
-
-\newoperation{\EvalTy}{Eval}
-
-\newkeyword{\Pat}{pat}
-\newkeyword{\Copat}{copat}
-\newkeyword{\Atomic}{atomic}
-\newkeyword{\Complex}{cplx}
-% \newkeyword{\Val}{val}
-\newkeyword{\Comp}{comp}
-\newkeyword{\Code}{code}
-
-\newoperation{\Atom}{atom}
-\newoperation{\Ptr}{ptr}
-\newoperation{\Addr}{addr}
-\newoperation{\Deref}{deref}
-\newcommand{\addrof}[1]{\& #1}
-\newcommand{\deref}[1]{*#1}
-
-\newoperation{\IntTy}{Int}
-\newoperation{\NatTy}{Nat}
-\newoperation{\Int}{int}
-\newoperation{\FloatTy}{Float}
-\newoperation{\Float}{flt}
-\newoperation{\TypeIx}{Type}
-\newoperation{\TypeRep}{ty}
-\newcommand{\TyIx}{\TypeIx}
-\newcommand{\TyR}{\TypeRep}
-
-\newoperation{\Subr}{sub}
-
-\newoperation{\Run}{run}
-\newoperation{\Void}{void}
-\newoperation{\VoidTy}{Void}
-
-\newoperation{\More}{more}
-\newoperation{\MoreTy}{More}
-
-\newoperation{\Memo}{memo}
-\newoperation{\Remember}{remember}
-\newoperation{\Save}{save}
-\newoperation{\Tape}{Tape}
-\newoperation{\Start}{start}
-\newoperation{\Play}{play}
-\newoperation{\Pause}{pause}
-
-\newoperation{\Later}{Later}
-\newoperation{\Todo}{todo}
-\newoperation{\Done}{done}
-\newkeyword{\Now}{now}
-
-\newoperation{\Num}{Num}
-\newoperation{\Bool}{Bool}
-\newoperation{\True}{True}
-\newoperation{\False}{False}
-\newkeyword{\If}{if}
-\newkeyword{\Then}{then}
-\newkeyword{\Else}{else}
-\newkeyword{\Data}{data}
-\newoperation{\String}{String}
-\newoperation{\List}{List}
-\newoperation{\Nil}{Nil}
-\newoperation{\Cons}{Cons}
-\newoperation{\Maybe}{Maybe}
-\newoperation{\Nothing}{Nothing}
-\newoperation{\Just}{Just}
-\newoperation{\Tree}{Tree}
-\newoperation{\Branch}{Branch}
-\newoperation{\Leaf}{Leaf}
-
-\newoperation{\Final}{terminal}
 
 %% Coloring
 

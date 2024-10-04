@@ -133,7 +133,7 @@ The abstract should briefly summarize the contents of the paper in
 
 Syntactic sugar:
 \begin{align*}
-  \Else \to M
+  \Else M
   &=
   \Continue \_ \to M
   \\
@@ -433,13 +433,13 @@ Identity, associativity, and annihilation laws of composition:
   &
   (O_1; O_2); O_3 &= O_1; (O_2; O_3)
   &
-  \Do M; O &= \do M
+  \Do M; O &= \Do M
   \\
   \varepsilon; B &= B
   &
   (O_1; O_2); B &= O_1; (O_2; B)
   &
-  \Do M; B &= \do M
+  \Do M; B &= \Else M
 \end{align*}
 
 % Decomposing patterns and copatterns:

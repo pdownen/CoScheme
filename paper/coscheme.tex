@@ -393,7 +393,7 @@ Apartness between patterns and values ($P \apart V$):
   % \mid \Try x \to B_v
   % \\
   \mathit{ExtensionFunc} &\ni{}& F
-  &::= (Q[x] ~ P) ~ O
+  &::= Q[x ~ P] ~ O
   \mid \lambda P. O
   \\
   \mathit{Value} &\ni{}& V
@@ -494,9 +494,9 @@ Instantiating templates and recursive $\lamstar$:
   % &=
   % (\Template B_{nr}) ~ W
   % \\
-  \lamstar B
+  \lamstar F
   &=
-  (\Template B) ~ (\lambda x. (\lamstar B) ~ x)
+  (\Template F) ~ (\lambda x. (\lamstar F) ~ x)
   \\
   (\Template O; B) ~ V
   &=
@@ -583,20 +583,28 @@ Apartness between copatterns and contexts ($Q \apart C$):
 \end{figure}
 
 \begin{lemma}
-  For all source-level values $V$ in \cref{fig:source-equality}, there is a
-  target-level value $W$ such that $\den{V} = W$ up to the equational theory of
-  the target language in \cref{fig:target-equality}.  Additionally,
-  $T\den{B} = \lambda s. M$ and $E\den{O} = \lambda b. \lambda s. N$ are always
-  target-level values, for some $M$ and $N$.
+  The following instances of translation are all values up to the equational
+  theory of the target language in \cref{fig:target-equality}:
+  \begin{enumerate}[(a)]
+  \item $T\den{B} = \lambda s. M$ for some term $M$,
+  \item $E\den{O} = \lambda b. \lambda s. M$ for some term $M$,
+  \item $E\den{F} = \lambda b. \lambda s. \lambda x. M$ for some term $M$,
+  \item $\den{V} = W$ for some value $W$.
+  \end{enumerate}
 \end{lemma}
+
+\begin{proposition}[Conservative Extnsion]
+  If $M = N$ in the equational theory of the target
+  (\cref{fig:target-equality}), then so too does $\den{M} = \den{N}$.
+\end{proposition}
 
 \begin{proposition}[Soundness]
   The equational axioms given in \cref{fig:source-equality} are sound with
   respect to the translation in \cref{fig:translation},
   \begin{align*}
     M &= M' &&\implies & \den{M} &= \den{M'} \\
-    B &= B' &&\implies & T\den{B}~x &= T\den{B'}~x \\
-    O &= O' &&\implies & E\den{O}~x~y &= E\den{O'}~x~y
+    B &= B' &&\implies & T\den{B} &= T\den{B'} \\
+    O &= O' &&\implies & E\den{O} &= E\den{O'}
   \end{align*}
   up to the equational theory of the target language in
   \cref{fig:target-equality}.

@@ -14,6 +14,7 @@
 % Used for displaying a sample figure. If possible, figure files should
 % be included in EPS format.
 \usepackage{xcolor}
+\usepackage[shortlabels]{enumitem}
 
 % llncs.cls clashes with amsthm.
 % Save the LNCS proof environment defined by the class
@@ -176,16 +177,22 @@ Translating new terms:
   \den{M}
   &=
   \text{by induction}
-  &\text{otherwise}
+  &(\text{otherwise})
 \end{align*}
 Translating templates:
 \begin{align*}
   T\den{\varepsilon}
   &=
   \lambda s. \mathit{fail}~s
+  &
+  &=_\eta
+  \mathit{fail}
   \\
   T\den{O; B}
   &=
+  \lambda s. E\den{O} ~ T\den{B} ~ s
+  &
+  &=_\eta
   E\den{O} ~ T\den{B}
   \\
   T\den{\Continue x \to M}
@@ -206,17 +213,23 @@ Translating copattern-matching and pattern-matching functions:
   E\den{\lambda P. O}
   &=
   E\den{\lambda x. \Match P \gets x ~ O}
-  &(\text{if} P \notin \mathit{Variable})
+  &(\text{if } P \notin \mathit{Variable})
 \end{align*}
 
 Translating other extensions:
 \begin{align*}
   E\den{\varepsilon}
   &=
+  \lambda b. \lambda s. b ~ s
+  &
+  &=_\eta
   \lambda b. b
   \\
   E\den{O; O'}
   &=
+  \lambda b. \lambda s. E\den{O} ~ (E\den{O'}~b) ~ s
+  &
+  &=_\eta
   E\den{O} \comp E\den{O'}
   \\
   E\den{\lambda x. O}
@@ -225,7 +238,17 @@ Translating other extensions:
   \\
   E\den{\Match P \gets M ~ O}
   &=
-  \Match \den{M} \With \set{P \to E\den{O}; \_ \to \lambda b. b}
+  \lambda b. \lambda s.
+  \begin{aligned}[t]
+    &\Match \den{M} \With \\
+    &\quad
+    \begin{aligned}[t]
+      \{~
+      P &\to E\den{O}~b~s; \\
+      \_ &\to b~s
+      ~\}
+    \end{aligned}
+  \end{aligned}
   \\
   E\den{\Nest O}
   &=
@@ -342,12 +365,8 @@ Observational axioms:
 Apartness between patterns and values ($P \apart V$):
 \begin{gather*}
   \infer
-  {K ~ \many{P} \apart K' ~ \many{V}}
-  {K \neq K'}
-  \qqqquad
-  \infer
-  {K ~ \many{P} \apart K ~ \many{V}}
-  {|\many{P}| \neq |\many{V}|}
+  {K ~ P_1 \dots P_n \apart V}
+  {V \neq K ~ W_1 \dots W_n}
   \qqqquad
   \infer
   {K~P_1 \dots P_n \apart K ~ V_1 \dots V_n}
@@ -365,22 +384,24 @@ Apartness between patterns and values ($P \apart V$):
   % \mathit{TemplateValue} &\ni{}& B_v
   % &::= \varepsilon
   % \mid O_v; B_v
-  % \mid \Continue x \to M
+  % \mid \Continue x \to V
   % \\
   % \mathit{ExtensionValue} &\ni{}& O_v
-  % &::= \varepsilon
-  % \mid O_v; O'_v
-  % \mid Q[x] ~ O
-  % \mid \lambda P. O
-  % \mid \Nest O
-  % \mid \Try x \to B
+  % &::= O_f
+  % \mid O_f; O_v
+  % \mid \Nest O_v
+  % \mid \Try x \to B_v
   % \\
-  % \mathit{Value} &\ni{}& V
-  % &::= \dots
-  % \mid \lamstar B_v
-  % \mid \Template B_v
-  % \mid \Extension O_v
-  % \\
+  \mathit{ExtensionFunc} &\ni{}& F
+  &::= (Q[x] ~ P) ~ O
+  \mid \lambda P. O
+  \\
+  \mathit{Value} &\ni{}& V
+  &::= \dots
+  \mid \lamstar (F; B)
+  \mid \Template B
+  \mid \Extension O
+  \\
   % \mathit{NonRecTemplate} &\ni{}& B_{nr}
   % &::= O_{nr}; B_{nr}
   % \mid \Else \to M
@@ -501,10 +522,10 @@ Pattern and copattern matching:
   O\subst{\many{x}}{\many{W}}
   &(\text{if } P\subst{\many{x}}{\many{W}} &= V)
   \\
-  \Match{} P \gets W ~ O
+  \Match{} P \gets V ~ O
   &=
   \varepsilon
-  &(\text{if } P &\apart W)
+  &(\text{if } P &\apart V)
   \\[1ex]
   (\Template{} (\lambda P. \Do M); B) ~ V' ~ V
   &=
@@ -561,16 +582,24 @@ Apartness between copatterns and contexts ($Q \apart C$):
 \label{fig:source-equality}
 \end{figure}
 
+\begin{lemma}
+  For all source-level values $V$ in \cref{fig:source-equality}, there is a
+  target-level value $W$ such that $\den{V} = W$ up to the equational theory of
+  the target language in \cref{fig:target-equality}.  Additionally,
+  $T\den{B} = \lambda s. M$ and $E\den{O} = \lambda b. \lambda s. N$ are always
+  target-level values, for some $M$ and $N$.
+\end{lemma}
+
 \begin{proposition}[Soundness]
   The equational axioms given in \cref{fig:source-equality} are sound with
   respect to the translation in \cref{fig:translation},
   \begin{align*}
     M &= M' &&\implies & \den{M} &= \den{M'} \\
-    B &= B' &&\implies & T\den{B} &= T\den{B'} \\
-    O &= O' &&\implies & E\den{O} &= E\den{O'}
+    B &= B' &&\implies & T\den{B}~x &= T\den{B'}~x \\
+    O &= O' &&\implies & E\den{O}~x~y &= E\den{O'}~x~y
   \end{align*}
   up to the equational theory of the target language in
-  \cref{fig:source-equality}.
+  \cref{fig:target-equality}.
 \end{proposition}
 
 \section{Optimizing Away Administrative Reductions}
@@ -579,120 +608,80 @@ Apartness between copatterns and contexts ($Q \apart C$):
 \centering
 Translating new terms:  
 \begin{align*}
-  I\den{\lamstar B}
+  \den{\lamstar B}()
   &=
   \Rec \mathit{self} = T\den{B}(\lambda x. \mathit{self} ~ x)
   \\
-  I\den{\Template B}
+  \den{\Template B}()
   &=
-  T\den{B}()
+  \lambda s. T\den{B}(s)
   \\
-  I\den{\Extension O}
+  \den{\Extension O}()
   &=
-  E\den{O}()
+  \lambda b. \lambda s. E\den{O}(b, s)
   \\
-  I\den{M}
+  \den{M}()
   &=
   \text{by induction}
-  &\text{otherwise}
+  &(\text{otherwise})
 \end{align*}
 Translating templates:
 \begin{align*}
-  T\den{\varepsilon}(\many{V})
+  T\den{\varepsilon}(V)
   &=
-  \mathit{fail}~\many{V}
+  \mathit{fail}~V
   \\
-  T\den{O; B}(\many{V})
+  T\den{O; B}(V)
   &=
-  E\den{O}(T\den{B}, \many{V})
-  \\
-  T\den{\Continue x \to M}()
-  &=
-  \lambda x. I\den{M}
+  E\den{O}(T\den{B}, V)
   \\
   T\den{\Continue x \to M}(V)
   &=
-  I\den{M}\subst{x}{V}
+  \den{M}()\subst{x}{V}
 \end{align*}
 
 Translating copattern-matching and pattern-matching functions:
 \begin{align*}
-  E\den{(Q[x] ~ P) ~ O}(\many{V})
+  E\den{(Q[x] ~ P) ~ O}(W, V)
   &=
-  E\den{Q[x] ~ (\lambda P. O)}(\many{V})
+  E\den{Q[x] ~ (\lambda P. O)}(W, V)
   \\
-  E\den{x ~ O}()
+  E\den{x ~ O}(W, V)
   &=
-  \lambda x. E\den{O}(x)
+  E\den{O}(W, V)\subst{x}{W}
   \\
-  E\den{x ~ O}(W, \many{V})
+  E\den{\lambda P. O}(W, V)
   &=
-  E\den{O}(W, \many{V})\subst{x}{W}
-  \\
-  E\den{\lambda P. O}(\many{V})
-  &=
-  E\den{\lambda x. \Match P \gets x ~ O}(\many{V})
+  E\den{\lambda x. \Match P \gets x ~ O}(W, V)
   &(\text{if } P \notin \mathit{Variable})
 \end{align*}
 
 Translating other extensions:
 \begin{align*}
-  E\den{\varepsilon}()
+  E\den{\varepsilon}(W, V)
   &=
-  \lambda b. b
-  \\
-  E\den{\varepsilon}(W, \many{V})
-  &=
-  W(\many{V})
-  \\
-  E\den{O; O'}()
-  &=
-  E\den{O}() \comp E\den{O'}()
-  \\
-  E\den{O; O'}(W)
-  &=
-  E\den{O}() ~ E\den{O'}(W)
+  W(V)
   \\
   E\den{O; O'}(W, V)
   &=
-  (\lambda s. E\den{O}(s, V)) ~ E\den{O'}(W)
-  \\
-  E\den{\lambda x. O}()
-  &=
-  \lambda b. \lambda s. (\lambda x. E\den{O}((\lambda s'. b ~ s' ~ x), s))
-  \\
-  E\den{\lambda x. O}(W)
-  &=
-  \lambda s. (\lambda x. E\den{O}((\lambda s'. W(s', x)), s))
+  (\lambda b. E\den{O}(b, V)) ~ (\lambda s. E\den{O'}(W, s))
   \\
   E\den{\lambda x. O}(W, V)
   &=
-  \lambda x. E\den{O}((\lambda s'. W(s', x)), V)
+  \lambda x. E\den{O}((\lambda s'. W(s') ~ x), V)
   \\
-  E\den{\Match P \gets M ~ O}(\many{V})
+  E\den{\Match P \gets M ~ O}(W, V)
   &=
-  \Match I\den{M} \With
-  \set{P \to E\den{O}(\many{V}); \_ \to E\den{\varepsilon}(\many{V})}
-  \\
-  E\den{\Nest O}()
-  &=
-  \lambda b. \lambda s. \Rec s' = E\den{O}((\lambda \_. b ~ s), (\lambda x. s' ~ x))
-  \\
-  E\den{\Nest O}(W)
-  &=
-  \lambda s. \Rec s' = E\den{O}((\lambda \_. W(s)), (\lambda x. s' ~ x))
+  \Match \den{M}() \With
+  \set{P \to E\den{O}(W, V); \_ \to W(V)}
   \\
   E\den{\Nest O}(W, V)
   &=
   \Rec s' = E\den{O}((\lambda \_. W(V)), (\lambda x. s' ~ x))
   \\
-  E\den{\Try x \to B}()
+  E\den{\Try x \to B}(W, V)
   &=
-  \lambda x. T\den{B}()
-  \\
-  E\den{\Try x \to B}(W, \many{V})
-  &=
-  T\den{B}(\many{V})\subst{x}{W}
+  T\den{B}(V)\subst{x}{W}
 \end{align*}
 
 Inlining administrative $\lambda$-abstractions:
@@ -704,8 +693,7 @@ Inlining administrative $\lambda$-abstractions:
   M(\many{V})
   &=
   M ~ \many{V}
-  &
-  \text{otherwise}
+  &(\text{otherwise})
 \end{align*}
 
 \caption{Inlining version of the translation.}
@@ -716,11 +704,11 @@ Inlining administrative $\lambda$-abstractions:
   Up to the equational theory of the target language in
   \cref{fig:target-equality},
   \begin{align*}
-    I\den{M} &= \den{M}
+    \den{M}() &= \den{M}
     \\
-    T\den{B}(\many{V}) &= T\den{B} ~ \many{V}
+    \lambda s. T\den{B}(s) &= T\den{B}
     \\
-    E\den{O}(\many{V}) &= E\den{O} ~ \many{V}
+    \lambda b. \lambda s. E\den{O}(b, s) &= E\den{O}
   \end{align*}  
 \end{proposition}
 

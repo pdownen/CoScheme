@@ -142,17 +142,19 @@
 ;; Test the given boolean expression: if it is true, run the given extension, and if it is false, fall through to the next option.  To ensure a predictable evaluation order, this is defined as a macro so that the expression which returns the success extension only runs when the check is true.
 (define-syntax-rule
   (guard check ext)
-  (if check
-      ext
-      empty-extension))
+  (try next self
+       (if check
+           (apply-extension ext next self)
+           (apply-template next self))))
 
 ;; match-guard : Expr -> Pattern -> Extension -> Extension
 ;; Attempt to match the given expression against the pattern: if the match is successful, run the given extension under the pattern's bindings, and the match fails, fall through to the next option.
 (define-syntax-rule
   (match-guard expr pat ext)
-  (match expr
-    [pat ext]
-    [_ empty-extension]))
+  (try next self
+       (match expr
+         [pat (apply-extension ext next self)]
+         [_ (apply-template next self)])))
 
 ;; try-case-λ : Formals -> Extension -> Extension
 ;; Attempt to be a lambda that binds the given parameters: if the correct number of arguments are applied, run the given extension with the parameters bound to the arguments, and otherwise fall through to the next option. Note that the form (try-λ rest-id ext) accepts any number of arguments, so it always succeeds.

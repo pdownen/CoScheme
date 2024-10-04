@@ -182,7 +182,7 @@ Translating templates:
 \begin{align*}
   T\den{\varepsilon}
   &=
-  \mathit{fail}
+  \lambda s. \mathit{fail}~s
   \\
   T\den{O; B}
   &=
@@ -201,7 +201,7 @@ Translating copattern-matching and pattern-matching functions:
   \\
   E\den{x ~ O}
   &=
-  \lambda x. E\den{O} ~ x
+  \lambda b. \lambda x. E\den{O} ~ b ~ x
   \\
   E\den{\lambda P. O}
   &=
@@ -289,8 +289,9 @@ Operational axioms:
     \end{aligned}
   \end{aligned}
   &=
-  N\subst{BV(P)}{\many{W}}
-  &(\text{if } \exists \many{W},~ V &= P\subst{BV(P)}{\many{W}})
+  N\subst{\many{x}}{\many{W}}
+  &(\text{if } P\subst{\many{x}}{\many{W}} &= V)
+  % &(\text{if } \exists \many{W},~ V &= P\subst{BV(P)}{\many{W}})
   \\
   \begin{aligned}
     &\Match V \With \\
@@ -305,7 +306,8 @@ Operational axioms:
     &\Match V \With \\
     &\qquad \set{\many{P' \to N'}}
   \end{aligned}
-  &(\text{if}\!\not\exists \many{W},~ V &= P\subst{BV(P)}{\many{W}})
+  &(\text{if } P &\apart V)
+  % &(\text{if}\!\not\exists \many{W},~ V &= P\subst{BV(P)}{\many{W}})
   \\
   \Rec x = V
   &=
@@ -314,6 +316,11 @@ Operational axioms:
 
 Observational axioms:
 \begin{align*}
+  % \lambda x. (V ~ x)
+  % &=
+  % V
+  % &(\text{if } x &\notin FV(V))
+  % \\
   (\lambda x. E[x]) ~ M
   &=
   E[M]
@@ -331,6 +338,22 @@ Observational axioms:
   \end{aligned}
   &(\text{if } BV(P) \cap FV(E) = \emptyset)
 \end{align*}
+
+Apartness between patterns and values ($P \apart V$):
+\begin{gather*}
+  \infer
+  {K ~ \many{P} \apart K' ~ \many{V}}
+  {K \neq K'}
+  \qqqquad
+  \infer
+  {K ~ \many{P} \apart K ~ \many{V}}
+  {|\many{P}| \neq |\many{V}|}
+  \qqqquad
+  \infer
+  {K~P_1 \dots P_n \apart K ~ V_1 \dots V_n}
+  {1 \leq j \leq n & P_j \apart V_j}
+\end{gather*}
+
 \caption{Untyped equational axioms of the target language.}
 \label{fig:target-equality}
 \end{figure}
@@ -338,31 +361,50 @@ Observational axioms:
 \begin{figure}
 \centering
 
-\begin{align*}
-  \mathit{NonRecTemplate} &\ni{}& B_{nr}
-  &::= O_{nr}; B_{nr}
-  \mid \Else \to M
-  \\
-  \mathit{NonRecExtension} &\ni{}& O_{nr}
-  &::= \varepsilon
-  \mid O_{nr}; O'_{nr}
-  \mid Q[\_] ~ O_{nr}
-  \mid \lambda P. O_{nr}
-  \\
-  &&&\phantom{:=}
-  \mid \Match P \gets M ~ O_{nr}
-  \mid \Nest O
-  \mid \Try x \to B_{nr}
-  \\
-  \mathit{RecCxt} &\ni{}& R
-  &::= \hole
-  \mid R; O
-  \mid O; R
-  \mid Q[x] ~ R
-  \mid \lambda P. R
-  \mid \Match P \gets M ~ O
-  \mid \Try x \to R
-\end{align*}
+\begin{alignat*}{2}
+  % \mathit{TemplateValue} &\ni{}& B_v
+  % &::= \varepsilon
+  % \mid O_v; B_v
+  % \mid \Continue x \to M
+  % \\
+  % \mathit{ExtensionValue} &\ni{}& O_v
+  % &::= \varepsilon
+  % \mid O_v; O'_v
+  % \mid Q[x] ~ O
+  % \mid \lambda P. O
+  % \mid \Nest O
+  % \mid \Try x \to B
+  % \\
+  % \mathit{Value} &\ni{}& V
+  % &::= \dots
+  % \mid \lamstar B_v
+  % \mid \Template B_v
+  % \mid \Extension O_v
+  % \\
+  % \mathit{NonRecTemplate} &\ni{}& B_{nr}
+  % &::= O_{nr}; B_{nr}
+  % \mid \Else \to M
+  % \\
+  % \mathit{NonRecExtension} &\ni{}& O_{nr}
+  % &::= \varepsilon
+  % \mid O_{nr}; O'_{nr}
+  % \mid Q[\_] ~ O_{nr}
+  % \mid \lambda P. O_{nr}
+  % \\
+  % &&&\phantom{:=}
+  % \mid \Match P \gets M ~ O_{nr}
+  % \mid \Nest O
+  % \mid \Try x \to B_{nr}
+  % \\
+  % \mathit{RecCxt} &\ni{}& R
+  % &::= \hole
+  % \mid R; O
+  % \mid O; R
+  % \mid Q[x] ~ R
+  % \mid \lambda P. R
+  % \mid \Match P \gets M ~ O
+  % \mid \Try x \to R
+\end{alignat*}
 
 Identity, associativity, and annihilation laws of composition:
 \begin{align*}
@@ -413,76 +455,107 @@ Identity, associativity, and annihilation laws of composition:
 %   x ~ (O; O')
 % \end{align*}
 
-Instantiating templates, extensions, and recursive $\lamstar$:
+Instantiating templates and recursive $\lamstar$:
 \begin{align*}
-  (\Extension O) ~ V
+  % (\Extension O) ~ V
+  % &=
+  % \Template{} (O; \Continue x \to (V ~ x))
+  % \\
+  % (\Template R[Q[x] ~ O]) ~ V
+  % &=
+  % (\Template R[Q[\_] ~ O\subst{x}{V}]) ~ V
+  % \\
+  % (\Template R[\Continue x \to M]) ~ V
+  % &=
+  % (\Template R[\Else \to M\subst{x}{V}]) ~ V
+  % \\
+  % (\Template B_{nr}) ~ V
+  % &=
+  % (\Template B_{nr}) ~ W
+  % \\
+  \lamstar B
   &=
-  \Template{} (O; \Continue x \to (V ~ x))
+  (\Template B) ~ (\lambda x. (\lamstar B) ~ x)
   \\
-  (\Template R[Q[x] ~ O]) ~ V
+  (\Template O; B) ~ V
   &=
-  (\Template R[Q[\_] ~ O\subst{x}{V}]) ~ V
-  \\
-  (\Template R[\Continue x \to M]) ~ V
-  &=
-  (\Template R[\Else \to M\subst{x}{V}]) ~ V
-  \\
-  (\Template B_{nr}) ~ V
-  &=
-  (\Template B_{nr}) ~ W
+  (\Extension O) ~ (\Template B) ~ V
   \\
   (\Template \varepsilon) ~ V
   &=
   \mathit{fail}~V
   \\
-  \lamstar B
+  (\Template \Continue x \to M) ~ V
   &=
-  (\Template B) ~ (\lambda x. (\lamstar B) ~ x)
+  M\subst{x}{V}
+  \\
+  (\Extension \Try x \to B) ~ V
+  &=
+  \Template B\subst{x}{V}
 \end{align*}
 
 Pattern and copattern matching:
 \begin{align*}
-  \Match P \gets P\subst{\many{x}}{\many{V}} ~ O
+  \Match P \gets V ~ O
   &=
-  O\subst{\many{x}}{\many{V}}
+  O\subst{\many{x}}{\many{W}}
+  &(\text{if } P\subst{\many{x}}{\many{W}} &= V)
   \\
-  \Match{} (K~\many{P}) \gets (K'~\many{V}) ~ O
+  \Match{} P \gets W ~ O
   &=
   \varepsilon
-  \\
-  (\Template{} (\lambda P. \Do M); B) ~ V ~ P\subst{\many{x}}{\many{W}}
+  &(\text{if } P &\apart W)
+  \\[1ex]
+  (\Template{} (\lambda P. \Do M); B) ~ V' ~ V
   &=
   M\subst{\many{x}}{\many{W}}
+  &(\text{if } P\subst{\many{x}}{\many{W}} &= V)
   \\
-  (\Template{} (\lambda (K~\many{x}). O); B) ~ V ~ (K'~\many{V})
+  (\Template{} (\lambda P. O); B) ~ V' ~ V
   &=
-  (\Template B) ~ V ~ (K' ~ \many{V})
-  &(\text{if } K \neq K')
-  \\
-  Q[(\Template{} (Q[y] = M); B) ~ V]\subst{\many{x}}{\many{W}}
+  (\Template B) ~ V' ~ V
+  &(\text{if } P &\apart V)
+  \\[1ex]
+  C[(\Template{} (Q[y] = M); B) ~ V]
   &=
   M\subst{y}{V}\subst{\many{x}}{\many{W}}
+  &(\text{if } Q\subst{\many{x}}{\many{W}} &= C)
   \\
   C[(\Template{} (Q[y] ~ O); B) ~ V]
   &=
   C[(\Template B) ~ V]
-  &(\text{if } Q \apart C)
-  \\
-  (\Template \Continue x \to M) ~ V
+  &(\text{if } Q &\apart C)
+  \\[1ex]
+  C[\lamstar (Q[y] = M); B]
   &=
-  M\subst{x}{V}
+  \begin{aligned}[t]
+    M
+    &\subst{y}{(\lamstar (Q[y] = M); B)}
+    \\
+    &\subst{\many{x}}{\many{W}}
+  \end{aligned}
+  &(\text{if } Q\subst{\many{x}}{\many{W}} &= C)
+  \\
+  C[\lamstar (Q[y] ~ O); B]
+  &=
+  C[\lamstar B]
+  &(\text{if } Q &\apart C)
 \end{align*}
 
-Copattern context apartness ($Q \apart C$):
-\begin{align*}
+Apartness between copatterns and contexts ($Q \apart C$):
+\begin{gather*}
   \infer
-  {\hole ~ \many[i]{P_i} ~ (K~\many{P}) \apart \hole ~ \many[i]{V_i} ~ (K'~\many{W})}
-  {K \neq K' & |\many[i]{P_i}| = |\many[i]{V_i}|}
+  {\hole ~ P_1 \dots P_n \apart \hole ~ V_1 \dots V_n}
+  {P_n \apart V_n}
   \qqqquad
   \infer
   {Q ~ P \apart C}
   {Q \apart C}
-\end{align*}
+  \qqqquad
+  \infer
+  {Q \apart C ~ V}
+  {Q \apart C}
+\end{gather*}
 
 \caption{Some equalities of copattern extensions.}
 \label{fig:source-equality}

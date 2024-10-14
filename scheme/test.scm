@@ -7,7 +7,7 @@
   [(map* f xs) do ((map* f) xs)]
   [(map* f) (nest)
     (extension
-     [(go '())      do '()]
+     [(go ())       do '()]
      [(go (x . xs)) do (cons (f x) (go xs))])])
 
 (define* id*

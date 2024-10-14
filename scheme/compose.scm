@@ -184,7 +184,7 @@
 ;; Attempt to match the given expression against the pattern: if the match is successful, run the given extension under the pattern's bindings, and the match fails, fall through to the next option.
 (define-syntax try-match
   (lambda(stx)
-    (syntax-case stx (quote)
+    (syntax-case stx (quote quasiquote)
       [(try-match expr #t ext)
        #'(try-if expr ext)]
       [(try-matchexpr #f ext)
@@ -200,17 +200,20 @@
        #'(try-let ([name expr]) ext)]
       [(try-match expr (quote sexp) ext)
        #'(try-if (equal? (quote sexp) expr) ext)]
+      [(try-match expr (quasiquote qpat) ext)
+       #'(try-match-quasiquote expr qpat ext)]
       [(try-match expr () ext)
        #'(try-if (null? expr) ext)]
       [(try-match expr (pat1 . pats) ext)
-       #'(try next self
-              (let ([val expr])
-                (try-match-inline val (pat1 . pats) ext)))])))
+       #'(try-let ([val expr])
+           (try-match-inline val (pat1 . pats) ext))])))
 
 (define-syntax try-match-inline
-  (syntax-rules (quote)
+  (syntax-rules (quote quasiquote)
     [(try-match-inline val (quote sexp) ext)
      (try-if (equal? (quote sexp) val) ext)]
+    [(try-match-inline val (quasiquote qpat) ext)
+     (try-match-quasiquote val qpat ext)]
     [(try-match-inline val (pat1 . pats) ext)
      (try-if
       (pair? val)
@@ -219,6 +222,42 @@
         (try-match-inline first pat1 (try-match-inline rest pats ext))))]
     [(try-match-inline val pat ext)
      (try-match val pat ext)]))
+
+(define-syntax try-match-quasiquote
+  (lambda(stx)
+    (syntax-case stx (unquote)
+      [(try-match-quasiquote expr (unquote pat) cont ext)
+       #'(try-match-splice expr pat cont ext)]
+      [(try-match-quasiquote expr (qpat1 . qpats) cont ext)
+       #'(try-match-quasiquote expr qpat1 (() qpats cont) ext)]
+      [(try-match-quasiquote expr () cont ext)
+       #'(try-match-splice expr () cont ext)]
+      [(try-match-quasiquote expr name cont ext)
+       (identifier? #'name)
+       #'(try-match-splice expr (quote name) cont ext)]
+      [(try-match-quasiquote expr lit cont ext)
+       (let ([raw (syntax->datum #'lit)])
+         (or (number? raw)
+             (char? raw)
+             (string? raw)))
+       #'(try-match-splice expr lit cont ext)]
+      [(try-match-quasiquote expr qpat ext)
+       #'(try-match-quasiquote expr qpat () ext)])))
+
+(define-syntax try-match-splice
+  (syntax-rules (unquote)
+    [(try-match-splice expr pat ((pats ...) () cont) ext)
+     (try-match-splice expr (pats ... pat) cont ext)]
+    [(try-match-splice expr pat ((pats ...) (unquote pat-end) cont) ext)
+     (try-match-splice expr (pats ... pat . pat-end) cont ext)]
+    [(try-match-splice expr pat ((pats ...) (qpat1 . qpats) cont) ext)
+     (try-match-quasiquote expr qpat1 ((pats ... pat) qpats cont) ext)]
+    [(try-match-splice expr pat ((pats ...) dot-qpat cont) ext)
+     (try-match-quasiquote expr dot-qpat ((pats ... pat) cont) ext)]
+    [(try-match-splice expr pat ((pats ...) cont) ext)
+     (try-match-splice expr (pats ... . pat) cont ext)]
+    [(try-match-splice expr pat () ext)
+     (try-match expr pat ext)]))
 
 (define-syntax try-match*
   (syntax-rules ()

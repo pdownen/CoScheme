@@ -208,18 +208,17 @@
                 (try-match-inline val (pat1 . pats) ext)))])))
 
 (define-syntax try-match-inline
-  (lambda(stx)
-    (syntax-case stx (quote)
-      [(try-match-inline val (quote sexp) ext)
-       #'(try-if (equal? (quote sexp) val) ext)]
-      [(try-match-inline val (pat1 . pats) ext)
-       #'(try-if
-          (pair? val)
-          (try-let ([first (car val)]
-                    [rest (cdr val)])
-            (try-match-inline first pat1 (try-match-inline rest pats ext))))]
-      [(try-match-inline val pat ext)
-       #'(try-match val pat ext)])))
+  (syntax-rules (quote)
+    [(try-match-inline val (quote sexp) ext)
+     (try-if (equal? (quote sexp) val) ext)]
+    [(try-match-inline val (pat1 . pats) ext)
+     (try-if
+      (pair? val)
+      (try-let ([first (car val)]
+                [rest (cdr val)])
+        (try-match-inline first pat1 (try-match-inline rest pats ext))))]
+    [(try-match-inline val pat ext)
+     (try-match val pat ext)]))
 
 (define-syntax try-match*
   (syntax-rules ()

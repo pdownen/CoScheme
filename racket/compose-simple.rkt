@@ -37,11 +37,11 @@
 
 ;; empty-template : Template
 ;; nothing is defined
-(define (empty-template self) (error (format "comatch: no clause matching context for ~a" self)))
+(define (empty-template self) (error 'comatch "no clause matching context for ~a" self))
 
 ;; empty-object : Codata
 ;; I don't exist
-(define empty-object (λ args (error "empty-object: called with arguments ~a" args)))
+(define empty-object (λ args (error 'empty-object "called with arguments ~a" args)))
 
 ;; extend-template : Extension -> Template -> Template
 ;; add more methods to a Template, and override any duplicates, but avoid fixing its "self" to allow for future extensions

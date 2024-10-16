@@ -36,6 +36,7 @@
 \usepackage{cleveref}
 
 \usepackage{preamble}
+\usepackage{minted}
 
 % If you use the hyperref package, please uncomment the following two lines
 % to display URLs in blue roman font according to Springer's eBook style:
@@ -71,11 +72,13 @@ The abstract should briefly summarize the contents of the paper in
 %
 %
 %
-\section{Introduction}
+\section{Introduction} \label{sec-intro}
 
-\section{Key Idea}
+\input{introduction}
 
-\section{Translating Composable Copatterns}
+\section{Key Idea} \label{sec-examples}
+
+\section{Translating Composable Copatterns} \label{sec-translation}
 
 \begin{figure}
 \centering
@@ -263,9 +266,9 @@ Translating other extensions:
 \end{figure}
 
 
-\section{Macro Definition}
+\section{Macro Definition} \label{sec-macro}
 
-\section{Correctness}
+\section{Correctness} \label{sec-correctness}
 
 \begin{figure}
 \centering
@@ -610,7 +613,7 @@ Apartness between copatterns and contexts ($Q \apart C$):
   \cref{fig:target-equality}.
 \end{proposition}
 
-\section{Optimizing Away Administrative Reductions}
+\section{Optimizing Away Administrative Reductions} \label{sec-opt}
 
 \begin{figure}
 \centering
@@ -720,9 +723,9 @@ Inlining administrative $\lambda$-abstractions:
   \end{align*}  
 \end{proposition}
 
-\section{Related and Future Work}
+\section{Related and Future Work} \label{sec-future}
 
-\section{Conclusion}
+\section{Conclusion} \label{sec-conclusion}
 
 \begin{credits}
 \subsubsection{\ackname}

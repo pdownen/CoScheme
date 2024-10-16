@@ -1,0 +1,65 @@
+The use of inductive data types to represent finite data, such as lists and trees, is prevalent among functional languages.
+However, the use of its less widespread counterpart, coinductive datatypes, to characterize infinite data is still in its earlier stages.
+Codata generally enables us to encode infinite structures, such as streams and processes naturally.
+In contrast to inductive data, characterized by the use of pattern match on its constructors, coinductive data is defined by observations that declare what should happen under a specific evaluation context.
+
+Non-strict languages like Haskell blur the line between data and codata, providing tools to encode infinite data.
+For example, consider this infinite list of Fibonacci numbers:
+    \begin{minted}{haskell}
+        fib = 0 : 1 : zipWith (+) fib (tail fib)
+    \end{minted}
+This is not the case for strict languages. In those languages, we need to stray from the usual execution model and explicitly deal with the control flow.
+
+One way to construct codata is using the dual of patterns, copatterns.
+Instead of breaking down inductive data types into smaller pieces, copatterns synthesize, potentially infinite, codata from a finite sequence of observations.
+Abel et al. \cite{APTS2013C} define copatterns as a collection of pairs of experiments and their outcome.
+The experiments mentioned earlier describe a specific evaluation context that can be substituted by its outcome when comatched.
+Copatterns are highly composable and can be nested and mixed with regular patterns.
+Even though copatterns restore the previously broken symmetry between data and codata, their adoption is not universal.
+To illustrate, Agda provides native support to it; OCaml has an outdated fork that extends the base language with copatterns.
+This is why we have chosen Scheme, a high-level functional untyped language, as our implementation language.
+
+\begin{figure}
+    \begin{minted}{racket}
+    (define* [(fib 'head) 0]
+             [((fib 'tail) 'head) 1]
+             [((fib 'tail) 'tail) (zipWith + fib (fib 'tail))])
+    \end{minted}
+    \caption{Fibonacci stream.}
+    \label{fig:ex-fib}
+\end{figure}
+
+By bringing copatterns to this new class of languages, we can take advantage of its quirks to define a highly composable representation of copatterns.
+This trait can help with the expression problem \cite{ExpressionProblem}.
+The expression problem is interested in finding an abstraction that enables the extension of both the behavior and representation of data types without needing a full recompilation.
+% ??
+\begin{figure}
+    \begin{minted}{racket}
+        (define-object (eval-add <: meta)
+            [(self 'eval (list 'add l r)) =
+                (+ (self 'eval l) (self 'eval r))])
+
+        (define eval-mul
+           (object
+                [(self 'eval (list 'mul l r)) =
+                    (* (self 'eval l) (self 'eval r))]))
+      
+        (define eval-arith
+            (eval-num 'compose eval-add eval-mul))
+    \end{minted}
+    \caption{Arithmetic evaluator defined using composition.}
+    \label{fig:ex-arith-eval}
+\end{figure}
+
+Our primary contributions are:
+\begin{itemize}
+    \item An encoding of copatterns in Scheme and Racket with support to equational reasoning.
+    We provide three flavors for our implementation: A R6RS version where we implement our own pattern matching, A naive Racket version, and a cleaver Racket version where we optimize the number of administrative reductions;
+    \item A core calculus with nested copatterns, self-referential objects, recursion templates, and composable extensions, which is a conservative extension of the $\lambda$-calculus with pattern-matching and recursion;
+\end{itemize} 
+
+The remainder of the article has the following structure: First, we explain and provide a deeper insight into how our implementation works, followed by key examples (Section \ref{sec-examples}).
+Second, we specify the translation of our source language, with high-level features such as nested copatterns and self-referential objects, into a core target $\lambda$-calculus (Section \ref{sec-translation}).
+Third, we scrutinize our implementation, comparing each provided flavor (Section \ref{sec-macro}).
+Fourth, we present the properties of our system (Section \ref{sec-correctness}).
+Last, we explain the details of our optimized racket implementation (Section \ref{sec-opt}).

@@ -49,9 +49,9 @@ This is why we have chosen Scheme, a high-level functional untyped language, as 
 
 \begin{figure}
     \begin{minted}{racket}
-    (define* [(fib 'head) 0]
-             [((fib 'tail) 'head) 1]
-             [((fib 'tail) 'tail) (zipWith + fib (fib 'tail))])
+    (define* [ (fib 'head)        = 0]
+             [((fib 'tail) 'head) = 1]
+             [((fib 'tail) 'tail) = (zipWith + fib (fib 'tail))])
     \end{minted}
     \caption{Fibonacci stream.}
     \label{fig:ex-fib}

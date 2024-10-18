@@ -1,3 +1,31 @@
+For decades, functional programmers have had a reliable and versatile method for representing tree-shaped structures: inductive data types.
+These can model data of any size --- for example, lists of an arbitrary length --- but each instance must be \emph{finite}.
+Infinite information --- like a stream of input that can go on forever --- does not fit into an inductive type, so programmer must use some other representation to model potentially infinite objects.
+
+Fortunately, the inductive data types used by functional programmers every day have a polar opposite: \emph{coinductive codata types}.
+The \emph{coinductive} descriptor signals that values of the type may contain infinite information.
+Haskell programmers are already well-versed in these types, since non-strict languages blur the line between induction and coinduction.
+For example, consider the usual example of the infinite list of Fibonacci numbers in Haskell:
+\begin{minted}{haskell}
+fibs = 0 : 1 : zipWith (+) fib (tail fib)
+\end{minted}
+\hs|fibs| cannot be fully evaluated because it has no base case --- it would eventually expand out to \hs|0 : 1 : 1 : 2 : 3 : 5 : 8 : ...| forever --- but this is no problem in a non-strict language that only evaluates as much as needed.
+
+In contrast, \emph{codata} describes types that are defined by primitive \emph{destructors} that \emph{use} values of the codata type, as opposed to the primitive constructors that define how to build values of a data type.
+For example, the usual \agda|Stream a| codata type of infinite \agda|a|s is defined by two destructors: \agda|Head : Stream a -> a| extracts the first element and \agda|Tail : Stream a -> Stream a| discards the first element and returns the rest.
+To define new streams, we can describe how they react to different combinations of \agda|Head| and \agda|Tail| destructions using \emph{copatterns} \cite{APTS2013C}.  The copattern-based definition of the \agda|fibs| function above is:
+\begin{minted}{agda}
+fibs : Stream Nat
+Head fibs = 0
+Head (Tail fibs) = 1
+Tail (Tail fibs) = zipWith _+_ fibs (Tail fibs)
+\end{minted}
+Unfortunately, Agda rejects this definition.
+
+\vspace{2em}
+\hrule
+\vspace{2em}
+
 The use of inductive data types to represent finite data, such as lists and trees, is prevalent among functional languages.
 However, the use of its less widespread counterpart, coinductive datatypes, to characterize infinite data is still in its earlier stages.
 Codata generally enables us to encode infinite structures, such as streams and processes naturally.
@@ -63,3 +91,10 @@ Second, we specify the translation of our source language, with high-level featu
 Third, we scrutinize our implementation, comparing each provided flavor (Section \ref{sec-macro}).
 Fourth, we present the properties of our system (Section \ref{sec-correctness}).
 Last, we explain the details of our optimized racket implementation (Section \ref{sec-opt}).
+
+
+
+%%% Local Variables:
+%%% mode: LaTeX
+%%% TeX-master: "coscheme"
+%%% End:

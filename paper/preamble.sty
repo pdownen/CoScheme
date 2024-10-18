@@ -1,6 +1,10 @@
 \ProvidesPackage{preamble}
 \RequirePackage{xargs}
 
+%% Annotations
+
+\newcommand{\paul}[1]{{\color{purple} \emph{Paul}: #1}}
+
 %% Multi-line math spacing
 
 \newcommand{\spaceheight}{0pt}
@@ -262,3 +266,12 @@
 \setlength{\fboxsep}{1pt}\kern-1pt%
 \colorbox{#1}{#2}%
 }}
+
+
+%% Minted environments
+
+\newmintinline[scm]{scheme}{}
+
+\newmintinline[hs]{haskell}{}
+
+\newmintinline[agda]{agda}{}

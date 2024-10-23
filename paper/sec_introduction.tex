@@ -1,6 +1,6 @@
 For decades, functional programmers have had a reliable and versatile method for representing tree-shaped structures: inductive data types.
 These can model data of any size --- for example, lists of an arbitrary length --- but each instance must be \emph{finite}.
-Infinite information --- like a stream of input that can go on forever --- does not fit into an inductive type, so programmer must use some other representation to model potentially infinite objects.
+Infinite information --- like a stream of input that can go on forever --- does not fit into an inductive type, so the programmer must use some other representation to model potentially infinite objects.
 
 Fortunately, the inductive data types used by functional programmers every day have a polar opposite: \emph{coinductive codata types}.
 The \emph{coinductive} descriptor signals that values of the type may contain infinite information.
@@ -12,7 +12,7 @@ fibs = 0 : 1 : zipWith (+) fib (tail fib)
 \hs|fibs| cannot be fully evaluated because it has no base case --- it would eventually expand out to \hs|0 : 1 : 1 : 2 : 3 : 5 : 8 : ...| forever --- but this is no problem in a non-strict language that only evaluates as much as needed.
 
 In contrast, \emph{codata} describes types that are defined by primitive \emph{destructors} that \emph{use} values of the codata type, as opposed to the primitive constructors that define how to build values of a data type.
-For example, the usual \agda|Stream a| codata type of infinite \agda|a|s is defined by two destructors: \agda|Head : Stream a -> a| extracts the first element and \agda|Tail : Stream a -> Stream a| discards the first element and returns the rest.
+For example, the usual \agda|Stream a| codata type of infinite \agda|a|'s is defined by two destructors: \agda|Head : Stream a -> a| extracts the first element and \agda|Tail : Stream a -> Stream a| discards the first element and returns the rest.
 To define new streams, we can describe how they react to different combinations of \agda|Head| and \agda|Tail| destructions using \emph{copatterns} \cite{APTS2013C}.  The copattern-based definition of the \agda|fibs| function above is:
 \begin{minted}{agda}
 fibs : Stream Nat
@@ -20,78 +20,32 @@ Head fibs = 0
 Head (Tail fibs) = 1
 Tail (Tail fibs) = zipWith _+_ fibs (Tail fibs)
 \end{minted}
-Unfortunately, Agda rejects this definition.
+\adriano{This example is funny, it works but emits 3 warnings, two related to the termination checker and one suggestion to turn on a flag (--guardedness). However, if you turn this flag on those warnings become errors. After typesetting the proofs, I will try to look for more failing examples in Agda.}
+Even though copatterns provide an elegant way to define codata, their adoption is not universal.
+To illustrate, this previous definition does not fully satisfy Agda's termination checker.
+Although we can force Agda to accept this instance, not every copattern is valid due to technical limitations.
+OCaml is another language that supports copatterns.
+However, the fork that added this feature was never merged and stopped being updated to newer OCaml versions.
 
-\vspace{2em}
-\hrule
-\vspace{2em}
+In this scenario, we have chosen Scheme as our implementation language.
+Customizability is one of the key features of lisps dialects, and by taking leverage on that, we can produce a new solution to the expression problem \cite{ExpressionProblem}.
+Therefore, by choosing a well-established dialect, we produce a standalone, composable, and reusable implementation of copatterns for a new audience.
+\adriano{Should we talk about the expression problem here in the introduction?}
 
-The use of inductive data types to represent finite data, such as lists and trees, is prevalent among functional languages.
-However, the use of its less widespread counterpart, coinductive datatypes, to characterize infinite data is still in its earlier stages.
-Codata generally enables us to encode infinite structures, such as streams and processes naturally.
-In contrast to inductive data, characterized by the use of pattern match on its constructors, coinductive data is defined by observations that declare what should happen under a specific evaluation context.
-
-Non-strict languages like Haskell blur the line between data and codata, providing tools to encode infinite data.
-For example, consider this infinite list of Fibonacci numbers:
-    \begin{minted}{haskell}
-        fib = 0 : 1 : zipWith (+) fib (tail fib)
-    \end{minted}
-This is not the case for strict languages. In those languages, we need to stray from the usual execution model and explicitly deal with the control flow.
-
-One way to construct codata is using the dual of patterns, copatterns.
-Instead of breaking down inductive data types into smaller pieces, copatterns synthesize, potentially infinite, codata from a finite sequence of observations.
-Abel et al. \cite{APTS2013C} define copatterns as a collection of pairs of experiments and their outcome.
-The experiments mentioned earlier describe a specific evaluation context that can be substituted by its outcome when comatched.
-Copatterns are highly composable and can be nested and mixed with regular patterns.
-Even though copatterns restore the previously broken symmetry between data and codata, their adoption is not universal.
-To illustrate, Agda provides native support to it; OCaml has an outdated fork that extends the base language with copatterns.
-This is why we have chosen Scheme, a high-level functional untyped language, as our implementation language.
-
-\begin{figure}
-    \begin{minted}{racket}
-    (define* [ (fibs 'head)        = 0]
-             [((fibs 'tail) 'head) = 1]
-             [((fibs 'tail) 'tail) = (zipWith + fibs (fibs 'tail))])
-    \end{minted}
-    \caption{Fibonacci stream.}
-    \label{fig:ex-fib}
-\end{figure}
-
-By bringing copatterns to this new class of languages, we can take advantage of its quirks to define a highly composable representation of copatterns.
-This trait can help with the expression problem \cite{ExpressionProblem}.
-The expression problem is interested in finding an abstraction that enables the extension of both the behavior and representation of data types without needing a full recompilation.
-% ??
-\begin{figure}
-    \begin{minted}{racket}
-        (define-object (eval-add <: meta)
-            [(self 'eval (list 'add l r)) =
-                (+ (self 'eval l) (self 'eval r))])
-
-        (define eval-mul
-           (object
-                [(self 'eval (list 'mul l r)) =
-                    (* (self 'eval l) (self 'eval r))]))
-      
-        (define eval-arith
-            (eval-num 'compose eval-add eval-mul))
-    \end{minted}
-    \caption{Arithmetic evaluator defined using composition.}
-    \label{fig:ex-arith-eval}
-\end{figure}
 
 Our primary contributions are:
 \begin{itemize}
-    \item An encoding of copatterns in Scheme and Racket with support to equational reasoning.
+    \item An encoding of copatterns in Scheme and Racket.
+    Our abstraction provides a syntax that enables equational reasoning and emphasizes both the vertical and horizontal composition of copatterns.
     We provide three flavors for our implementation: A R6RS version where we implement our own pattern matching, A naive Racket version, and a cleaver Racket version where we optimize the number of administrative reductions;
-    \item A core calculus with nested copatterns, self-referential objects, recursion templates, and composable extensions, which is a conservative extension of the $\lambda$-calculus with pattern-matching and recursion;
+    \item A core calculus with high-level features such as nested copatterns, self-referential objects, recursion templates, and composable extensions.
+    This calculus depicts our implementation, and we prove that it is a conservative extension of the $\lambda$-calculus with pattern-matching and recursion;
 \end{itemize} 
-
-The remainder of the article has the following structure: First, we explain and provide a deeper insight into how our implementation works, followed by key examples (Section \ref{sec-examples}).
-Second, we specify the translation of our source language, with high-level features such as nested copatterns and self-referential objects, into a core target $\lambda$-calculus (Section \ref{sec-translation}).
+The remainder of the article has the following structure: First, we introduce our implementation by explaining meaningful examples (Section \ref{sec-examples}).
+Second, we specify a core language with high-level features representing our implementation. Then we describe a translation into a target $\lambda$-calculus (Section \ref{sec-translation}).
 Third, we scrutinize our implementation, comparing each provided flavor (Section \ref{sec-macro}).
 Fourth, we present the properties of our system (Section \ref{sec-correctness}).
 Last, we explain the details of our optimized racket implementation (Section \ref{sec-opt}).
-
 
 
 %%% Local Variables:

@@ -2,7 +2,7 @@
 
 (provide define* λ* override-λ* define-object object meta
          extension apply-extension template apply-template
-         chain nest comatch try always-do guard match-guard
+         chain nest comatch try always-do try-if try-match
          try-λ try-case-λ try-match-λ try-apply-remember try-apply-forget
          empty-extension empty-template choose commit merge
          introspect plug closed-cases selfless with-self self-modify)
@@ -161,40 +161,40 @@
   expr)
 
 
-;; guard : Bool -> Extension -> Extension
+;; try-if : Bool -> Extension -> Extension
 ;; Test the given boolean expression: if it is true, run the given extension, and if it is false, fall through to the next option.  To ensure a predictable evaluation order, this is defined as a macro so that the expression which returns the success extension only runs when the check is true.
 (define-syntax-rule
-  (guard check ext)
+  (try-if check ext)
   (if check
       ext
       empty-extension))
 
-(define-syntax guard-inline
+(define-syntax try-if-inline
   (syntax-rules ()
-    [(guard-inline (next self) check ext)
+    [(try-if-inline (next self) check ext)
      (if check
          (apply-extension-inline ext next self)
          (apply-template-inline next self))]
-    [(guard-inline (next) check ext)
+    [(try-if-inline (next) check ext)
      (if check
          (apply-extension-inline ext next)
          next)]))
 
-;; match-guard : Expr -> Pattern -> Extension -> Extension
+;; try-match : Expr -> Pattern -> Extension -> Extension
 ;; Attempt to match the given expression against the pattern: if the match is successful, run the given extension under the pattern's bindings, and the match fails, fall through to the next option.
 (define-syntax-rule
-  (match-guard expr pat ext)
+  (try-match expr pat ext)
   (match expr
     [pat ext]
     [_ empty-extension]))
 
-(define-syntax match-guard-inline
+(define-syntax try-match-inline
   (syntax-rules ()
-    [(match-guard-inline (next self) expr pat ext)
+    [(try-match-inline (next self) expr pat ext)
      (match expr
        [pat (apply-extension-inline ext next self)]
        [_ (apply-template-inline next self)])]
-    [(match-guard-inline (next) expr pat ext)
+    [(try-match-inline (next) expr pat ext)
      (match expr
        [pat (apply-extension-inline ext next)]
        [_ next])]))
@@ -437,8 +437,8 @@
         [list #'try-λ       one-or-two? #'try-λ-inline]
         [list #'try-case-λ  one-or-two? #'try-case-λ-inline]
         [list #'try-match-λ one-or-two? #'try-match-λ-inline]
-        [list #'guard       one-or-two? #'guard-inline]
-        [list #'match-guard one-or-two? #'match-guard-inline]))
+        [list #'try-if      one-or-two? #'try-if-inline]
+        [list #'try-match   one-or-two? #'try-match-inline]))
 
 (define-syntax (apply-extension-inline stx)
   (syntax-case stx (λ)

@@ -200,14 +200,14 @@
   [(eval 'eval (list 'add l r))
    = (eval 'add (eval 'eval l) (eval 'eval r))]
   [(eval 'add x y)
-   (guard (and (number? x) (number? y)))
+   (try-if (and (number? x) (number? y)))
    = (+ x y)])
 
 (define-object eval-mul-safe
   [(eval 'eval (list 'mul l r))
    = (eval 'mul (eval 'eval l) (eval 'eval r))]
   [(eval 'mul x y)
-   (guard (and (number? x) (number? y)))
+   (try-if (and (number? x) (number? y)))
    = (* x y)])
 
 (define eval-arith-safe
@@ -222,15 +222,15 @@
   (or (equal? s 'add) (equal? s 'mul)))
 
 (define-object reform-operations
-  [(reform op l r) (guard (and (operation? op) (number? l))) = (reform op (list 'num l) r)]
-  [(reform op l r) (guard (and (operation? op) (number? r))) = (reform op l (list 'num r))]
-  [(reform op l r) (guard (operation? op))                   = (list op l r)])
+  [(reform op l r) (try-if (and (operation? op) (number? l))) = (reform op (list 'num l) r)]
+  [(reform op l r) (try-if (and (operation? op) (number? r))) = (reform op l (list 'num r))]
+  [(reform op l r) (try-if (operation? op))                   = (list op l r)])
 
 (define-object reform-operations*
-  [(reform op l r) (guard (operation? op))
+  [(reform op l r) (try-if (operation? op))
                    (extension
-                    [_ (guard (number? l)) = (reform op (list 'num l) r)]
-                    [_ (guard (number? r)) = (reform op l (list 'num r))]
+                    [_ (try-if (number? l)) = (reform op (list 'num l) r)]
+                    [_ (try-if (number? r)) = (reform op l (list 'num r))]
                     [_                     = (list op l r)])])
 
 (define constant-fold

@@ -136,6 +136,12 @@
 
 \newcommand{\ccomment}[1]{\text{\it -{}- #1}}
 
+%% Scheme syntax
+
+\newcommand{\q}{\mathtt{'\!}}
+\newcommand{\qq}{\mathtt{`\!}}
+\newcommand{\splice}{\mathtt{,\!}}
+
 %% Join points
 
 \let\join\Join
@@ -272,6 +278,8 @@
 %% Minted environments
 
 \newmintinline[scm]{scheme}{}
+
+\newmintinline[rkt]{racket}{}
 
 \newmintinline[hs]{haskell}{}
 

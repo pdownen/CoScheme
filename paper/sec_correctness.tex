@@ -1,0 +1,369 @@
+\begin{figure}
+\centering
+  
+\begin{alignat*}{2}
+  \mathit{Value} &\ni{}& V, W
+  &::= x
+  \mid \lambda x. M
+  \mid \Null
+  \mid \Cons V \, W
+  \mid \q{x}
+  \\
+  \mathit{EvalCxt} &\ni{}& E
+  &::= \hole
+  \mid E ~ M
+  \mid V ~ E
+  \mid \Match E \With \set{\many{P \to N}}
+  \mid \Rec x = E
+\end{alignat*}
+
+Operational axioms:
+\begin{align*}
+  (\lambda x. M) ~ V
+  &=
+  M\subst{x}{V}
+  % \\
+  % \begin{aligned}
+  %   &\Match V \With \\
+  %   &\qquad\set{\many[i]{P_i \to N_i}}
+  % \end{aligned}
+  % &=
+  % N_k\subst{BV(P_k)}{\many{W}}
+  % &
+  % \begin{aligned}
+  %   (&\text{if } && V = P_k\subst{BV(P_k)}{\many{W}} \\
+  %   &\text{and } &&\forall 1 \leq j < k, \\
+  %   &&&\not\exists \many{W'}, V = P_j\subst{BV(P_j)}{\many{W'}})
+  % \end{aligned}
+  \\
+  \begin{aligned}
+    &\Match V \With \\
+    &\qquad
+    \begin{aligned}[t]
+    \{~ &P \to N; \\
+    &\many{P' \to N'}~\}
+    \end{aligned}
+  \end{aligned}
+  &=
+  N\subst{\many{x}}{\many{W}}
+  &(\text{if } P\subst{\many{x}}{\many{W}} &= V)
+  % &(\text{if } \exists \many{W},~ V &= P\subst{BV(P)}{\many{W}})
+  \\
+  \begin{aligned}
+    &\Match V \With \\
+    &\qquad
+    \begin{aligned}[t]
+    \{~ &P \to N; \\
+    &\many{P' \to N'}~\}
+    \end{aligned}
+  \end{aligned}
+  &=
+  \begin{aligned}
+    &\Match V \With \\
+    &\qquad \set{\many{P' \to N'}}
+  \end{aligned}
+  &(\text{if } P &\apart V)
+  % &(\text{if}\!\not\exists \many{W},~ V &= P\subst{BV(P)}{\many{W}})
+  \\
+  \Rec x = V
+  &=
+  V\subst{x}{(\Rec x = V)}
+\end{align*}
+
+% Observational axioms:
+% \begin{align*}
+%   % \lambda x. (V ~ x)
+%   % &=
+%   % V
+%   % &(\text{if } x &\notin FV(V))
+%   % \\
+%   (\lambda x. E[x]) ~ M
+%   &=
+%   E[M]
+%   \\
+%   E\left[
+%     \begin{aligned}
+%       &\Match M \With \\
+%       &\qquad\set{\many{P \to N}}
+%     \end{aligned}
+%   \right]
+%   &=
+%   \begin{aligned}
+%     &\Match M \With \\
+%     &\qquad \set{\many{P \to E[N]}}
+%   \end{aligned}
+%   &(\text{if } BV(P) \cap FV(E) = \emptyset)
+% \end{align*}
+
+Apartness between patterns and values ($P \apart V$):
+\begin{gather*}
+  \infer
+  {\q{x} \apart V}
+  {V \notin \mathit{Variable} \cup \set{\q{x}}}
+  \qquad
+  \infer
+  {\Null \apart V}
+  {V \notin \mathit{Variable} \cup \set{\Null}}
+  \\[1ex]
+  \infer
+  {\Cons P ~ P' \apart V}
+  {V \notin \mathit{Variable} \cup \set{\Cons W ~ W' \mid W, W' \in \mathit{Value}}}
+  \\[1ex]
+  \infer
+  {\Cons P ~ P' \apart \Cons W ~ W'}
+  {P \apart W}
+  \qquad
+  \infer
+  {\Cons P ~ P' \apart \Cons W ~ W'}
+  {P' \apart W'}
+  % \infer
+  % {K ~ P_1 \dots P_n \apart V}
+  % {V \neq K ~ W_1 \dots W_n}
+  % \qqqquad
+  % \infer
+  % {K~P_1 \dots P_n \apart K ~ V_1 \dots V_n}
+  % {1 \leq j \leq n & P_j \apart V_j}
+\end{gather*}
+
+\caption{Untyped equational axioms of the target language.}
+\label{fig:target-equality}
+\end{figure}
+
+\begin{figure}
+\centering
+
+\begin{alignat*}{2}
+  % \mathit{TemplateValue} &\ni{}& B_v
+  % &::= \varepsilon
+  % \mid O_v; B_v
+  % \mid \Continue x \to V
+  % \\
+  % \mathit{ExtensionValue} &\ni{}& O_v
+  % &::= O_f
+  % \mid O_f; O_v
+  % \mid \Nest O_v
+  % \mid \Try x \to B_v
+  % \\
+  \mathit{ExtensionFunc} &\ni{}& F
+  &::= Q[x ~ P] ~ O
+  \mid \lambda P. O
+  \\
+  \mathit{Value} &\ni{}& V
+  &::= \dots
+  \mid \lamstar (F; B)
+  \mid \Template B
+  \mid \Extension O
+  \\
+  % \mathit{NonRecTemplate} &\ni{}& B_{nr}
+  % &::= O_{nr}; B_{nr}
+  % \mid \Else \to M
+  % \\
+  % \mathit{NonRecExtension} &\ni{}& O_{nr}
+  % &::= \varepsilon
+  % \mid O_{nr}; O'_{nr}
+  % \mid Q[\_] ~ O_{nr}
+  % \mid \lambda P. O_{nr}
+  % \\
+  % &&&\phantom{:=}
+  % \mid \Match P \gets M ~ O_{nr}
+  % \mid \Nest O
+  % \mid \Try x \to B_{nr}
+  % \\
+  % \mathit{RecCxt} &\ni{}& R
+  % &::= \hole
+  % \mid R; O
+  % \mid O; R
+  % \mid Q[x] ~ R
+  % \mid \lambda P. R
+  % \mid \Match P \gets M ~ O
+  % \mid \Try x \to R
+\end{alignat*}
+
+Identity, associativity, and annihilation laws of composition:
+\begin{align*}
+  \varepsilon; O &= O % = O; \varepsilon
+  &
+  (O_1; O_2); O_3 &= O_1; (O_2; O_3)
+  &
+  \Do M; O &= \Do M
+  \\
+  \varepsilon; B &= B
+  &
+  (O_1; O_2); B &= O_1; (O_2; B)
+  &
+  \Do M; B &= \Else M
+\end{align*}
+
+% Decomposing patterns and copatterns:
+% \begin{align*}
+%   (Q[x] ~ P) ~ O
+%   &=
+%   Q[x] ~ (\lambda P. O)
+%   &
+%   \_ ~ O
+%   &=
+%   O
+%   &
+%   \lambda P. O
+%   &=
+%   \lambda x. (\Match P \gets x ~ O)
+% \end{align*}
+
+% Factoring out recursion ($x \neq y$ and $x \notin BV(P)$):
+% \begin{align*}
+%   \lambda y. (x ~ O)
+%   &=
+%   x ~ (\lambda y. O)
+%   &
+%   \Match P \gets M ~ (x ~ O)
+%   &=
+%   x ~ (\Match P \gets M ~ O)
+%   \\
+%   (x ~ O); O'
+%   &=
+%   x ~ (O; O')
+%   &
+%   O; (x ~ O')
+%   &=
+%   x ~ (O; O')
+% \end{align*}
+
+Instantiating templates and recursive $\lamstar$:
+\begin{align*}
+  % (\Extension O) ~ V
+  % &=
+  % \Template{} (O; \Continue x \to (V ~ x))
+  % \\
+  % (\Template R[Q[x] ~ O]) ~ V
+  % &=
+  % (\Template R[Q[\_] ~ O\subst{x}{V}]) ~ V
+  % \\
+  % (\Template R[\Continue x \to M]) ~ V
+  % &=
+  % (\Template R[\Else \to M\subst{x}{V}]) ~ V
+  % \\
+  % (\Template B_{nr}) ~ V
+  % &=
+  % (\Template B_{nr}) ~ W
+  % \\
+  \lamstar (F; B)
+  &=
+  (\Template F; B) ~ (\lamstar (F; B))
+  \\
+  (\Template O; B) ~ V
+  &=
+  (\Extension O) ~ (\Template B) ~ V
+  \\
+  (\Template \varepsilon) ~ V
+  &=
+  \mathit{fail}~V
+  \\
+  (\Template \Continue x \to M) ~ V
+  &=
+  M\subst{x}{V}
+  \\
+  (\Extension \Try x \to B) ~ V
+  &=
+  \Template B\subst{x}{V}
+\end{align*}
+
+Pattern and copattern matching:
+\begin{align*}
+  \Match P \gets V ~ O
+  &=
+  O\subst{\many{x}}{\many{W}}
+  &(\text{if } P\subst{\many{x}}{\many{W}} &= V)
+  \\
+  \Match{} P \gets V ~ O
+  &=
+  \varepsilon
+  &(\text{if } P &\apart V)
+  \\[1ex]
+  (\Template{} (\lambda P. \Do M); B) ~ V' ~ V
+  &=
+  M\subst{\many{x}}{\many{W}}
+  &(\text{if } P\subst{\many{x}}{\many{W}} &= V)
+  \\
+  (\Template{} (\lambda P. O); B) ~ V' ~ V
+  &=
+  (\Template B) ~ V' ~ V
+  &(\text{if } P &\apart V)
+  \\[1ex]
+  C[(\Template{} (Q[y] = M); B) ~ V]
+  &=
+  M\subst{y}{V}\subst{\many{x}}{\many{W}}
+  &(\text{if } Q\subst{\many{x}}{\many{W}} &= C)
+  \\
+  C[(\Template{} (Q[y] ~ O); B) ~ V]
+  &=
+  C[(\Template B) ~ V]
+  &(\text{if } Q &\apart C)
+  \\[1ex]
+  C[\lamstar (Q[y] = M); B]
+  &=
+  \begin{aligned}[t]
+    M
+    &\subst{y}{(\lamstar (Q[y] = M); B)}
+    \\
+    &\subst{\many{x}}{\many{W}}
+  \end{aligned}
+  &(\text{if } Q\subst{\many{x}}{\many{W}} &= C)
+  \\
+  C[\lamstar (Q[y] ~ O); B]
+  &=
+  C[\lamstar B]
+  &(\text{if } Q &\apart C)
+\end{align*}
+
+Apartness between copatterns and contexts ($Q \apart C$):
+\begin{gather*}
+  \infer
+  {\hole ~ P_1 \dots P_n \apart \hole ~ V_1 \dots V_n}
+  {P_n \apart V_n}
+  \qqqquad
+  \infer
+  {Q ~ P \apart C}
+  {Q \apart C}
+  \qqqquad
+  \infer
+  {Q \apart C ~ V}
+  {Q \apart C}
+\end{gather*}
+
+\caption{Some equalities of copattern extensions.}
+\label{fig:source-equality}
+\end{figure}
+
+\begin{lemma}
+  The following instances of translation are all values up to the equational
+  theory of the target language in \cref{fig:target-equality}:
+  \begin{enumerate}[(a)]
+  \item $T\den{B} = \lambda s. M$ for some term $M$,
+  \item $E\den{O} = \lambda b. \lambda s. M$ for some term $M$,
+  \item $E\den{F} = \lambda b. \lambda s. \lambda x. M$ for some term $M$,
+  \item $\den{V} = W$ for some value $W$.
+  \end{enumerate}
+\end{lemma}
+
+\begin{proposition}[Conservative Extension]
+  If $M = N$ in the equational theory of the target
+  (\cref{fig:target-equality}), then so too does $\den{M} = \den{N}$.
+\end{proposition}
+
+\begin{proposition}[Soundness]
+  The equational axioms given in \cref{fig:source-equality} are sound with
+  respect to the translation in \cref{fig:translation},
+  \begin{align*}
+    M &= M' &&\implies & \den{M} &= \den{M'} \\
+    B &= B' &&\implies & T\den{B} &= T\den{B'} \\
+    O &= O' &&\implies & E\den{O} &= E\den{O'}
+  \end{align*}
+  up to the equational theory of the target language in
+  \cref{fig:target-equality}.
+\end{proposition}
+
+
+%%% Local Variables:
+%%% mode: LaTeX
+%%% TeX-master: "coscheme"
+%%% End:

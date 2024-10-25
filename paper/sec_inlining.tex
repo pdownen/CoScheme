@@ -1,0 +1,113 @@
+\begin{figure}
+\centering
+Translating new terms:  
+\begin{align*}
+  \den{\lamstar B}()
+  &=
+  \Rec \mathit{self} = T\den{B}(\lambda x. \mathit{self} ~ x)
+  \\
+  \den{\Template B}()
+  &=
+  \lambda s. T\den{B}(s)
+  \\
+  \den{\Extension O}()
+  &=
+  \lambda b. \lambda s. E\den{O}(b, s)
+  \\
+  \den{M}()
+  &=
+  \text{by induction}
+  &(\text{otherwise})
+\end{align*}
+Translating templates:
+\begin{align*}
+  T\den{\varepsilon}(V)
+  &=
+  \mathit{fail}~V
+  \\
+  T\den{O; B}(V)
+  &=
+  (\lambda b. E\den{O}(b, V)) ~ (\lambda s. T\den{B}(s))
+  \\
+  T\den{\Continue x \to M}(V)
+  &=
+  \den{M}()\subst{x}{V}
+\end{align*}
+
+Translating copattern-matching and pattern-matching functions:
+\begin{align*}
+  E\den{(Q[x] ~ P) ~ O}(W, V)
+  &=
+  E\den{Q[x] ~ (\lambda P. O)}(W, V)
+  \\
+  E\den{x ~ O}(W, V)
+  &=
+  E\den{O}(W, V)\subst{x}{W}
+  \\
+  E\den{\lambda P. O}(W, V)
+  &=
+  E\den{\lambda x. \Match P \gets x ~ O}(W, V)
+  &(\text{if } P \notin \mathit{Variable})
+\end{align*}
+
+Translating other extensions:
+\begin{align*}
+  E\den{\varepsilon}(W, V)
+  &=
+  W(V)
+  \\
+  E\den{O; O'}(W, V)
+  &=
+  (\lambda b. E\den{O}(b, V)) ~ (\lambda s. E\den{O'}(W, s))
+  \\
+  E\den{\lambda x. O}(W, V)
+  &=
+  \lambda x. E\den{O}((\lambda s'. W(s') ~ x), V)
+  \\
+  E\den{\Match P \gets M ~ O}(W, V)
+  &=
+  \Match \den{M}() \With
+  \set{P \to E\den{O}(W, V); \_ \to W(V)}
+  \\
+  E\den{\Nest O}(W, V)
+  &=
+  \Rec s' = E\den{O}((\lambda \_. W(V)), (\lambda x. s' ~ x))
+  \\
+  E\den{\Try x \to B}(W, V)
+  &=
+  T\den{B}(V)\subst{x}{W}
+\end{align*}
+
+Inlining administrative $\lambda$-abstractions:
+\begin{align*}
+  (\lambda x. M)(W, \many{V})
+  &=
+  M(\many{V})\subst{x}{W}
+  \\
+  M(\many{V})
+  &=
+  M ~ \many{V}
+  &(\text{otherwise})
+\end{align*}
+
+\caption{Inlining version of the translation.}
+\label{fig:inline-translation}
+\end{figure}
+
+\begin{proposition}
+  Up to the equational theory of the target language in
+  \cref{fig:target-equality},
+  \begin{align*}
+    \den{M}() &= \den{M}
+    \\
+    \lambda s. T\den{B}(s) &= T\den{B}
+    \\
+    \lambda b. \lambda s. E\den{O}(b, s) &= E\den{O}
+  \end{align*}  
+\end{proposition}
+
+
+%%% Local Variables:
+%%% mode: LaTeX
+%%% TeX-master: "coscheme"
+%%% End:

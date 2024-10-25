@@ -98,7 +98,9 @@ The abstract should briefly summarize the contents of the paper in
   \mathit{Value} &\ni{}& V, W
   &::= x
   \mid \lambda x. M
-  \mid K~\many{V}
+  \mid \Null
+  \mid \Cons V \, W
+  \mid \q{x}
   \\
   \mathit{EvalCxt} &\ni{}& E
   &::= \hole
@@ -189,12 +191,31 @@ Observational axioms:
 Apartness between patterns and values ($P \apart V$):
 \begin{gather*}
   \infer
-  {K ~ P_1 \dots P_n \apart V}
-  {V \neq K ~ W_1 \dots W_n}
-  \qqqquad
+  {\q{x} \apart V}
+  {V \notin \mathit{Variable} \cup \set{\q{x}}}
+  \qquad
   \infer
-  {K~P_1 \dots P_n \apart K ~ V_1 \dots V_n}
-  {1 \leq j \leq n & P_j \apart V_j}
+  {\Null \apart V}
+  {V \notin \mathit{Variable} \cup \set{\Null}}
+  \\[1ex]
+  \infer
+  {\Cons P ~ P' \apart V}
+  {V \notin \mathit{Variable} \cup \set{\Cons W ~ W' \mid W, W' \in \mathit{Value}}}
+  \\[1ex]
+  \infer
+  {\Cons P ~ P' \apart \Cons W ~ W'}
+  {P \apart W}
+  \qquad
+  \infer
+  {\Cons P ~ P' \apart \Cons W ~ W'}
+  {P' \apart W'}
+  % \infer
+  % {K ~ P_1 \dots P_n \apart V}
+  % {V \neq K ~ W_1 \dots W_n}
+  % \qqqquad
+  % \infer
+  % {K~P_1 \dots P_n \apart K ~ V_1 \dots V_n}
+  % {1 \leq j \leq n & P_j \apart V_j}
 \end{gather*}
 
 \caption{Untyped equational axioms of the target language.}

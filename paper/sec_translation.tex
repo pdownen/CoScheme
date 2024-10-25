@@ -58,7 +58,7 @@ But notice the extra complication here: calling \scm|((stutter 10) 'head)| with 
 That means the underlying code implementing \scm|stutter| \emph{cannot} ask for three arguments in three different calls and then check that the last two are \scm|'tail|.
 Instead, it has to eagerly match the arguments its given against the patterns and try each of the guards to see if the current line fails --- and only \emph{after} that all succeeds, it may ask for more arguments and continue the copattern match.
 
-\subsubsection{Composition and the dimensions of composition}
+\subsubsection{Composition and the dimensions of extensibility}
 \label{sec:composition-challenges}
 
 The second set of challenges is due to the new notions of object composition that we develop here.

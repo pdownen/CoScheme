@@ -4,7 +4,7 @@ Infinite information --- like a stream of input that can go on forever --- does 
 
 Fortunately, the inductive data types used by functional programmers every day have a polar opposite: \emph{coinductive codata types}.
 The \emph{coinductive} descriptor signals that values of the type may contain infinite information.
-Haskell programmers are already well-versed in these types, since non-strict languages blur the line between induction and coinduction.
+Haskell programmers are already well-versed in coinductive styles of types, since non-strict languages blur the line between induction and coinduction.
 For example, consider the usual example of the infinite list of Fibonacci numbers in Haskell:
 \begin{minted}{haskell}
 fibs = 0 : 1 : zipWith (+) fib (tail fib)
@@ -13,7 +13,7 @@ fibs = 0 : 1 : zipWith (+) fib (tail fib)
 
 In contrast, \emph{codata} describes types that are defined by primitive \emph{destructors} that \emph{use} values of the codata type, as opposed to the primitive constructors that define how to build values of a data type.
 For example, the usual \agda|Stream a| codata type of infinite \agda|a|'s is defined by two destructors: \agda|Head : Stream a -> a| extracts the first element and \agda|Tail : Stream a -> Stream a| discards the first element and returns the rest.
-To define new streams, we can describe how they react to different combinations of \agda|Head| and \agda|Tail| destructions using \emph{copatterns} \cite{APTS2013C}.  The copattern-based definition of the \agda|fibs| function above is:
+To define new streams, we can describe how they react to different combinations of \agda|Head| and \agda|Tail| destructions using \emph{copatterns}~\cite{APTS2013C}.  The copattern-based definition of the same \agda|fibs| function above is:
 \begin{minted}{agda}
 fibs : Stream Nat
 Head fibs = 0
@@ -21,31 +21,34 @@ Head (Tail fibs) = 1
 Tail (Tail fibs) = zipWith _+_ fibs (Tail fibs)
 \end{minted}
 \adriano{This example is funny, it works but emits 3 warnings, two related to the termination checker and one suggestion to turn on a flag (--guardedness). However, if you turn this flag on those warnings become errors. After typesetting the proofs, I will try to look for more failing examples in Agda.}
-Even though copatterns provide an elegant way to define codata, their adoption is not universal.
-To illustrate, this previous definition does not fully satisfy Agda's termination checker.
-Although we can force Agda to accept this instance, not every copattern is valid due to technical limitations.
-OCaml is another language that supports copatterns.
-However, the fork that added this feature was never merged and stopped being updated to newer OCaml versions.
+Unfortunately, if we want to actually produce working code in this style, our choices are limited.
+Agda gives the most full-fledged implementation of copatterns in a real system~\cite{ElaboratingDependentCopatterns}.
+However, Agda is primarily a proof assistant rather than a general-purpose programming language, and as such, has different concerns than an ordinary functional programmer.
+In particular, Agda currently doesn't understand if \agda|fibs| well-founded --- it is --- and so \agda|fibs| is rejected by the termination checker.
+There is also some support for copatterns in OCaml~\cite{LaforgueR17}, but as an unofficial extension that has not been merged into the main compiler.
 
-In this scenario, we have chosen Scheme as our implementation language.
-Customizability is one of the key features of lisps dialects, and by taking leverage on that, we can produce a new solution to the expression problem \cite{ExpressionProblem}.
-Therefore, by choosing a well-established dialect, we produce a standalone, composable, and reusable implementation of copatterns for a new audience.
-\adriano{Should we talk about the expression problem here in the introduction?}
+We want to be able to write this kind of copattern-based code and have it fully integrated into a real, general-purpose programming language.
+The easiest way to do so is to start with a programmable programming language~\cite{ProgrammablePL} --- we focus in particular on Scheme and Racket --- which offers a robust macro system for seamlessly implementing new language features.
+We show a new method for implementing copatterns as a collection of macros in order to program with copatterns in Scheme-like languages.
 
+Rather than just recapitulating the previous macro-definition of copatterns~\cite{LaforgueR17}, we focus on providing new methods of extensibility not available before.
+In particular, code defined by our copattern macros can be composed in a variety of ways,
+offering a new solution to the expression problem~\cite{ExpressionProblem}.
+Not only do copatterns allow us to easily define code using equational reasoning in Scheme, these new dimensions of composition allow us to capture some ``design patterns'' used by functional programmers as first-class abstractions.
 
-Our primary contributions are:
+Our primary contributions are organized as follows:
 \begin{itemize}
-    \item An encoding of copatterns in Scheme and Racket.
-    Our abstraction provides a syntax that enables equational reasoning and emphasizes both the vertical and horizontal composition of copatterns.
-    We provide three flavors for our implementation: A R6RS version where we implement our own pattern matching, A naive Racket version, and a cleaver Racket version where we optimize the number of administrative reductions;
-    \item A core calculus with high-level features such as nested copatterns, self-referential objects, recursion templates, and composable extensions.
-    This calculus depicts our implementation, and we prove that it is a conservative extension of the $\lambda$-calculus with pattern-matching and recursion;
+\item \Cref{sec-examples} shows examples of programming with copattern equations in Scheme-like languages, including new forms of program composition --- vertical and horizontal --- that allows us to solve familiar examples of the expression problem~\cite{ExpressionProblem} through a fusion of functional and object-oriented techniques.
+\item \Cref{sec-translation} presents a theory for how to translate copatterns into a small core target language --- untyped $\lambda$-calculus with recursion and patterns --- with a local double-barrel transformation reminiscent of selective continuation-passing style transformation.
+  Importantly, only the new language constructs are transformed, while existing ones in the target language are unchanged.
+\item \Cref{sec-macro} explains how to implement the high-level translation above in real code, and specifically how the implementation differs between Racket and a standard R${}^6$RS-compliant Scheme.
+\item \Cref{sec-correctness} demonstrates correctness in terms of an equational theory for reasoning about copattern-matching code in the source language, which is a convervative extension of the target language, and we prove is sound with respect to translation.
 \end{itemize} 
-The remainder of the article has the following structure: First, we introduce our implementation by explaining meaningful examples (Section \ref{sec-examples}).
-Second, we specify a core language with high-level features representing our implementation. Then we describe a translation into a target $\lambda$-calculus (Section \ref{sec-translation}).
-Third, we scrutinize our implementation, comparing each provided flavor (Section \ref{sec-macro}).
-Fourth, we present the properties of our system (Section \ref{sec-correctness}).
-Last, we explain the details of our optimized racket implementation (Section \ref{sec-opt}).
+% The remainder of the article has the following structure: First, we introduce our implementation by explaining meaningful examples (Section \ref{sec-examples}).
+% Second, we specify a core language with high-level features representing our implementation. Then we describe a translation into a target $\lambda$-calculus (Section \ref{sec-translation}).
+% Third, we scrutinize our implementation, comparing each provided flavor (Section \ref{sec-macro}).
+% Fourth, we present the properties of our system (Section \ref{sec-correctness}).
+% Last, we explain the details of our optimized racket implementation (Section \ref{sec-opt}).
 
 
 %%% Local Variables:

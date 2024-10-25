@@ -163,30 +163,30 @@ Operational axioms:
   V\subst{x}{(\Rec x = V)}
 \end{align*}
 
-Observational axioms:
-\begin{align*}
-  % \lambda x. (V ~ x)
-  % &=
-  % V
-  % &(\text{if } x &\notin FV(V))
-  % \\
-  (\lambda x. E[x]) ~ M
-  &=
-  E[M]
-  \\
-  E\left[
-    \begin{aligned}
-      &\Match M \With \\
-      &\qquad\set{\many{P \to N}}
-    \end{aligned}
-  \right]
-  &=
-  \begin{aligned}
-    &\Match M \With \\
-    &\qquad \set{\many{P \to E[N]}}
-  \end{aligned}
-  &(\text{if } BV(P) \cap FV(E) = \emptyset)
-\end{align*}
+% Observational axioms:
+% \begin{align*}
+%   % \lambda x. (V ~ x)
+%   % &=
+%   % V
+%   % &(\text{if } x &\notin FV(V))
+%   % \\
+%   (\lambda x. E[x]) ~ M
+%   &=
+%   E[M]
+%   \\
+%   E\left[
+%     \begin{aligned}
+%       &\Match M \With \\
+%       &\qquad\set{\many{P \to N}}
+%     \end{aligned}
+%   \right]
+%   &=
+%   \begin{aligned}
+%     &\Match M \With \\
+%     &\qquad \set{\many{P \to E[N]}}
+%   \end{aligned}
+%   &(\text{if } BV(P) \cap FV(E) = \emptyset)
+% \end{align*}
 
 Apartness between patterns and values ($P \apart V$):
 \begin{gather*}
@@ -274,7 +274,7 @@ Apartness between patterns and values ($P \apart V$):
 
 Identity, associativity, and annihilation laws of composition:
 \begin{align*}
-  \varepsilon; O &= O = O; \varepsilon
+  \varepsilon; O &= O % = O; \varepsilon
   &
   (O_1; O_2); O_3 &= O_1; (O_2; O_3)
   &

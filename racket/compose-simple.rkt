@@ -333,6 +333,11 @@
 
 (define default-object-modifier (make-parameter meta))
 
+;; try-object : Codata -> Extension
+;; Unplug as a function, useful as a try-style operation for meta-enabled objects instead of extensions
+(define (try-object o) (o 'unplug))
+
+
 ;;;;;;;;;;;;;;;;;
 ;; Main Macros ;;
 ;;;;;;;;;;;;;;;;;

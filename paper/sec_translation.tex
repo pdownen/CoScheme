@@ -1,0 +1,419 @@
+
+\subsection{Challenges}
+
+Even though small examples may be straightforward to understand, there are several challenges to correctly implementing copatterns in the general case.
+Some of these challenges are specific to Scheme --- a dynamically-typed, call-by-value langauge --- which forces us to carefully resolve the timing of which and which copatterns are matched.
+Other challenges are specific to our specific extensions to copatterns --- the ability to compose copattern-matching in two different directions --- which also brings in the notion of the recursive ``self.''
+
+\subsubsection{Timing and the order of copattern matching}
+\label{sec:timing-challenges}
+
+Partly due to the fact that we can't gain any information from a static type system, we must interpret the programmer's code as it is written.
+This means we have to deal with copatterns that may have ambiguous cases where two different overlapping copattern equations match the same application.
+For example, this function moves a number by 1 away from 0 --- positives are incremented and negatives are decremented:
+\begin{minted}{scheme}
+(define*
+  [(away-from0 x) (try-if (>= x 0)) = (+ x 1)]
+  [(away-from0 x) (try-if (<= x 0)) = (- x 1)])
+\end{minted}
+The two different equations overlap for 0 itself: either one matches the call \scm|(away-from0 0)|.
+To disambiguate overlapping copatterns, the listed equations are always tried top-down, and the first full match ``wins,'' as is typical in functional languages.
+In this case, the first line wins so \scm|(away-from0 0)| is \scm|1|.
+Furthermore, guards like \scm|try-if| and \scm|try-match| are run left-to-right with shortcircuiting --- the moment a copattern or a guard fails, everything to the right is skipped.
+This makes it possible to protect potentially-erroneous guards with another safety guard to its left, such as \scm|(try-if (not (= y 0)))| followed by \scm|(try-if (> (/ x y) z))|.
+
+But there are more timing issues to deal with besides these usual choices for disambiguation and short-circuiting.
+First of all, since we in a call-by-value language, we have to handle cases where an object is used in a context that doesn't fully match a copattern \emph{yet}, but could in the future --- and possibly multiple different times.
+This can happen for instances like curried functions that take arguments in multiple different calls.
+Just like with ordinary curried functions, using such an object in a calling context passing only the first list of arguments --- but not the second --- builds a \emph{value} which closes over the parameters so far.
+For example, consider this simple counter object that can add or get its current internal state.
+\begin{minted}{scheme}
+(define*
+  [((counter x) 'add y) = (counter (+ x y))]
+  [((counter x) 'get)   = x])
+\end{minted}
+The call \scm|((counter 4) 'get)| matches the second equation, which is \scm|4|, but \scm|(counter 4)| on its own isn't enough information to definitively match either copattern, so it is just a value remembering that \scm|x = 4| and waiting for another call.
+Similarly, the call \scm|(counter (+ x y))| on the right-hand side is \emph{also} incomplete in the same sense, so it, too, is a value.
+This definition gives us an object with the following behavior:
+\begin{minted}{scheme}
+> (define c0 (counter 4))
+> (define c1 (c0 'add 1))
+> ((c1 'add 2) 'get)
+7
+> (c1 'get)
+5
+\end{minted}
+
+So far, what have seen so far seems similar to pattern-matching functions in languages that are curried-by-default.
+One way in which copatterns generalize curried functions is that each equation can take a \emph{different} number of arguments.
+For example, consider this reordering of the \scm|stutter| stream from \cref{sec-examples}:
+\begin{minted}{scheme}
+(define*
+  [(((stutter n) 'tail) 'tail) = (stutter (+ n 1))]
+  [(((stutter n) 'tail) 'head) = n]
+  [ ((stutter n) 'head)        = n])
+\end{minted}
+Since none of the copatterns overlap, its behavior is exactly the same as before.
+But notice the extra complication here: calling \scm|((stutter 10) 'head)| with two arguments (\scm|10| and \scm|'head|) should immediately return \scm|10|, but the first equation is waiting for three arguments (an \scm|n| and two \scm|'tail|s passed separately).
+That means the underlying code implementing \scm|stutter| \emph{cannot} ask for three arguments in three different calls and then check that the last two are \scm|'tail|.
+Instead, it has to eagerly match the arguments its given against the patterns and try each of the guards to see if the current line fails --- and only \emph{after} that all succeeds, it may ask for more arguments and continue the copattern match.
+
+\subsubsection{Composition and the dimensions of composition}
+\label{sec:composition-challenges}
+
+The second set of challenges is due to the new notions of object composition that we develop here.
+In particular, we want to be able to combine objects along two different directions:
+\begin{itemize}
+\item
+  \emph{vertical composition} is an ``either or'' combination of two or more objects, such as \scm|(o1 'compose o2 ...)| that acts like \scm|o1| or \scm|o2|, \etc[,] depending on which one knows how to respond to the context.
+  Textually, vertical composition of \scm|(object line-a1 line-a2...)| and \scm|(object line-b1 line-b2 ...)| behaves as if we copied all each line of copattern-matching equations internally used to define the two objects and pasted them vertically into the newly-composed object as:
+\begin{minted}{scheme}
+(object line-a1
+        line-a2
+        ...
+        line-b1
+        line-b2
+        ...)
+\end{minted}
+\item
+  \emph{horizontal composition} is an ``and then'' combination of of objects in a copattern-matching line, such as \scm|[(self 'method1) (try-object o1)]| defining a \scm|'method1| that continues to act like \scm|o1| when \scm|o1| knows how to respond to the surrounding context, and otherwise tries the next line.
+  Textually, vertical composition of a \scm|'method1| followed by trying another object with its own copattern-matching contexts \scm|Q1 Q2 ...| acts as if the two copatterns are combined and the inner object is inlined into the outer one like so:
+\begin{minted}{scheme}
+(object [(self 'method1) (try-object (object [Q1 = response1]
+                                             [Q2 = response2]
+                                             ...))]
+        line2
+        ...)
+=
+(object [(self 'method1) (comatch Q1) = response1]
+        [(self 'method1) (comatch Q2) = response2]
+        ...
+        line2
+        ...)
+\end{minted}
+\end{itemize}
+
+Even though we can visually understand the two directions of composition by the textual manipulations above, in reality, both of these compositions are done at run-time (\ie with arbitrary procedural values), as opposed to ``compile-time'' transformation (\ie macro-expansion time manipulations of code).
+This means we need an extensible representation of run-time object values that allows for automatically switching from one object to another in the case of copattern-match failure, as well as correctly keeping track of what to try next.
+
+The basic idea of this representation can be understood as an extension of a idiom in ordinary functional programming.
+In order to define an open-ended, pattern-matching function, we can give the cases we know how to handle now by matching on the arguments, and include a default ``catch-all'' case at the end for the other behavior.
+In Haskell, this might look like
+\begin{minted}{haskell}
+f next PatA1 PatA2 ... = expr1
+f next PatB1 PatB2 ... = expr2
+...
+f next x1    x2    ... = next x1 x2 ...
+\end{minted}
+
+For example, consider the single-line \scm|eval-add| evaluator object from \cref{sec-examples}.
+In order to compose \scm|eval-add| with another evaluator handling a different case, like \scm|eval-add|, it's internal extensible code takes an extra hidden argument saying what to try \scm|next| if its line doesn't match, analogous to:
+\begin{minted}{scheme}
+(define (eval-add-ext1 next)
+  (lambda*
+    [(self 'eval `(add ,l ,r)) = (+ (self 'eval l) (self 'eval r))]
+    [ self                     = (next self)]))
+\end{minted}
+Note that, unlike the Haskell code above, the hidden \scm|next| parameter also takes \emph{another} hidden parameter: \scm|self|.
+Why?
+Because if the \scm|next| set of equations needs to recurse, it can't actually jump to itself directly --- that would skip the \scm|eval-add| code entirely --- but needs to jump back to the very first equation to try.
+This \scm|self| parameter holds the value of the \emph{whole} object after all compositions have been done, as it appeared in the original call site.
+Thus, the internal extensible code \scm|eval-add-ext| \emph{also} takes this second \scm|self| parameter for the same reason: it may be the second component of a composition, and can be further expanded into built-in Racket primitives like so:
+\begin{minted}{scheme}
+(define ((eval-add-ext2 next) self)
+  (match-lambda*
+    [(list 'eval `(add ,l ,r)) (+ (self 'eval l) (self 'eval r))]
+    [args                      ((next self) args)]))
+\end{minted}
+
+One final detail to note: unless otherwise stated, the \scm|self| parameter --- which is visible as the root of any copattern --- is \emph{always} the same view of the entire object.
+That means nesting multiple copatterns in sequence might not give the expected result, because the \scm|self| parameter in the hole of every copattern context will be bound to the same value.
+If we instead want the parameter in the hole of every copattern context to reflect the object at that point in time --- that is, be assigned the value given by the partial applications given by the preceding copatterns --- we can use the \scm|nest| operation.
+For example, nesting copatterns in a sequence gives us a shorthand for the common functional idiom of a ``local'' loop that closes over some parameters that never change, such as this definition of mapping a function over a list:
+\begin{minted}{scheme}
+(define*
+  [(map* f xs) = ((map* f) xs)]
+  [(map* f) (nest)
+    (extension
+     [(go null)        = null]
+     [(go (cons x xs)) = (cons (f x) (go xs))])])
+\end{minted}
+The \scm|map*| function support both curried and uncurried application. and they are defined to be equal.
+Its real code is given in the curried case, where the function parameter \scm|f| is bound first and never changes.
+Then in a second step, we have the internal looping function \scm|go| which matches over its list parameter and recurses with a new list.
+By using \scm|nest|, we have \scm|go = (map* f)|, so that \scm|f| is visible from the closure but does not need to be passed again at every step of the loop.
+
+\subsection{Double-barrel translation}
+
+To reason about how the correctness and behavior of composable copattern-matching, we give a high-level translation into a conventional $\lambda$-calculus with recursion and pattern matching (given in \cref{fig:target-syntax}).
+Our pattern language is modeled after a small common core found among various implementations of Scheme, which includes normal variable wildcards $x$ that can match anything, quoted symbols $\q{x}$, and lists of the form $\Null$ or $(\Cons P \, P')$.
+Note that we assume all bound variables $x$ in a pattern are distinct from one another.
+As shorthand, we write a list of patterns $P_1 ~ P_2 ~ \dots ~ P_n$ for $(\Cons P_1 ~ (\Cons P_2 ~ \dots (\Cons P_n \Null)))$.
+To model the patterns found in typed functional languages like ML and Haskell, such as constructor applications $K ~ \many{P}$, we can represent the constructor  as a quoted symbol $\q{K}$ and the application as a list $\q{K} ~ \many{P}$.
+The specifics of patterns themselves are surprisingly not essential to the main copattern translation, and could be extended with other features found in more specific implementations.
+
+\begin{figure}
+\centering
+\begin{alignat*}{2}
+  \mathit{Term} &\ni{}& M, N
+  &::= x
+  \mid M ~ N
+  \mid \lambda x. M
+  \mid K
+  \mid \Match M \With \set{\many{P \to N}}
+  \mid \Rec x = M
+  \\
+  \mathit{Pattern} &\ni{}& P
+  &::= x
+  \mid \q{x}
+  \mid \Null
+  \mid \Cons P \, P'
+\end{alignat*}
+
+\caption{Target language: pure $\lambda$-calculus with pattern-matching and recursion.}
+\label{fig:target-syntax}
+\end{figure}
+
+For simplicity, this translation begins from a small source language with copatterns (given in \cref{fig:source-syntax}) separated into three main syntactic categories:
+\begin{itemize}
+\item[($M, N$)] \emph{Terms} are the usual terms source language, and represent ordinary first-class values as well as applications.
+  The new forms of terms are $\lamstar B$ which gives a self-referential copattern-matching object, along with $\Template B$ and $\Extension O$ which include the other two syntactic categories as first-class values.
+\item[($B$)] \emph{Templates} represent self-referential code without a fixed self.
+  Instead, the ``self'' placeholder remains unbound for now, and can be instantiated later as $\Template B ~ V$ (where the ``self'' of the template is bound to $V$) or $\lamstar B$ (where the ``self'' of the template is recursively bound to $\lamstar B$).
+\item[($O$)] \emph{Extensions} represent extensible code which can be composed together both vertically and horizontally.
+  Instead of failing on an unsuccessful match, extensions will continue on to an as-of-yet unspecified ``next'' option.
+  To support recursion, the ``self'' placeholder is also unbound for now --- just like with templates --- and can be bound later when the whole object is finished being composed.
+  The ``next'' thing to try can be given by the vertical composition with another extension $O; O'$ or a base-case template $O; B$.
+  Arbitrary first-class values can passed in as the next option ($V$) and the self object ($W$) as $\Extension O ~ V ~ W$.
+\end{itemize}
+
+\begin{figure}
+\centering
+
+\begin{alignat*}{2}
+  \mathit{Term} &\ni{}& M, N
+  &::= \dots
+  \mid \lamstar B
+  \mid \Template B
+  \mid \Extension O
+  \\
+  \mathit{Template} &\ni{}& B
+  &::= \varepsilon
+  \mid O; B
+  \mid \Continue x \to M
+  \\
+  \mathit{Extension} &\ni{}& O
+  &::= \varepsilon
+  \mid O; O'
+  \mid Q[x] ~ O
+  \mid \lambda P.~ O
+  % \mid \If M ~ O
+  \mid \Match P \gets M ~ O
+  \mid \Nest O
+  \mid \Try x \to B
+  \\
+  \mathit{Copattern} &\ni{}& Q
+  &::= \hole
+  \mid Q ~ P
+  \\
+  \mathit{Pattern} &\ni{}& P
+  &::= x
+  \mid \q{x}
+  \mid \Null
+  \mid \Cons P \, P'
+\end{alignat*}
+
+Syntactic sugar:
+\begin{align*}
+  \Else M
+  &=
+  \Continue \_ \to M
+  \\
+  \Do M
+  &=
+  \Try \_ \to \Else \to M
+  \\
+  (= M)
+  &=
+  \Do M
+  \\
+  \If M ~ O
+  &=
+  \Match \True \gets M ~ O
+  \\
+  \Let x = M ~ O
+  &=
+  \Match x \gets M ~ O
+\end{align*}
+\caption{Source language: target extended with nested copatterns,
+  self-referential objects, recursion templates, and composable extensions.}
+\label{fig:source-syntax}
+\end{figure}
+
+The remaining new syntax defines how to specify and combine copattern-matching expressions.
+Copatterns $Q[x]$ themselves are a subset of contexts, $Q$, which surround an object internally named $x$.
+Two lines separated by a semicolon ($O; O'$) is the syntax for vertical composition that tries either $O$ or $O'$, and prefixing with a copattern-matching expression ($Q[x] O$) is syntax for horizontal composition that tries $Q[x]$ and then $O$.
+The $\varepsilon$ represents an empty extension with respect to vertical composition: it immediatly refers to the next option.
+Smaller special cases of matching include pattern lambdas ($\lambda P. O$) that try to match a new argument against $P$, and pattern guards ($\Match P \gets M ~ O$) that try to match a given expression $M$ against $P$; both of which continue as $O$ if they succeed.
+$\Nest O$ allows for nesting multiple copatterns with a partially applied self object from this point.
+
+Finally we have the terminators for ending a sequence of matching.
+A template can end in the empty $\varepsilon$ (which just fails, because there is no code to handle the case) or a $\Continue x \to M$ which serves as the default ``catch-all'' case.
+The parameter $x$ bound by $\Continue x \to M$ is another way to introduce a name for the recrusive reference to the object itself at the end of a template, and allows for $M$ to restart from the top and continue the computation.
+The familiar syntactic sugar $\Else M$ covers the common case where $M$ give an answer without recursively continuing.
+Similarly, an extension can end with $\Try x \to B$ which gives a ``catch-all'' case which runs some other (non-extensible) template $B$.
+The parameter $x$ bound by $\Try x \to B$ gives a name to the next option that would have been tried after this one and allows $B$ to explicitly move on to the next option if it needs to.
+The syntactic sugar $\Do M$ cover the most common case of $\Try$ which definitively commits to a particular term $M$ to return as the result without trying any futher options.
+To write examples in a simliar style to ML-family languages, we also use the syntactic sugar $(= M)$ with the same meaning, which looks odd out of context, but expresses the equational nature of copattern matching when used in examples.
+
+Finally, the full translation from the source (\cref{fig:source-syntax}) to target (\cref{fig:target-syntax}) is given in \cref{fig:translation}.
+This translation shares many similarities to continuation-passing style (CPS) translations.
+However, we explicitly avoid converting the entire program to CPS.
+Notably, every syntactic form for the source language is unchanged; for example, $\den{M~N} = \den{M} ~ \den{N}$.
+Instead, the only time we need to introduce an extra paramter is for the two new syntactic categories.
+All templates are translated to functions that take a value for the whole object itself to a new version of that object.
+Similarly, all extensions are translated to functions that take both a template as the ``base case'' to try next as well as a value for the whole object itself.
+Even though this is dynamically-typed, we can view the type of templates as object transformers and extensions as template transformers:
+\begin{align*}
+  Object &= \text{some type of function}
+  \\
+  Template &= Object \to Object'
+  \\
+  Extension &= Template \to Template'
+  \\
+  &= Template \to Object \to Object'
+\end{align*}
+
+\begin{figure}
+\centering
+Translating new terms:  
+\begin{align*}
+  \den{\lamstar B}
+  &=
+  (\Rec \mathit{self} = T\den{B} ~ (\lambda x. \mathit{self} ~ x))
+  &=_\eta
+  (\Rec \mathit{self} = T\den{B} ~ \mathit{self})
+  \\
+  \den{\Template B}
+  &=
+  T\den{B}
+  \\
+  \den{\Extension O}
+  &=
+  E\den{O}
+  \\
+  \den{M}
+  &=
+  \text{by induction}
+  &(\text{otherwise})
+\end{align*}
+Translating templates:
+\begin{align*}
+  T\den{\varepsilon}
+  &=
+  \lambda s. \mathit{fail}~s
+  &
+  &=_\eta
+  \mathit{fail}
+  \\
+  T\den{O; B}
+  &=
+  \lambda s. E\den{O} ~ T\den{B} ~ s
+  &
+  &=_\eta
+  E\den{O} ~ T\den{B}
+  \\
+  T\den{\Continue x \to M}
+  &=
+  \lambda x. \den{M}
+\end{align*}
+
+Translating copattern-matching and pattern-matching functions:
+\begin{align*}
+  E\den{(Q[x] ~ P) ~ O}
+  &=
+  E\den{Q[x] ~ (\lambda P. O)}
+  \\
+  E\den{x ~ O}
+  &=
+  \lambda b. \lambda x. E\den{O} ~ b ~ x
+  \\
+  E\den{\lambda P. O}
+  &=
+  E\den{\lambda x. \Match P \gets x ~ O}
+  &(\text{if } P \notin \mathit{Variable})
+\end{align*}
+
+Translating other extensions:
+\begin{align*}
+  E\den{\varepsilon}
+  &=
+  \lambda b. \lambda s. b ~ s
+  &
+  &=_\eta
+  \lambda b. b
+  \\
+  E\den{O; O'}
+  &=
+  \lambda b. \lambda s. E\den{O} ~ (E\den{O'}~b) ~ s
+  &
+  &=_\eta
+  E\den{O} \comp E\den{O'}
+  \\
+  E\den{\lambda x. O}
+  &=
+  \lambda b. \lambda s. (\lambda x. E\den{O} ~ (\lambda s'. b ~ s' ~ x) ~ s)
+  \\
+  E\den{\Match P \gets M ~ O}
+  &=
+  \lambda b. \lambda s.
+  \begin{aligned}[t]
+    &\Match \den{M} \With \\
+    &\quad
+    \begin{aligned}[t]
+      \{~
+      P &\to E\den{O}~b~s; \\
+      \_ &\to b~s
+      ~\}
+    \end{aligned}
+  \end{aligned}
+  \\
+  E\den{\Nest O}
+  &=
+  \lambda b. \lambda s. \Rec s' = E\den{O} ~ (\lambda \_. b ~ s) ~ (\lambda x. s' ~ x)
+  \\
+  E\den{\Try x \to B}
+  &=
+  \lambda x. T\den{B}
+\end{align*}
+\caption{Translating copattern-based source code to the target language.}
+\label{fig:translation}
+\end{figure}
+
+The only interesting cases for translating terms are the new forms.
+$\Template B$ and $\Extension O$ are just translated to their given forms as transformation functions.
+With $\lamstar B$, we need to recursively plug its translation in for its self parameter.
+Note the one detail that the recursive $\mathit{self}$ is $\eta$-expanded to in this application.
+This ensures that $\lambda x. \mathit{self} ~ x$ is treated as a value in a real implementation, and is always safe assuming that $B$ describes a function (non-functional cases of $\lamstar B$ are undefined user error).
+
+For templates an extensions, the terminators $\Continue$ and $\Try$ are translated to just plain $\lambda$-abstractions that allow the programmer direct access to their implicit parameters.
+Other cases are specific to each form.
+Complex copatterns ($x ~ \many{P_1} P_n ~ O$) are reduced down to a simpler sequence of pattern lambdas ($x ~ \lambda P_1. \dots \lambda P_n. ~ O$), and pattern lambdas ($\lambda P. O$) are reduced down to a simpler non-matching lambda followed by an explicit match guard ($\lambda x. \Match P \gets x ~ O$).
+
+This leaves just the base cases of simple extension forms.
+Each time an extension (of form $\lambda b. \lambda s. \dots$) ``fails'', it calls the given next template with the given self object ($b~s$).
+A match guard $\den{\Match P \gets M ~ O}$ will try to match the translation of $M$ against the pattern $P$; the success case continues as $E\den{O}$ with the same next template and self.
+A non-matching lambda $\den{\lambda x. O}$ always succeeds (for now), but note that the next template to try on failure has to be changed to include the given argument.
+Why?
+Because the lambda has already consumed the next argument from its context, it would be gone if later on the following operations fail and move on to the next option.
+So instead of invoking the given $b$ directly as $b~s'$ (for a potentially different future $s'$), they need to invoke $b$ applied to this argument $x$ as $b~s'~x$.
+Finally, the $\den{\Nest O}$ operation is defined by recursively creating a new value for the self parameter by recursively taking a new snap-shot of how the objects looks now, after all the preceeding applications and matching has already occurred.
+
+In this translation, we also give the $\eta$-reduced forms on the right-hand side when available.
+This makes it easier to see that the empty extension $\varepsilon$ is just the identity function (given the next thing $b$ to try, $\varepsilon$ does nothing and immediately moves on to $b$), and horizontal composition $O; O'$ is just ordinary function composition.
+
+
+%%% Local Variables:
+%%% mode: LaTeX
+%%% TeX-master: "coscheme"
+%%% End:

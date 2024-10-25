@@ -19,6 +19,8 @@
 
 Operational axioms:
 \begin{align*}
+  (\beta)
+  &&
   (\lambda x. M) ~ V
   &=
   M\subst{x}{V}
@@ -36,6 +38,8 @@ Operational axioms:
   %   &&&\not\exists \many{W'}, V = P_j\subst{BV(P_j)}{\many{W'}})
   % \end{aligned}
   \\
+  (\mathit{match})
+  &&
   \begin{aligned}
     &\Match V \With \\
     &\qquad
@@ -49,6 +53,8 @@ Operational axioms:
   &(\text{if } P\subst{\many{x}}{\many{W}} &= V)
   % &(\text{if } \exists \many{W},~ V &= P\subst{BV(P)}{\many{W}})
   \\
+  (\mathit{apart})
+  &&
   \begin{aligned}
     &\Match V \With \\
     &\qquad
@@ -65,6 +71,8 @@ Operational axioms:
   &(\text{if } P &\apart V)
   % &(\text{if}\!\not\exists \many{W},~ V &= P\subst{BV(P)}{\many{W}})
   \\
+  (\mathit{rec})
+  &&
   \Rec x = V
   &=
   V\subst{x}{(\Rec x = V)}

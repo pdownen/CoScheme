@@ -1,0 +1,106 @@
+To increase familiarity with copatterns in Scheme, let us stress their main traits and introduce our syntax.
+One of the entry points of our extension is the macro \scm{define*}.
+This macro enables us to declare a codata object by a list of observations.
+Those observations are pairs of a copattern and a possible outcome.
+In each observation, the first element of the copattern is the object's name.
+
+One key feature of copatterns is that they can be defined upon an arbitrarily long sequence of patterns.
+In other words, they can be \emph{nested}.
+Hence, after the object's name, we can have more patterns dictating a more specific evaluation context to be matched.
+
+\adriano{Insert the explanation that methods/destructors are represented with atoms}
+To illustrate this concept, let us materialize a simple example from the ground up.
+Still considering the classic stream examples, we can define streams in terms of their response to the \scm{head} and \scm{tail} destructors. 
+So, to create fancier streams, it suffices to specify copatterns containing those destructors.
+Let us target a stream that, starting from a number \scm{n}, counts the same number twice before incrementing it.
+Since we want to start from a given number, we need to specify a context that represents this idea: \scm{stutter n}.
+We could have other roots, such as \scm{stutter} and \scm{stutter n m}, but we want to state contexts with only a single value.
+Now, we need to describe the behavior of our destructors.
+For the \scm{head} destructor, we can return our current state \scm{n}.
+However, what should we do with \emph{tail}?
+We want our second element to be \scm{m}, yet we want our third element to be the successor of \scm{n}.
+There is no way to specify the desired behavior, considering that the outcome depends on the \emph{next} action. 
+This is where copatterns take the spotlight.
+\adriano{Remove the repeated information above} Copatterns can define contexts not only based on the next action but with any finite number of sequential actions.  
+Therefore, we can spell out that when we ask for the second element --- \scm{(((stutter n) 'tail) 'head)} --- we return n.
+Despite that, we did not define where the increment should happen.
+We want to depict the behavior that we increment the current state in every two elements. 
+\adriano{bad sentence}
+We can do this by defining a recursive case when we observe that we passed by two elements --- \scm{(((stutter n) 'tail) 'tail)} ---. 
+It may not seem to, but this is enough to define our desired stream. This specific combination of copatterns of the stream's destructors covers all possible cases.
+As a user, this is important since our implementation does not provide coverage analysis.
+
+This framework is not limited by matching a single value in each group.
+For example, we can define a stream that intercalates elements from two different streams using a similar configuration, taking two arguments instead of one.
+
+\adriano{Maybe we can put those examples side by side in a single figure if we decrease the font size}
+\begin{minted}{scheme}
+;; stutter : Stream Nat
+(define*
+  [ ((stutter n) 'head)        = n]
+  [(((stutter n) 'tail) 'head) = n]
+  [(((stutter n) 'tail) 'tail) = (stutter (+ n 1))])
+\end{minted}
+
+\begin{minted}{scheme}
+;; zigzag : (Stream a, Stream a) -> Stream a
+(define*
+  [ ((zigzag xs ys) 'head)        = (xs 'head)]
+  [(((zigzag xs ys) 'tail) 'head) = (ys 'head)]
+  [(((zigzag xs ys) 'tail) 'tail) = (zigzag (xs 'tail) (ys 'tail))])
+\end{minted}
+
+However, copatterns are not exclusively used with streams and infinite data.
+In particular, we can define a depth-first search on a finite binary tree.
+For this goal, we need to specify what should happen in the leaves and nodes of the tree.
+We can create copatterns that match on a specific pattern of the input.
+Therefore, when we see an evaluation context with a leaf, we return a singleton, and when we see a node, we recurse.
+\adriano{Do I need to talk about how DFS works?}
+
+\begin{minted}{scheme}
+  (define*
+    [((search ('leaf e)) 'dfs) = (list e)]
+    [((search ('node l e r)) 'dfs) = (append ((search l) 'dfs) (list e)
+                                             ((search r) 'dfs))])
+  \end{minted}
+
+Now let us consider an arithmetic evaluator:
+
+\begin{minted}{scheme}
+;; eval* : Expr -> Number
+(define eval*
+  (lambda*
+  [(eval ('num n))   = n]
+  [(eval ('add l r)) = (+ (eval l) (eval r))]))
+\end{minted}
+
+Fantastic, it works! But what if we wish to add a multiplication, a new operation, to our evaluator? 
+We could definitely add one more line to the previous definition with a copattern matching a \scm{'Mult} term.
+Nevertheless, we do not always want to modify existing working code, which is one of the questions concerning the expression problem.
+One approach we can take is to define each operator as an individual evaluator who only knows how to deal with one operation and compose them all.
+\begin{minted}{scheme}
+  ;; eval-num : ('num Number) -> Number
+  (define-object
+    [(eval-num 'eval ('num n)) = n])
+  
+  ;; eval-add : ('add e e) <: e -> Number
+  (define-object (eval-add <: meta)
+    [(self 'eval ('add l r)) = (+ (self 'eval l) (self 'eval r))])
+  
+  ;; eval-mul : ('mul e e) <: e -> Number
+  (define eval-mul
+    (object [(self 'eval ('mul l r)) = (* (self 'eval l) (self 'eval r))]))
+  
+  (define eval-arith
+    (eval-num 'compose eval-add eval-mul))
+
+\end{minted}
+
+This is our crown jewel: \emph{Composition}.
+To be more precise, vertical composition since we are adding more cases to the list of observations.
+To help visualize, you can think that the list of possible observations has one entry per line, and we are adding more lines to that list, thus vertical composition.
+Another approach to composition is to extend some copattern with a series of other copatterns.
+In that case, we are extending the size of a line, thus creating a horizontal composition.
+
+\adriano{I have three topics: constant folding, evaluator with variables, and a horizontal composition example.
+The dream would be to encode one of the evaluators with a horizontal composition so I could explain the other and finish with the fancy one.}

@@ -340,10 +340,10 @@
   (syntax-rules ()
     [(try-apply-remember ext arg ...)
      (try next self
-          ((apply-extension-inline ext next self) arg ...))]
+          ((apply-extension ext next self) arg ...))]
     [(try-apply-remember ext arg ... . rest)
      (try next self
-          (apply (apply-extension-inline ext next self) arg ... rest))]))
+          (apply (apply-extension ext next self) arg ... rest))]))
 
 (define-syntax try-apply-forget
   (syntax-rules ()

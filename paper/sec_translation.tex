@@ -23,7 +23,7 @@ Furthermore, guards like \scm|try-if| and \scm|try-match| are run left-to-right 
 This makes it possible to protect potentially-erroneous guards with another safety guard to its left, such as \scm|(try-if (not (= y 0)))| followed by \scm|(try-if (> (/ x y) z))|.
 
 But there are more timing issues to deal with besides these usual choices for disambiguation and short-circuiting.
-First of all, since we in a call-by-value language, we have to handle cases where an object is used in a context that doesn't fully match a copattern \emph{yet}, but could in the future --- and possibly multiple different times.
+First of all, since we are in a call-by-value language, we have to handle cases where an object is used in a context that doesn't fully match a copattern \emph{yet}, but could in the future --- and possibly multiple different times.
 This can happen for instances like curried functions that take arguments in multiple different calls.
 Just like with ordinary curried functions, using such an object in a calling context passing only the first list of arguments --- but not the second --- builds a \emph{value} which closes over the parameters so far.
 For example, consider this simple counter object that can add or get its current internal state.

@@ -8,24 +8,27 @@
     The following instances of translation are all values up to the equational theory of the target language in \cref{fig:target-equality}:
 
     The proof follows by mutual recursion/induction.
+    By definition, we know that our translation return terms in the target language.
+    In other words, we can say that $\den{M}=M'$ for some target term $M'$.
     \begin{enumerate}[(a)]
         \item $T\den{B} = \lambda s. M$ for some term $M$,
         \begin{proof}
-            Let us consider the possible values of $B$.
+            By induction on $B$.
             \begin{itemize}
                 \item $(B = \varepsilon)$ By our translation we have: $T\den{\varepsilon} = \lambda s. ~\mathit{fail} ~s$, where $M=\mathit{fail} ~s$.
                 \item ($B = O; B'$) By our translation we have: $T\den{O; B'} = \lambda s. ~\den{O} ~\den{B'} ~s$.
                     Our induction hypothesis provides us that $T\den{B'} = \lambda s. M'$ for some term $M'$.
-                    By (b) we know that $E\den{O}=\lambda b. \lambda s. M_O$ for some term $M_O$.
+                    % By (b) we know that $E\den{O}=\lambda b. \lambda s. M_O$ for some term $M_O$.
                     \begin{align*}
                         & \quad \lambda s. ~\den{O} ~\den{B'} ~s \\
-                        =& \quad \lambda s.  ~(\lambda b. \lambda s. M_O) ~(\lambda s. M') ~s & (IH, (b))
+                        % =& \quad \lambda s.  ~(\lambda b. \lambda s. M_O) ~(\lambda s. M') ~s & (IH, (b))
+                        =& \quad \lambda s. ~M_O ~(\lambda s. M') ~s & (IH)
                     \end{align*}
-                    Where $M=M'' ~(\lambda b. \lambda s. M_O) ~(\lambda s. M') ~s$.
-                    \item $(B = \Continue x \to M')$ 
+                    Where $M=M_O ~(\lambda s. M') ~s$.
+                \item $(B = \Continue x \to M')$ 
                     \begin{align*}
-                        & \quad T\den{\Continue x \to M'} = \lambda x. ~\den{M}' \\
-                        =& \quad \lambda x. ~(\lambda s. ~M'') & (\cref{l-trans-terms}) \\
+                        & \quad T\den{\Continue x \to M'} = \lambda x. ~\den{M'} \\
+                        =& \quad \lambda x. ~(\lambda s. ~M'') \\
                         =& \quad \lambda s. ~(\lambda s. ~M'') \subst{x}{s} & (=_{\alpha})
                     \end{align*} 
             \end{itemize}
@@ -33,7 +36,7 @@
         \end{proof}
 \item $E\den{O} = \lambda b. \lambda s. M$ for some term $M$,
 \begin{proof}
-    Let us consider the possible values of $O$.
+    By induction on $O$.
     \begin{itemize}
     \item $(O = \varepsilon)$ By our translation we have $E\den{\varepsilon} = \lambda b. \lambda s. ~b ~s$, where $M= b ~s$.
     \item $(O = O_1;O_2)$
@@ -104,7 +107,7 @@
                 \_ &\to b~s
                 ~\}
               \end{aligned}
-            \end{aligned}  & (IH, \cref{l-trans-terms})
+            \end{aligned}  & (IH)
             \end{align*}
     \item $(O = \Nest O)$
         \begin{align*}
@@ -147,7 +150,7 @@
         \item $\den{x} = x$, where $W=x$.
         \item \begin{align*}
             & \quad \den{\lambda x. ~M} = \lambda x. ~\den{M} \\
-            =& \quad \lambda x. ~M'' & (\cref{l-trans-terms})
+            =& \quad \lambda x. ~M'
         \end{align*}
         where $W = \lambda x. ~M''$.
         \item $\den{null} = null$, where $W=null$.

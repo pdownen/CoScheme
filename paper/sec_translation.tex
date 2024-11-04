@@ -76,7 +76,7 @@ In particular, we want to be able to combine objects along two different directi
         ...)
 \end{minted}
 \item
-  \emph{horizontal composition} is an ``and then'' combination of of objects in a copattern-matching line, such as \scm|[(self 'method1) (try-object o1)]| defining a \scm|'method1| that continues to act like \scm|o1| when \scm|o1| knows how to respond to the surrounding context, and otherwise tries the next line.
+  \emph{horizontal composition} is an ``and then'' combination of objects in a copattern-matching line, such as \scm|[(self 'method1) (try-object o1)]| defining a \scm|'method1| that continues to act like \scm|o1| when \scm|o1| knows how to respond to the surrounding context, and otherwise tries the next line.
   Textually, vertical composition of a \scm|'method1| followed by trying another object with its own copattern-matching contexts \scm|Q1 Q2 ...| acts as if the two copatterns are combined and the inner object is inlined into the outer one like so:
 \begin{minted}{scheme}
 (object [(self 'method1) (try-object (object [Q1 = response1]

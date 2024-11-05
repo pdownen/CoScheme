@@ -1,11 +1,9 @@
 To increase our familiarity with copatterns in Scheme, let us stress their main traits and introduce our syntax.
 One of the entry points of our extension is the macro \scm{define*}.
-This macro enables us to declare a codata object by a list of observations.
-Those observations are pairs of copatterns and possible outcomes.
-In each observation, the first element of the copattern is the object's name.
-One key feature of copatterns is that they can be \emph{nested}, in other words, they can be defined upon an arbitrarily long sequence of patterns and copatterns.
-Hence, after the object's name, we can have more (co)patterns dictating a more specific evaluation context to be matched.
-Copatterns allow us to do equational reasoning. Thus, when we face a matching evaluation context, we can substitute the context with the outcome of the respective observation.
+This macro enables us to declare codata objects through a list of observations.
+Each observation is a pair containing a copattern and an outcome.
+Every copattern starts with the object's name, which can be followed by an arbitrarily long sequence of patterns. 
+The fact that we can create \emph{nested} copatterns allows us to perform equational reasoning. This happens because we can always add one more pattern to the copattern, thus dictating a more specific evaluation context to be matched. The key idea behind observations is that if we find an evaluation context that satisfies our copattern, we can substitute the context with the outcome of the respective observation.
 
 \begin{minted}{scheme}
 ;; stutter : Stream Nat
@@ -20,7 +18,7 @@ Still considering the classic stream scenario, we can define streams in terms of
 So, to create fancier streams, it suffices to specify copatterns containing those destructors.
 Let us target a stream that, starting from a number \scm{n}, counts the same number twice before incrementing it. 
 Since we want to start from a given number, we need to specify a context that represents this idea: \scm{stutter n}.
-We could have other root contexts, such as \scm{stutter} and \scm{stutter n m}, but those do not describe a context with only a single initial value.
+We could have selected another initial context, such as \scm{stutter} and \scm{stutter n m}, but those do not describe a context with only a single initial value.
 
 Now, we need to describe the behavior of our destructors.
 We can represent our destructors as quoted values.
@@ -29,22 +27,21 @@ What should we do when we have this previous context?
 In other words, what should be the outcome of that observation? 
 For the \scm{head} destructor, we can return our current state \scm{n}.
 However, what should we do with \emph{tail}? We want our second element to be \scm{n}, yet we want our third element to be the successor of \scm{n}.
+We want to depict the behavior that we increment the current state in every two elements. 
 It is not clear what we should do because the outcome depends on the \emph{next} action after \scm{tail}. 
 This is where copatterns take the spotlight.
-Since copatterns can be defined upon arbitrarily long contexts, we can spell out part of the desired behavior: when we ask for the second element --- \scm{(((stutter n) 'tail) 'head)} --- we return n.
-Despite that, we did not define where the increment should happen.
-We want to depict the behavior that we increment the current state in every two elements. 
-We can do this by returning a new stream, with a new state \scm{n + 1}, after every two elements --- \scm{(((stutter n) 'tail) 'tail)} ---. 
-
-\adriano{Maybe I need to explain why we can define streams only with a combination of head and tail calls?}
+Since copatterns can be defined with arbitrarily long contexts, we can spell out the desired behavior using multiple observations.
+So, when we ask for the second element --- \scm{(((stutter n) 'tail) 'head)} --- we return our current state \scm{n}.
+But if we passed over two elements --- \scm{(((stutter n) 'tail) 'tail)} ---,
+we can return a new stream with a new state \scm{n + 1}. 
 
 It may not seem to, but this is enough to define our desired stream.
 This specific combination of copatterns containing the stream's destructors covers all possible evaluation contexts.
-We specified that we return the current state for the first two elements, and if we have a context with at least two \scm{tail} destructors, we consume this context fragment and return a new stream with the incremented state.   
+We specified that we return the current state for the first two elements, and if we have a context with at least two \scm{tail} destructors, we replace this context fragment with a new stream with the incremented state.   
 
-Reasoning about the coverage of the current copatterns is important since our implementation does not provide coverage analysis.
+Reasoning about the coverage of our copatterns is important since our implementation does not provide coverage analysis.
 If we encounter an uncovered case, our implementation emits a runtime error, explaining that this is an uncovered copattern.
-Non-total configurations, akin to partial functions, are not always undesirable. They can simplify the development during a prototyping phase, and if the missing case does not make sense, they can be the most semantic correct thing to do.
+Non-total configurations, akin to partial functions, are not always undesirable. They can simplify the development during a prototyping phase, and if the missing case does not make sense, they can be the most semantic thing to do.
 
 This framework is not limited by matching a single value in the initial group.
 To illustrate, we can define a stream that intercalates elements from two different streams using a similar configuration, but observing two arguments instead of one.
@@ -63,7 +60,7 @@ However, copatterns are not exclusively used with streams and infinite data.
 In particular, we can define a depth-first search on a finite binary tree.
 For this goal, we need to specify what should happen in contexts containing leaves and nodes of a tree.
 We can create observations that match a specific shape of the input.
-Therefore, when we see an evaluation context with a leaf, we return a singleton, and when we see a node, we recurse on both children and append their results.
+Therefore, when we see an evaluation context with a leaf --- \scm{((search ('leaf e)) 'dfs)} ---, we return a singleton, and when we see a node --- \scm{((search ('node l e r)) 'dfs)} ---, we recurse on both children and append their results.
 \adriano{Do I need to talk about how DFS works?}
 
 \begin{minted}{scheme}
@@ -83,11 +80,18 @@ Now let us consider an arithmetic evaluator:
     [(eval ('add l r)) = (+ (eval l) (eval r))]))
 \end{minted}
 
-Fantastic, it works! But what if we wish to add a multiplication, a new operation, to our evaluator? 
-We could add one more line to the previous definition with a copattern matching a \scm{'Mult} term.
+
+Fantastic, it works! 
+We have described an evaluator using copatterns matching the possible terms.
+One interesting remark is that we have two recursive calls in the addition case.
+The user must pay attention to this since we are working in call-by-value language.
+However, what if we wish to add a multiplication, a new operation, to our evaluator? 
+We could add one more observation to the previous definition with a copattern matching a \scm{'Mult} term and an outcome similar to the addition case.
 Nevertheless, we do not always want to modify existing working code.
 This is one of the concerns of the expression problem.
-To solve this issue, we could have defined each operator as an individual evaluator who only knows how to deal with one operation and compose them all.
+We want to add more operations to our codata type without modifying what we already have.
+With that in mind, we could have defined this evaluator differently to solve this issue.
+We could create a new evaluator for each operator. Each new evaluator would only know how to deal with one operation, and we could recreate the original evaluator by composing all new evaluators.
 
 \begin{minted}{scheme}
   ;; eval-num : ('num Number) -> Number
@@ -107,14 +111,12 @@ To solve this issue, we could have defined each operator as an individual evalua
 
 \end{minted}
 
-\adriano{TODO: Write about the helper functions that we use during the composition}
+\adriano{TODO: lambda*, define*, define-object}
 
-\adriano{I think I should remove this, this explanation already happens on sec 3}
 This approach emphasizes our crown jewel: \emph{Composition}.
 To be more precise, this is a vertical composition since we are adding more cases to the list of observations.
 To help visualize this, you can think that the list of possible observations has one entry per line, and we are adding more lines to that list, thus vertical composition.
 Another approach to composition, also supported by our implementation, is to extend some copattern with other copatterns.
 In that case, we are extending the size of a specific line, thus creating a horizontal composition.
 
-\adriano{I have three topics: constant folding, evaluator with variables, and a horizontal composition example.
-The happy path would be to encode one of the evaluators with a horizontal composition, so I could explain the other and finish with the fancy one.}
+\adriano{I have three topics: constant folding, evaluator with variables, and a horizontal composition example.}

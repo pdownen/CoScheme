@@ -20,7 +20,6 @@ Head fibs = 0
 Head (Tail fibs) = 1
 Tail (Tail fibs) = zipWith _+_ fibs (Tail fibs)
 \end{minted}
-\adriano{This example is funny, it works but emits 3 warnings, two related to the termination checker and one suggestion to turn on a flag (--guardedness). However, if you turn this flag on those warnings become errors. After typesetting the proofs, I will try to look for more failing examples in Agda.}
 Unfortunately, if we want to actually produce working code in this style, our choices are limited.
 Agda gives the most full-fledged implementation of copatterns in a real system~\cite{ElaboratingDependentCopatterns}.
 However, Agda is primarily a proof assistant rather than a general-purpose programming language, and as such, has different concerns than an ordinary functional programmer.

@@ -258,6 +258,10 @@ Instantiating templates and recursive $\lamstar$:
   &=
   (\Template F; B) ~ (\lamstar (F; B))
   \\
+  \lambda x. (\lamstar (F; B)) ~ x
+  &=
+  \lamstar (F; B)
+  \\
   (\Template O; B) ~ V
   &=
   (\Extension O) ~ (\Template B) ~ V
@@ -342,8 +346,9 @@ Apartness between copatterns and contexts ($Q \apart C$):
 \label{fig:source-equality}
 \end{figure}
 
-\begin{lemma}
+\begin{restatable}{lemma}{thmvaluetranslation}
   \label{l-value}
+  \label{thm:value-translation}
   The following instances of translation are all values up to the equational
   theory of the target language in \cref{fig:target-equality}:
   \begin{enumerate}[(a)]
@@ -352,14 +357,16 @@ Apartness between copatterns and contexts ($Q \apart C$):
   \item $E\den{F} = \lambda b. \lambda s. \lambda x. M$ for some term $M$,
   \item $\den{V} = W$ for some value $W$.
   \end{enumerate}
-\end{lemma}
+\end{restatable}
 
-\begin{proposition}[Conservative Extension]
+\begin{restatable}[Conservative Extension]{proposition}{thmconservativeextension}
+  \label{thm:conservative-extension}
   If $M = N$ in the equational theory of the target
   (\cref{fig:target-equality}), then so too does $\den{M} = \den{N}$.
-\end{proposition}
+\end{restatable}
 
-\begin{proposition}[Soundness]
+\begin{restatable}[Soundness]{proposition}{thmsoundness}
+  \label{thm:soundness}
   The equational axioms given in \cref{fig:source-equality} are sound with
   respect to the translation in \cref{fig:translation},
   \begin{align*}
@@ -369,7 +376,7 @@ Apartness between copatterns and contexts ($Q \apart C$):
   \end{align*}
   up to the equational theory of the target language in
   \cref{fig:target-equality}.
-\end{proposition}
+\end{restatable}
 
 
 %%% Local Variables:

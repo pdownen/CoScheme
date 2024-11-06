@@ -1,19 +1,21 @@
+\allowdisplaybreaks
+
 \adriano{Review the copattern case (probably use induction)}
 
 \adriano{Figure out the correct argument to assure things about $\den{M}$'s}
 
 
+\thmvaluetranslation*
 \begin{proof}
-    \Cref{l-value}.
-    The following instances of translation are all values up to the equational theory of the target language in \cref{fig:target-equality}:
+    The listed instances of translation are all values up to the equational theory of the target language in \cref{fig:target-equality}:
 
-    The proof follows by mutual recursion/induction.
+    The proof follows by mutual induction on the syntax of templates $B$, extensions $O$, and $F$, and values $V$.
     By definition, we know that our translation return terms in the target language.
     In other words, we can say that $\den{M}=M'$ for some target term $M'$.
     \begin{enumerate}[(a)]
         \item $T\den{B} = \lambda s. M$ for some term $M$,
-        \begin{proof}
-            By induction on $B$.
+        % \begin{proof}
+        %     By induction on $B$.
             \begin{itemize}
                 \item $(B = \varepsilon)$ By our translation we have: $T\den{\varepsilon} = \lambda s. ~\mathit{fail} ~s$, where $M=\mathit{fail} ~s$.
                 \item ($B = O; B'$) By our translation we have: $T\den{O; B'} = \lambda s. ~\den{O} ~\den{B'} ~s$.
@@ -32,11 +34,11 @@
                         =& \quad \lambda s. ~(\lambda s. ~M'') \subst{x}{s} & (=_{\alpha})
                     \end{align*} 
             \end{itemize}
-            \qed
-        \end{proof}
+        %     \qed
+        % \end{proof}
 \item $E\den{O} = \lambda b. \lambda s. M$ for some term $M$,
-\begin{proof}
-    By induction on $O$.
+% \begin{proof}
+%     By induction on $O$.
     \begin{itemize}
     \item $(O = \varepsilon)$ By our translation we have $E\den{\varepsilon} = \lambda b. \lambda s. ~b ~s$, where $M= b ~s$.
     \item $(O = O_1;O_2)$
@@ -121,11 +123,11 @@
             =& \quad \lambda b. (\lambda s.~ M_B)\subst{x}{b} & (=_{\alpha})
         \end{align*}
     \end{itemize}
-    \qed
-\end{proof}
+%     \qed
+% \end{proof}
 \item $E\den{F} = \lambda b. \lambda s. \lambda x. M$ for some term $M$,
-\begin{proof}
-    Let us consider the possible values of $F$.
+% \begin{proof}
+%     Let us consider the possible values of $F$.
     \begin{itemize}
         \item $(F= \lambda P. ~O)$ Let' consider if $P$ is a variable pattern or not:
         \begin{itemize}
@@ -141,11 +143,11 @@
             =& \quad \lambda b. \lambda s. (\lambda x. M'\subst{s}{x})\subst{x}{s} & (\alpha)
         \end{align*}
     \end{itemize}
-    \qed
-\end{proof}
+%     \qed
+% \end{proof}
 \item $\den{V} = W$ for some value $W$.
-\begin{proof}
-    By induction on $V$.
+% \begin{proof}
+%     By induction on $V$.
     \begin{itemize}
         \item $\den{x} = x$, where $W=x$.
         \item \begin{align*}
@@ -173,14 +175,21 @@
             =& \quad \lambda b. \lambda s. M_O& (b)
         \end{align*}
     \end{itemize}
-    \qed
-\end{proof}
+%     \qed
+% \end{proof}
 \end{enumerate}
 
 \end{proof}
 
-\begin{theorem}[Extension Composition Identity Left]
+\thmsoundness*
+\begin{proof}
+  Each axiom is derived up to the target equational theory in the following lemmas.
+\end{proof}
+
+\begin{lemma}[Extension Composition Identity Left]
+  \label{thm:ext-compose-id-left}
     $ E\den{\varepsilon; O} = E\den{O}.$
+\end{lemma}
     \begin{proof}
         \begin{align*}
             &\quad E\den{\varepsilon; O} \\
@@ -195,28 +204,32 @@
         \end{align*}
         \qed
     \end{proof}
-\end{theorem}
 
-\begin{theorem}[Extension Composition Identity Right]
-    $ E\den{O} = E\den{O;\varepsilon}.$
-    \begin{proof}
-        \begin{align*}
-            &\quad E\den{O;\varepsilon} \\
-            =& \quad \lambda b. \lambda s.~ E\den{O} ~(E\den{\varepsilon} ~b) ~s \\
-            =& \quad \lambda b. \lambda s.~ E\den{O} ~((\lambda b. \lambda s.~ b ~s) ~b) ~s \\
-            =& \quad \lambda b. \lambda s.~ E\den{O} ~(\lambda s.~ b ~s) ~s & (\beta)\\
-            =& \quad \lambda b. \lambda s.~ (\lambda b. \lambda s.~ M_0) ~(\lambda s.~ b ~s) ~s & (\cref{l-value})\\
-            =& \quad \color{red}{\lambda b. \lambda s.~ (\lambda b. \lambda s.~ M_0) ~b ~s} & \color{red}{(\eta)}\\
-            =& \quad \color{red}{\lambda b. \lambda s.~ (\lambda s.~ M_0) ~s} & (\beta)\\
-            =& \quad \color{red}{\lambda b. \lambda s.~ M_0} & (\beta) \\
-            =& \quad \color{red}{E\den{O}} & (\cref{l-value})
-        \end{align*}
-        \qed
-    \end{proof}
-\end{theorem}
+%% Paul: Removing this lemma since it is the only one that requires eta.
+    
+% \begin{lemma}[Extension Composition Identity Right]
+%   \label{thm:ext-compose-id-right}
+%   $ E\den{O} = E\den{O;\varepsilon}.$
+% \end{lemma}
+%     \begin{proof}
+%         \begin{align*}
+%             &\quad E\den{O;\varepsilon} \\
+%             =& \quad \lambda b. \lambda s.~ E\den{O} ~(E\den{\varepsilon} ~b) ~s \\
+%             =& \quad \lambda b. \lambda s.~ E\den{O} ~((\lambda b. \lambda s.~ b ~s) ~b) ~s \\
+%             =& \quad \lambda b. \lambda s.~ E\den{O} ~(\lambda s.~ b ~s) ~s & (\beta)\\
+%             =& \quad \lambda b. \lambda s.~ (\lambda b. \lambda s.~ M_0) ~(\lambda s.~ b ~s) ~s & (\cref{l-value})\\
+%             =& \quad \color{red}{\lambda b. \lambda s.~ (\lambda b. \lambda s.~ M_0) ~b ~s} & \color{red}{(\eta)}\\
+%             =& \quad \color{red}{\lambda b. \lambda s.~ (\lambda s.~ M_0) ~s} & (\beta)\\
+%             =& \quad \color{red}{\lambda b. \lambda s.~ M_0} & (\beta) \\
+%             =& \quad \color{red}{E\den{O}} & (\cref{l-value})
+%         \end{align*}
+%         \qed
+%     \end{proof}
 
-\begin{theorem}[Template Composition Identity Left]
-    $ T\den{\varepsilon; B} = T\den{B}.$
+\begin{lemma}[Template Composition Identity Left]
+  \label{thm:tmpl-compose-id-left}
+  $ T\den{\varepsilon; B} = T\den{B}.$
+\end{lemma}
     \begin{proof}
         \begin{align*}
             &\quad T\den{\varepsilon; B} \\
@@ -230,10 +243,12 @@
         \end{align*}
         \qed
     \end{proof}
-\end{theorem}
 
-\begin{theorem}[Extension Composition Associativity]
-    $ E\den{(O_1;O_2);O_3} = E\den{O_1;(O_2;O_3)}.$
+\begin{lemma}[Extension Composition Associativity]
+  \label{thm:ext-compose-assoc}
+  \\
+  $ E\den{(O_1;O_2);O_3} = E\den{O_1;(O_2;O_3)}.$
+\end{lemma}
     \begin{proof}
         \begin{align*}
             &\quad E\den{(O_1;O_2);O_3} \\
@@ -266,11 +281,11 @@
         \end{align*}
         \qed
     \end{proof}
-\end{theorem}
 
-\begin{theorem}[Template Composition Associativity]
-
-    $ T\den{(O_1;O_2);B} = T\den{O_1;(O_2;B)}.$
+\begin{lemma}[Template Composition Associativity]
+  \label{thm:templ-compose-assoc}
+  $ T\den{(O_1;O_2);B} = T\den{O_1;(O_2;B)}.$
+\end{lemma}
     \begin{proof}
         \begin{align*}
             &\quad T\den{(O_1;O_2);B} \\
@@ -300,10 +315,11 @@
         \end{align*}
         \qed
     \end{proof}
-\end{theorem}
 
-\begin{theorem}[Extension Commit]
-    $ E\den{\Do M; O} = E\den{\Do M}.$
+\begin{lemma}[Extension Commit]
+  \label{thm:ext-commit}
+  $ E\den{\Do M; O} = E\den{\Do M}.$
+\end{lemma}
     \begin{proof}
         \begin{align*}
             &\quad E\den{\Do M; O} \\
@@ -325,10 +341,11 @@
         \end{align*}
         \qed
     \end{proof}
-\end{theorem}
 
-\begin{theorem}[Template Commit]
-    $ T\den{\Do M; B} = T\den{\Else M}.$
+\begin{lemma}[Template Commit]
+  \label{thm:template-commit}
+  $ T\den{\Do M; B} = T\den{\Else M}.$
+\end{lemma}
     \begin{proof}
         \begin{align*}
             &\quad T\den{\Else M} \\
@@ -350,36 +367,163 @@
         \end{align*}
         \qed
     \end{proof}
-\end{theorem}
 
-\begin{theorem}[Unfold $\lamstar$]
+\begin{lemma}[$\eta\lamstar$]
+  \label{thm:eta-lamstar}
+  $E\den{\lambda x.~ (\lamstar (F; B)) ~ x} = E\den{\lamstar (F; B)}$
+\end{lemma}
+\begin{proof}
+  From \cref{thm:value-translation}, we have
+  $E\den{F} = \lambda b.\lambda s. \lambda z. M$ for some term $M$.  In the
+  following, let
+  $M' = M\subst{b}{T\den{B}}\subst{s}{(\lambda y.\mathit{self}~y)}$,
+  \begin{align*}
+    &\quad
+    E\den{\lambda x.~ (\lamstar (F; B)) ~ x}
+    \\
+    =&\quad
+    \lambda x. E\den{(\lamstar (F; B))} ~ x
+    \\
+    =&\quad
+    \lambda x.
+    (\Rec \mathit{self}
+    = (\lambda s. E\den{F} ~ T\den{B} ~ s)
+    ~ (\lambda y. \mathit{self}~y))
+    ~ x
+    \\
+    =&\quad
+    \lambda x.
+    (\Rec \mathit{self} = E\den{F} ~ T\den{B} ~ (\lambda y. \mathit{self}~y))
+    ~ x
+    &(\beta)
+    \\
+    =&\quad
+    \lambda x.
+    (\Rec \mathit{self}
+    = (\lambda b.\lambda s.\lambda z. M) ~ T\den{B}
+    ~ (\lambda y. \mathit{self}~y))
+    ~ x
+    &(\cref{thm:value-translation})
+    \\
+    =&\quad
+    \lambda x.
+    (\Rec \mathit{self}
+    = \lambda z. M\subst{b}{T\den{B}}\subst{s}{(\lambda y.\mathit{self}~y)})
+    ~ x
+    \\
+    =&\quad
+    \lambda x.
+    (\Rec \mathit{self} = \lambda z. M')
+    ~ x
+    &(\beta)
+    \\
+    =&\quad
+    \lambda x.
+    (\lambda z.
+    M'
+    \subst{\mathit{self}}{\Rec \mathit{self} = \lambda z. M'})
+    ~ x
+    &(rec)
+    \\
+    =&\quad
+    \lambda x.
+    M'
+    \subst{\mathit{self}}{\Rec \mathit{self} = \lambda z. M'}
+    \subst{z}{x}
+    &(\beta)
+    \\
+    =&\quad
+    \lambda z.
+    M'
+    \subst{\mathit{self}}{\Rec \mathit{self} = \lambda z. M'}
+    &(\alpha)
+    \\
+    =&\quad
+    \Rec \mathit{self} = \lambda z. M'
+    &(rec)
+    \\
+    =&\quad
+    \Rec \mathit{self}
+    = \lambda z. M\subst{b}{T\den{B}}\subst{s}{(\lambda y.\mathit{self}~y)}
+    \\
+    =&\quad
+    \Rec \mathit{self}
+    = (\lambda b. \lambda s. \lambda z. M) ~ T\den{B}
+    ~ (\lambda x. \mathit{self} ~ x)
+    &(\beta)
+    \\
+    =&\quad
+    \Rec \mathit{self} = E\den{F} ~ T\den{B} ~ (\lambda x. \mathit{self} ~ x)
+    &(\cref{thm:value-translation})
+    \\
+    =&\quad
+    \Rec \mathit{self}
+    = (\lambda s. E\den{F} ~ T\den{B} ~ s)
+    ~ (\lambda x. \mathit{self} ~ x)
+    &(\beta)
+    \\
+    =&\quad
+    \Rec \mathit{self} = T\den{F; B} ~ (\lambda x. \mathit{self} ~ x)
+    \\
+    =&\quad
+    E\den{\lamstar(F; B)}
+  \end{align*}
+  \qed
+\end{proof}
+
+\begin{lemma}[Unfold $\lamstar$]
+  \label{thm:unfold-lamstar}
     $ E\den{ \lamstar (F; B)} = \den{(\Template F; B) ~ (\lamstar (F; B))}.$
-    \begin{proof}
-        \begin{align*}
-            &\quad E\den{ \lamstar (F; B)} \\
-            =& \quad (\Rec \mathit{self} = T\den{F; B} ~ (\lambda x. \mathit{self} ~ x)) \\
-            =& \quad (\Rec \mathit{self} = T\den{F; B} ~ \mathit{self}) & \color{red}{(\eta)}\\
-            =& \quad (\Rec \mathit{self} = (\lambda s. ~E\den{F} ~T\den{B} ~s) ~  \mathit{self}) \\
-            % =& \quad (\Rec \mathit{self} = (\lambda s. ~E\den{F} ~T\den{B} ~s) ~ (\mathit{self}) & (\eta) \\
-            =& \quad (\Rec \mathit{self} = ~E\den{F}\subst{s}{\mathit{self}} ~T\den{B}\subst{s}{\mathit{self}} ~\mathit{self}) & (\beta)\\
-            % =& \quad (\Rec \mathit{self} = ~E\den{F}\subst{s}{self} ~T\den{B}\subst{s}{self} ~(self) & (\beta)\\
-            =& \quad (E\den{F}\subst{s}{\mathit{self}} ~T\den{B}\subst{s}{\mathit{self}} ~\mathit{self})\subst{self}{(\Rec \mathit{self} = ~E\den{F}\subst{s}{\mathit{self}} ~T\den{B}\subst{s}{\mathit{self}} ~\mathit{self})} & (rec)\\
-            =& \quad (E\den{F}\subst{s}{\mathit{self}} ~T\den{B}\subst{s}{\mathit{self}} ~\mathit{self})\subst{self}{E\den{ \lamstar (F; B)}} & (rec)\\
-            =& \quad (E\den{F}\subst{s}{E\den{ \lamstar (F; B)}} ~T\den{B}\subst{s}{E\den{ \lamstar (F; B)}} ~E\den{ \lamstar (F; B)})& (\beta)
-        \end{align*}
-        \begin{align*}
-            &\quad \den{(\Template F; B) ~ (\lamstar (F; B))} \\
-            =& \quad \den{(\Template F; B)} ~\den{(\lamstar (F; B))} \\
-            =& \quad E\den{(F; B)} ~E\den{(\lamstar (F; B))} \\
-            =& \quad (\lambda s. ~E\den{F} ~T\den{B} ~s) ~E\den{(\lamstar (F; B))} \\
-            =& \quad ~E\den{F}\subst{s}{E\den{(\lamstar (F; B))}} ~T\den{B}\subst{s}{E\den{(\lamstar (F; B))}} ~E\den{(\lamstar (F; B))}  & (\beta)
-        \end{align*}
-        \qed
-    \end{proof}
-\end{theorem}
+\end{lemma}
+\begin{proof}
+  Note,
+  \begin{math}
+    T\den{F; B} ~ (\lambda x. \mathit{self} ~ x)
+    =
+    E\den{F} ~ T\den{B} ~ (\lambda x. \mathit{self} ~ x)    
+  \end{math}
+  is $\beta$-equal to some value of the form $\lambda z. M'$ because
+  $T\den{F; B} = \lambda b. \lambda s. \lambda z. M$ from
+  \cref{thm:value-translation}.  So
+  $\Rec \mathit{self} = T\den{F; B} ~ (\lambda x. \mathit{self} ~ x)$ unfolds
+  via $\beta$ and $rec$ in the following,
+  \begin{align*}
+    &\quad
+    E\den{ \lamstar (F; B)}
+    \\
+    =& \quad
+    (\Rec \mathit{self} = T\den{F; B} ~ (\lambda x. \mathit{self} ~ x))
+    \\
+    =& \quad
+    T\den{F; B}
+    ~
+    (\lambda x.
+    (\Rec \mathit{self} = T\den{F; B} ~ (\lambda x. \mathit{self} ~ x))
+    ~ x)
+    )
+    & (\beta rec)
+    \\
+    =& \quad
+    T\den{F; B} ~ (\lambda x. \den{\lamstar(F; B)} ~ x)
+    \\
+    =& \quad
+    T\den{F; B} ~ \den{\lamstar(F; B)}
+    & (\cref{thm:eta-lamstar})
+    \\
+    =& \quad
+    \den{\Template (F; B)} ~ \den{\lamstar (F; B)}
+    \\
+    =& \quad
+    \den{(\Template (F; B)) ~ (\lamstar (F; B))}
+  \end{align*}
+  \qed
+\end{proof}
 
-\begin{theorem}[] \\
-    $ \den{(\Template O; B) ~ V} = \den{(\Extension O) ~ (\Template B) ~ V}.$
+\begin{lemma}[Template Extension]
+  \label{thm:templ-ext}
+  \\
+  $ \den{(\Template O; B) ~ V} = \den{(\Extension O) ~ (\Template B) ~ V}.$
+\end{lemma}
     \begin{proof}
         \begin{align*}
             &\quad \den{(\Template O; B) ~ V} \\
@@ -396,10 +540,11 @@
         \end{align*}
         \qed
     \end{proof}
-\end{theorem}
 
-\begin{theorem}[] \\
-    $ \den{(\Template \varepsilon) ~ V} = \den{\mathit{fail}~V}.$
+\begin{lemma}[Template Failure]
+  \label{thm:templ-fail}
+  $ \den{(\Template \varepsilon) ~ V} = \den{\mathit{fail}~V}.$
+\end{lemma}
     \begin{proof}
         \begin{align*}
             &\quad \den{(\Template \varepsilon) ~ V} \\
@@ -417,10 +562,11 @@
         \end{align*}
         \qed
     \end{proof}
-\end{theorem}
 
-\begin{theorem}[]
-    $ \den{(\Template \Continue x \to M) ~ V} = \den{M\subst{x}{V}}.$
+\begin{lemma}[Template Continue]
+  \label{thm:templ-continue}
+  $ \den{(\Template \Continue x \to M) ~ V} = \den{M\subst{x}{V}}.$
+\end{lemma}
     \begin{proof}
         \begin{align*}
             &\quad \den{(\Template \Continue x \to M) ~ V} \\
@@ -431,12 +577,13 @@
         \end{align*}
         \qed
     \end{proof}
-\end{theorem}
 
 \adriano{$\forall M V x, \den{M}\subst{x}{V} = \den{M\subst{x}{V}}$}
 
-\begin{theorem}[]
+\begin{lemma}[Extension Try]
+  \label{thm:ext-try}
     $ \den{(\Extension \Try x \to B) ~ V} = \Template B\subst{x}{V}.$
+\end{lemma}
     \begin{proof}
         \begin{align*}
             &\quad \den{(\Extension \Try x \to B) ~ V}  \\
@@ -447,10 +594,12 @@
         \end{align*}
         \qed
     \end{proof}
-\end{theorem}
 
-\begin{theorem}[] \\
-    $ \den{\Match P \gets V ~ O} = \den{O\subst{\many{x}}{\many{W}}} (\text{if } P\subst{\many{x}}{\many{W}} = V).$
+\begin{lemma}[Try Match]
+  \label{thm:try-match}
+  \\
+  $ \den{\Match P \gets V ~ O} = \den{O\subst{\many{x}}{\many{W}}} (\text{if } P\subst{\many{x}}{\many{W}} = V).$
+\end{lemma}
     \begin{proof}
         \begin{align*}
             &\quad \den{\Match P \gets V ~ O}  \\
@@ -477,4 +626,9 @@
         \end{align*}
         \qed
     \end{proof}
-\end{theorem}
+
+
+%%% Local Variables:
+%%% mode: LaTeX
+%%% TeX-master: "coscheme"
+%%% End:

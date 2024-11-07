@@ -7,178 +7,351 @@
 
 \thmvaluetranslation*
 \begin{proof}
-    The listed instances of translation are all values up to the equational theory of the target language in \cref{fig:target-equality}:
+  % The listed instances of translation are all values up to the equational theory of the target language in \cref{fig:target-equality}:
 
-    The proof follows by mutual induction on the syntax of templates $B$, extensions $O$, and $F$, and values $V$.
-    By definition, we know that our translation return terms in the target language.
-    In other words, we can say that $\den{M}=M'$ for some target term $M'$.
-    \begin{enumerate}[(a)]
-        \item $T\den{B} = \lambda s. M$ for some term $M$,
-        % \begin{proof}
-        %     By induction on $B$.
-            \begin{itemize}
-                \item $(B = \varepsilon)$ By our translation we have: $T\den{\varepsilon} = \lambda s. ~\mathit{fail} ~s$, where $M=\mathit{fail} ~s$.
-                \item ($B = O; B'$) By our translation we have: $T\den{O; B'} = \lambda s. ~\den{O} ~\den{B'} ~s$.
-                    Our induction hypothesis provides us that $T\den{B'} = \lambda s. M'$ for some term $M'$.
-                    % By (b) we know that $E\den{O}=\lambda b. \lambda s. M_O$ for some term $M_O$.
-                    \begin{align*}
-                        & \quad \lambda s. ~\den{O} ~\den{B'} ~s \\
-                        % =& \quad \lambda s.  ~(\lambda b. \lambda s. M_O) ~(\lambda s. M') ~s & (IH, (b))
-                        =& \quad \lambda s. ~M_O ~(\lambda s. M') ~s & (IH)
-                    \end{align*}
-                    Where $M=M_O ~(\lambda s. M') ~s$.
-                \item $(B = \Continue x \to M')$ 
-                    \begin{align*}
-                        & \quad T\den{\Continue x \to M'} = \lambda x. ~\den{M'} \\
-                        =& \quad \lambda x. ~(\lambda s. ~M'') \\
-                        =& \quad \lambda s. ~(\lambda s. ~M'') \subst{x}{s} & (=_{\alpha})
-                    \end{align*} 
-            \end{itemize}
-        %     \qed
-        % \end{proof}
-\item $E\den{O} = \lambda b. \lambda s. M$ for some term $M$,
-% \begin{proof}
-%     By induction on $O$.
+  % The proof follows
+  By mutual induction on the syntax of templates $B$, extensions $O$, extension functions $F$, and values $V$.
+  % By definition, we know that our translation returns terms in the target language.
+  % In other words, we can say that $\den{M}=M'$ for some target term $M'$.
+  \begin{enumerate}[(a)]
+  \item $T\den{B} = \lambda s. M$ for some term $M$, as shown by the following cases:
+    % \begin{proof}
+    %   By induction on $B$.
     \begin{itemize}
-    \item $(O = \varepsilon)$ By our translation we have $E\den{\varepsilon} = \lambda b. \lambda s. ~b ~s$, where $M= b ~s$.
+    \item $(B = \varepsilon)$
+      % By our translation we have:
+      $T\den{\varepsilon} = \lambda s. ~\mathit{fail} ~s$, so $M=\mathit{fail} ~s$.
+    \item ($B = O; B'$)
+      $T\den{O; B'} = \lambda s. ~\den{O} ~\den{B'} ~s$, so $M = \den{O} ~\den{B'} ~s$.
+      % By our translation we have: $T\den{O; B'} = \lambda s. ~\den{O} ~\den{B'} ~s$.
+      % Our induction hypothesis provides us that $T\den{B'} = \lambda s. M'$ for some term $M'$.
+      % % By (b) we know that $E\den{O}=\lambda b. \lambda s. M_O$ for some term $M_O$.
+      % \begin{align*}
+      %   & \quad \lambda s. ~\den{O} ~\den{B'} ~s \\
+      %   % =& \quad \lambda s.  ~(\lambda b. \lambda s. M_O) ~(\lambda s. M') ~s & (IH, (b))
+      %   =& \quad \lambda s. ~M_O ~(\lambda s. M') ~s & (IH)
+      % \end{align*}
+      % Where $M=M_O ~(\lambda s. M') ~s$.
+    \item $(B = \Continue x {\,\to\,} N)$
+      $T\den{\Continue x {\,\to\,} N} = \lambda x. \den{N}$, so $M = \den{N}$.
+      % \begin{align*}
+      %   & \quad T\den{\Continue x \to M'} = \lambda x. ~\den{M'} \\
+      %   =& \quad \lambda x. ~(\lambda s. ~M'') \\
+      %   =& \quad \lambda s. ~(\lambda s. ~M'') \subst{x}{s} & (=_{\alpha})
+      % \end{align*} 
+    \end{itemize}
+    % \qed
+    % \end{proof}
+  \item $E\den{O} = \lambda b. \lambda s. M$ for some term $M$, as shown by the following cases: 
+    % \begin{proof}
+    %   By induction on $O$.
+    \begin{itemize}
+    \item $(O = \varepsilon)$
+      % By our translation we have
+      $E\den{\varepsilon} = \lambda b. \lambda s. ~b ~s$, so $M= b ~s$.
     \item $(O = O_1;O_2)$
+      $E\den{O_1;O_2} = \lambda b. \lambda s. ~\den{O_1} ~(\den{O_2} ~b) ~s$, so $M = \den{O_1} ~(\den{O_2} ~b) ~s$.
+      % \begin{align*}
+      %   & \quad E\den{O_1;O_2} = \lambda b. \lambda s. ~\den{O_1} ~(\den{O_2} ~b) ~s\\
+      %   =& \quad \lambda b. \lambda s. ~(\lambda b. \lambda s. ~M_{O_1}) ~((\lambda b. \lambda s. ~M_{O_2}) ~b) ~s & (IH)
+      % \end{align*}
+      % Where $M=(\lambda b. \lambda s. ~M_{O_1}) ~((\lambda b. \lambda s. ~M_{O_2}) ~b) ~s$.
+    \item $(O = Q[x] ~O)$ follows by induction on $Q$ (generalizing $O$):
+      \begin{itemize}
+      \item $(Q=\hole)$ for all $O$,
+        % According to our translation:
         \begin{align*}
-            & \quad E\den{O_1;O_2} = \lambda b. \lambda s. ~\den{O_1} ~(\den{O_2} ~b) ~s\\
-            =& \quad \lambda b. \lambda s. ~(\lambda b. \lambda s. ~M_{O_1}) ~((\lambda b. \lambda s. ~M_{O_2}) ~b) ~s & (IH)
+          E\den{x ~O}
+          &=
+          \lambda b. \lambda x. E\den{O} ~ b ~ x
+          \\
+          &=
+          \lambda b. \lambda s. E\den{O}\subst{x}{s} ~ b ~ s
+          &(\alpha)
         \end{align*}
-        Where $M=(\lambda b. \lambda s. ~M_{O_1}) ~((\lambda b. \lambda s. ~M_{O_2}) ~b) ~s$.
-    \item $(O = Q[x] ~O)$ Let us consider each possible value of $Q$.
-        \begin{itemize}
-            \item $(Q=\hole)$ According to our translation: $E\den{\hole ~ [x] ~O} = E\den{x ~O} = \lambda b. \lambda x. E\den{O} ~ b ~ x$.
-            By our induction hypothesis we can infer that $E\den{O}=\lambda b. \lambda s. M_O$.
-            Therefore, we can conclude that $\lambda b. \lambda x. ~(\lambda b. \lambda s. M_O) ~ b ~ x$, where $ M = (\lambda b. \lambda s. M_O) ~ b ~ x$.
-            \item $Q=(Q ~P)$ According to our translation: $E\den{(Q ~P) ~ [x] ~O} = E\den{(Q[x] ~P) ~O} = E\den{Q[x] ~ (\lambda P. O)}$.
-            Eventually, we will hit the previous case after converting all patterns in the copattern into pattern $\lambda$'s.
-            After converting all patterns $O$ will have a shape of form: $\lambda P_0. ~\lambda P_1 ... \lambda P_n. ~O$.
-            \adriano{I think I need to use induction here.}
-        \end{itemize}
-    \item $(O = \lambda P. ~O)$ According to our translation:
-        \begin{align*} 
-            & \quad E\den{\lambda P. ~O} = E\den{\lambda x. \Match P \gets x ~ O}\\
-            =& \quad \lambda b. \lambda s. (\lambda x. E\den{\Match P \gets x ~ O} ~ (\lambda s'. b ~ s' ~ x) ~ s) \\
-            =& \quad \lambda b. \lambda s. (\lambda x. \lambda b. \lambda s. (
+        so $M = E\den{O}\subst{x}{s} ~ b ~ s$ for the given $O$.
+        % By our induction hypothesis we can infer that $E\den{O}=\lambda b. \lambda s. M_O$.
+        % Therefore, we can conclude that $\lambda b. \lambda x. ~(\lambda b. \lambda s. M_O) ~ b ~ x$, where $ M = (\lambda b. \lambda s. M_O) ~ b ~ x$.
+      \item $(Q=Q'~P)$
+        assuming the inductive hypothesis (IH) that, for all $O$, there is an $N_O$ such that $E\den{Q[x] ~ O} = \lambda b. \lambda s. N_O$.
+        For all $O$,
+        \begin{align*}
+          E\den{(Q'[x] ~ P) O}
+          &=
+          E\den{Q'[x] ~ (\lambda P. O)}
+          \\
+          &=
+          \lambda b. \lambda s. N_{(\lambda P. O)}
+          &(IH)
+        \end{align*}
+        so $M = N_{(\lambda P. O)}$ given by the inductive hypothesis applied to $\lambda P. O$.
+        % According to our translation:
+        % $E\den{(Q ~P) ~ [x] ~O} = E\den{(Q[x] ~P) ~O} = E\den{Q[x] ~ (\lambda P. O)}$.
+        % Eventually, we will hit the previous case after converting all patterns in the copattern into pattern $\lambda$'s.
+        % After converting all patterns $O$ will have a shape of form: $\lambda P_0. ~\lambda P_1 ... \lambda P_n. ~O$.
+        % \adriano{I think I need to use induction here.}
+      \end{itemize}
+    \item $(O = \lambda P. ~O)$ follows by cases if $P$ is a variable or another pattern:
+      \begin{itemize}
+      \item $(P \in \mathit{Variable})$
+        \begin{math}
+          E\den{\lambda x. ~O}
+          =
+          \lambda b. \lambda s.
+          (\lambda x. E\den{O} ~ (\lambda s'. b ~ s' ~ x) ~ s)
+          ,
+        \end{math}
+        so
+        \\
+        $M = \lambda x. E\den{O} ~ (\lambda s'. b ~ s' ~ x) ~ s$.
+      \item $(P \notin \mathit{Variable})$
+      \begin{math}
+        E\den{\lambda P. ~O}
+        =
+        E\den{\lambda x. \Match P \gets x ~ O}
+        ,
+      \end{math}
+      which follows by the above case.
+      \end{itemize}
+      % According to our translation:
+      % \begin{align*} 
+      %   & \quad E\den{\lambda P. ~O} = E\den{\lambda x. \Match P \gets x ~ O}\\
+      %   =& \quad \lambda b. \lambda s. (\lambda x. E\den{\Match P \gets x ~ O} ~ (\lambda s'. b ~ s' ~ x) ~ s) \\
+      %   =& \quad \lambda b. \lambda s. (\lambda x. \lambda b. \lambda s. (
+      %   \begin{aligned}[t]
+      %     &\Match \den{M} \With \\
+      %     &\quad
+      %     \begin{aligned}[t]
+      %       \{~
+      %       P &\to E\den{O}~b~s; \\
+      %       \_ &\to b~s
+      %       ~\}
+      %     \end{aligned}
+      %   \end{aligned}
+      %   )~ (\lambda s'. b ~ s' ~ x) ~ s) \\
+      %   =& \quad \lambda b. \lambda s. (\lambda x. \lambda b. \lambda s. (
+      %   \begin{aligned}[t]
+      %     &\Match \den{M} \With \\
+      %     &\quad
+      %     \begin{aligned}[t]
+      %       \{~
+      %       P &\to (\lambda b. \lambda s. M_O)~b~s; \\
+      %       \_ &\to b~s
+      %       ~\}
+      %     \end{aligned}
+      %   \end{aligned}
+      %   )~ (\lambda s'. b ~ s' ~ x) ~ s) & (IH)
+      % \end{align*}
+    \item $(O = \Match P \gets N ~ O)$
+        \begin{align*}
+          & \quad E\den{\Match P \gets N ~ O}
+          =
+          \lambda b. \lambda s.
+          \begin{aligned}[t]
+            &\Match \den{N} \With \\
+            &\quad
             \begin{aligned}[t]
-              &\Match \den{M} \With \\
-              &\quad
-              \begin{aligned}[t]
-                \{~
-                P &\to E\den{O}~b~s; \\
-                \_ &\to b~s
-                ~\}
-              \end{aligned}
+              \{~
+              P &\to E\den{O}~b~s; \\
+              \_ &\to b~s
+              ~\}
             \end{aligned}
-            )~ (\lambda s'. b ~ s' ~ x) ~ s) \\
-            =& \quad \lambda b. \lambda s. (\lambda x. \lambda b. \lambda s. (
-            \begin{aligned}[t]
-              &\Match \den{M} \With \\
-              &\quad
-              \begin{aligned}[t]
-                \{~
-                P &\to (\lambda b. \lambda s. M_O)~b~s; \\
-                \_ &\to b~s
-                ~\}
-              \end{aligned}
-            \end{aligned}
-            )~ (\lambda s'. b ~ s' ~ x) ~ s) & (IH)
-            \end{align*}
-    \item $(O = \Match P \gets M ~ O)$
-        \begin{align*}
-            & \quad E\den{\Match P \gets M ~ O} = \lambda b. \lambda s.
-            \begin{aligned}[t]
-              &\Match \den{M} \With \\
-              &\quad
-              \begin{aligned}[t]
-                \{~
-                P &\to E\den{O}~b~s; \\
-                \_ &\to b~s
-                ~\}
-              \end{aligned}
-            \end{aligned} \\
-            =& \quad \lambda b. \lambda s.
-            \begin{aligned}[t]
-              &\Match M' \With \\
-              &\quad
-              \begin{aligned}[t]
-                \{~
-                P &\to (\lambda b. \lambda s.~ M_O) ~b~s; \\
-                \_ &\to b~s
-                ~\}
-              \end{aligned}
-            \end{aligned}  & (IH)
-            \end{align*}
-    \item $(O = \Nest O)$
-        \begin{align*}
-            & \quad E\den{\Nest O} = \lambda b. \lambda s. \Rec s' = E\den{O} ~ (\lambda \_. b ~ s) ~ (\lambda x. s' ~ x)\\
-            =& \quad \lambda b. \lambda s. \Rec s' = (\lambda b. \lambda s.~ M_O) ~ (\lambda \_. b ~ s) ~ (\lambda x. s' ~ x) & (IH)
+          \end{aligned}
+          % \\
+          % =& \quad \lambda b. \lambda s.
+          % \begin{aligned}[t]
+          %   &\Match \den{N} \With \\
+          %   &\quad
+          %   \begin{aligned}[t]
+          %     \{~
+          %     P &\to (\lambda b. \lambda s.~ M_O) ~b~s; \\
+          %     \_ &\to b~s
+          %     ~\}
+          %   \end{aligned}
+          % \end{aligned}  & (IH)
         \end{align*}
-    \item $(O = \Try x \to B)$ 
+        so $M = \Match \den{N} \With \set{P \to E\den{O}~b~s; \_ \to b~s}$.
+      \item $(O = \Nest O)$
+        \begin{math}
+          E\den{\Nest O}
+          =
+          \lambda b. \lambda s.
+          (\Rec s' = E\den{O} ~ (\lambda \_. b ~ s) ~ (\lambda x. s' ~ x))
+          ,
+        \end{math}
+        so $M = (\Rec s' = E\den{O} ~ (\lambda \_. b ~ s) ~ (\lambda x. s' ~ x))$
+        % \begin{align*}
+        %   & \quad E\den{\Nest O} = \lambda b. \lambda s. \Rec s' = E\den{O} ~ (\lambda \_. b ~ s) ~ (\lambda x. s' ~ x)\\
+        %   =& \quad \lambda b. \lambda s. \Rec s' = (\lambda b. \lambda s.~ M_O) ~ (\lambda \_. b ~ s) ~ (\lambda x. s' ~ x) & (IH)
+        % \end{align*}
+      \item $(O = \Try x \to B)$
+        assuming the inductive hypothesis $(IH)$ from part (a) that
+        $T\den{B} = \lambda s. N$ for some $N$,
         \begin{align*}
-            & \quad E\den{\Try x \to B} = \lambda x. T\den{B}\\
-            =& \quad \lambda x. (\lambda s.~ M_B) & (a) \\
-            =& \quad \lambda b. (\lambda s.~ M_B)\subst{x}{b} & (=_{\alpha})
+          E\den{\Try x \to B}
+          &= \lambda x. T\den{B}
+          \\
+          &= \lambda x. (\lambda s.~ N)
+          & (IH)
+          \\
+          &=\lambda b. (\lambda s.~ N)\subst{x}{b}
+          & (\alpha)
         \end{align*}
+        so $M = N\subst{x}{b}$
     \end{itemize}
-%     \qed
-% \end{proof}
-\item $E\den{F} = \lambda b. \lambda s. \lambda x. M$ for some term $M$,
-% \begin{proof}
-%     Let us consider the possible values of $F$.
+    % \qed
+    % \end{proof}
+  \item $E\den{F} = \lambda b. \lambda s. \lambda x. M$ for some term $M$, as shown by the following cases:
+    % \begin{proof}
+    %   Let us consider the possible values of $F$.
     \begin{itemize}
-        \item $(F= \lambda P. ~O)$ Let' consider if $P$ is a variable pattern or not:
-        \begin{itemize}
-            \item $(P = x)$ According to our translation $E\den{\lambda x. ~O}=\lambda b. \lambda s. (\lambda x. E\den{O} ~ (\lambda s'. b ~ s' ~ x) ~ s)$.
-            Therefore, by (b), we can conclude that $\lambda b. \lambda s. (\lambda x. (\lambda b. \lambda s. M_O) ~ (\lambda s'. b ~ s' ~ x) ~ s)$
-            \item $(P \neq x)$ We have that $E\den{\lambda P. ~O}=E\den{\lambda x. \Match P \gets x ~ O}$ which is a specific case of the previous case, where $O=\Match P \gets x ~ O$.
-        \end{itemize} 
-        \item $(F= Q[x ~P] ~O)$ Eventually, after converting the whole copattern we will hit $E\den{x ~O}$, where $O$ is some sequence of nested $\lambda P$'s.
+    \item $(F= \lambda P. ~O)$
+      Following the same calculation in the matching special case of part (b) above,
+      $E\den{\lambda P. O} = \lambda b. \lambda s. (\lambda x. M)$
+      for some $M$.
+    %   Let' consider if $P$ is a variable pattern or not:
+    %   \begin{itemize}
+    %   \item $(P = x)$ According to our translation $E\den{\lambda x. ~O}=\lambda b. \lambda s. (\lambda x. E\den{O} ~ (\lambda s'. b ~ s' ~ x) ~ s)$.
+    %     Therefore, by (b), we can conclude that $\lambda b. \lambda s. (\lambda x. (\lambda b. \lambda s. M_O) ~ (\lambda s'. b ~ s' ~ x) ~ s)$
+    %   \item $(P \neq x)$ We have that $E\den{\lambda P. ~O}=E\den{\lambda x. \Match P \gets x ~ O}$ which is a specific case of the previous case, where $O=\Match P \gets x ~ O$.
+    %   \end{itemize} 
+    \item $(F= Q[x ~P] ~O)$
+      follows by induction on $Q$ (generalizing $O$):
+      \begin{itemize}
+      \item $(Q = \hole)$ for all $O$,
         \begin{align*}
-            & \quad E\den{x ~O} =  \lambda b. \lambda x. E\den{\lambda P. O'} ~ b ~ x\\
-            =& \quad \lambda b. \lambda x. (\lambda b. \lambda s. \lambda x. M') ~ b ~ x & (IH) \\
-            =& \quad \lambda b. \lambda x. (\lambda x. M'\subst{s}{x}) & (\beta) \\
-            =& \quad \lambda b. \lambda s. (\lambda x. M'\subst{s}{x})\subst{x}{s} & (\alpha)
+          E\den{(y ~ P) ~ O}
+          =
+          E\den{y ~ (\lambda P. O)}
+          &=
+          \lambda b. \lambda y. E\den{\lambda P. O} ~ b ~ y
+          % \\
+          % &=
+          % \lambda b. \lambda s. E\den{\lambda P. O}\subst{y}{s} ~ b ~ s
+          % &(\alpha)
         \end{align*}
+        Following the same calculation in the previous case $(F = \lambda P. O)$ gives us
+        some $N$ such that $E\den{\lambda P. O} = \lambda b. \lambda s'. \lambda x. N$, so continuing we have
+        \begin{align*}
+          E\den{(y ~ P) ~ O}
+          &=
+          \lambda b. \lambda y. (\lambda b. \lambda s'. \lambda x. N) ~ b ~ y
+          \\
+          &=
+          \lambda b. \lambda y. \lambda x. N\subst{s'}{y}
+          &(\beta)
+          \\
+          &=
+          \lambda b. \lambda s. \lambda x. N\subst{s'}{y}\subst{y}{s}
+          &(\alpha)
+        \end{align*}
+        so $M = N\subst{s'}{y}\subst{y}{s}$.
+      \item $(Q = Q' ~ P')$
+        assuming the inductive hypothesis that,
+        for all $O$, there is an $N_O$ such that
+        $E\den{Q'[y ~ P] ~ O} = \lambda b. \lambda s. \lambda x. N_O$.
+        For all $O$,
+        \begin{align*}
+          E\den{(Q'[y ~ P] ~ P') ~ O}
+          &=
+          E\den{Q'[y ~ P] ~ (\lambda P'. O)}
+          \\
+          &=
+          \lambda b. \lambda s. \lambda x. N_{(\lambda P'. O)}
+          &(IH)
+        \end{align*}
+        so $M = N_{(\lambda P'. O)}$ given by the inductive hypothesis applied to $\lambda P'. O$.
+      \end{itemize}
+      % Eventually, after converting the whole copattern we will hit $E\den{x ~O}$, where $O$ is some sequence of nested $\lambda P$'s.
+      % \begin{align*}
+      %   & \quad E\den{x ~O} =  \lambda b. \lambda x. E\den{\lambda P. O'} ~ b ~ x\\
+      %   =& \quad \lambda b. \lambda x. (\lambda b. \lambda s. \lambda x. M') ~ b ~ x & (IH) \\
+      %   =& \quad \lambda b. \lambda x. (\lambda x. M'\subst{s}{x}) & (\beta) \\
+      %   =& \quad \lambda b. \lambda s. (\lambda x. M'\subst{s}{x})\subst{x}{s} & (\alpha)
+      % \end{align*}
     \end{itemize}
-%     \qed
-% \end{proof}
-\item $\den{V} = W$ for some value $W$.
-% \begin{proof}
-%     By induction on $V$.
+    % \qed
+    % \end{proof}
+  \item $\den{V} = W$ for some value $W$, as shown by the following cases:
+    % \begin{proof}
+    %   By induction on $V$.
     \begin{itemize}
-        \item $\den{x} = x$, where $W=x$.
-        \item \begin{align*}
-            & \quad \den{\lambda x. ~M} = \lambda x. ~\den{M} \\
-            =& \quad \lambda x. ~M'
-        \end{align*}
-        where $W = \lambda x. ~M''$.
-        \item $\den{null} = null$, where $W=null$.
-        \item \begin{align*}
-            & \quad \den{\Cons V \, W} = \Cons \den{V_1} \, \den{V_2} \\
-            =& \quad \Cons V_1' \, V_2' & (IH)
-        \end{align*}
-        where $W = \Cons \den{V_1'} \, \den{V_2'}$.
-        \item $\den{x'} = x'$, where $W=x'$.
-        \item \begin{align*}
-            & \quad \den{\lamstar B} = \Rec \mathit{self} = T\den{B} ~ (\lambda x. \mathit{self} ~ x) \\
-            =& \quad \Rec \mathit{self} = (\lambda s. ~M_B) ~ (\lambda x. \mathit{self} ~ x) & (a)
-        \end{align*}
-        \item \begin{align*}
-            & \quad \den{\Template B} = T\den{B} \\
-            =& \quad \lambda s. M_B& (a)
-        \end{align*}
-        \item \begin{align*}
-            & \quad \den{\Extension O} = E\den{O} \\
-            =& \quad \lambda b. \lambda s. M_O& (b)
-        \end{align*}
+    \item $(V = x)$
+      $\den{x} = x$, so $W=x$.
+    \item $(V = \lambda x. M)$
+      $\den{\lambda x. M} = \lambda x. \den{M}$, so $W = \lambda x. \den{M}$.
+    \item $(V = \Null)$
+      $\den{\Null} = \Null$, so $W=\Null$.
+    \item $(V = \Cons V_1 ~ V_2)$
+      $\den{\Cons V_1 ~ V_2} = \Cons \den{V_1} ~ \den{V_2}$,
+      where $\den{V_1} = W_1$ and $\den{V_2} = W_2$ by the inductive hypotheses,
+      so $W = \Cons W_1 ~ W_2$.
+    \item $(V = \Template B)$
+      $\den{\Template B} = T\den{B} = \lambda s. M$, for some $M$,
+      by the inductive hypothesis part (a),
+      so $W = \lambda s. M$.
+    \item $(V = \Extension O)$
+      $\den{\Extension O} = E\den{O} = \lambda b. \lambda s. M$, for some $M$,
+      by the inductive hypothesis part (b),
+      so $W = \lambda b. \lambda s. M$.
+    \item $(V = \lamstar (F; B))$
+      assuming the inductive hypotheses that 
+      \begin{itemize}
+      \item[$IH_1$] there is some $N_1$ such that
+        $E\den{F} = \lambda b. \lambda s. \lambda x. N_1$, and
+      \item[$IH_2$] there is some $N_2$ such that
+        $T\den{B} = \lambda s. N_2$,
+      \end{itemize}
+      \begin{align*}
+        \den{\lamstar (F; B)}
+        &=
+        (\Rec \mathit{self} = T\den{F; B} ~ (\lambda x. \mathit{self} ~ x))
+        \\
+        &=
+        (\Rec \mathit{self} = E\den{F} ~ T\den{B} ~ (\lambda x. \mathit{self} ~ x))
+        &(\beta)
+        \\
+        &=
+        (\Rec \mathit{self}
+        = (\lambda b. \lambda s. \lambda x. N_1)
+        ~ T\den{B}
+        ~ (\lambda x. \mathit{self} ~ x))
+        &(IH_1)
+        \\
+        &=
+        (\Rec \mathit{self}
+        = (\lambda b. \lambda s. \lambda x. N_1)
+        ~ (\lambda s. N_2)
+        ~ (\lambda x. \mathit{self} ~ x))
+        &(IH_2)
+        \\
+        &=
+        (\Rec \mathit{self}
+        = \lambda x.N_1\subst{b}{(\lambda s.N_2)}\subst{s}{(\lambda x.\mathit{self}~x)})
+        &(\beta)
+        \\
+        &=
+        \begin{aligned}[t]
+          \lambda x.
+          N_1
+          &\subst{b}{(\lambda s.N_2)}
+          \\
+          &\subst{s}{(\lambda x.\mathit{self}~x)}
+          \\
+          &\subst
+          {\mathit{self}}
+          {
+            (\Rec \mathit{self}
+            =
+            \lambda x.N_1\subst{b}{(\lambda s.N_2)}\subst{s}{(\lambda x.\mathit{self}~x)})
+          }
+        \end{aligned}
+        &(rec)
+      \end{align*}
+    % \qed
+    % \end{proof}
     \end{itemize}
-%     \qed
-% \end{proof}
-\end{enumerate}
-
+  \end{enumerate}
 \end{proof}
 
 \thmsoundness*

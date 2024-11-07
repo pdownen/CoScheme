@@ -321,9 +321,9 @@ Pattern and copattern matching:
   \end{aligned}
   &(\text{if } Q\subst{\many{x}}{\many{W}} &= C)
   \\
-  C[\lamstar (Q[y] ~ O); B]
+  C[\lamstar (Q[y] ~ O); \Else M]
   &=
-  C[\lamstar B]
+  C[M]
   &(\text{if } Q &\apart C)
 \end{align*}
 
@@ -345,19 +345,6 @@ Apartness between copatterns and contexts ($Q \apart C$):
 \caption{Some equalities of copattern extensions.}
 \label{fig:source-equality}
 \end{figure}
-
-\begin{restatable}{lemma}{thmvaluetranslation}
-  \label{l-value}
-  \label{thm:value-translation}
-  The following instances of translation are all values up to the equational
-  theory of the target language in \cref{fig:target-equality}:
-  \begin{enumerate}[(a)]
-  \item $T\den{B} = \lambda s. M$ for some term $M$,
-  \item $E\den{O} = \lambda b. \lambda s. M$ for some term $M$,
-  \item $E\den{F} = \lambda b. \lambda s. \lambda x. M$ for some term $M$,
-  \item $\den{V} = W$ for some value $W$.
-  \end{enumerate}
-\end{restatable}
 
 \begin{restatable}[Conservative Extension]{proposition}{thmconservativeextension}
   \label{thm:conservative-extension}

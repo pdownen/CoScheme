@@ -4,8 +4,21 @@
 
 \adriano{Figure out the correct argument to assure things about $\den{M}$'s}
 
+\subsection{Conservative extension of the target}
 
-\thmvaluetranslation*
+\begin{restatable}{lemma}{thmvaluetranslation}
+  \label{l-value}
+  \label{thm:value-translation}
+  The following instances of translation are all values up to the equational
+  theory of the target language in \cref{fig:target-equality}:
+  \begin{enumerate}[(a)]
+  \item $T\den{B} = \lambda s. M$ for some term $M$,
+  \item $E\den{O} = \lambda b. \lambda s. M$ for some term $M$,
+  \item $E\den{F} = \lambda b. \lambda s. \lambda x. M$ for some term $M$,
+  \item $\den{V} = W$ for some value $W$.
+  \end{enumerate}
+\end{restatable}
+% \thmvaluetranslation*
 \begin{proof}
   % The listed instances of translation are all values up to the equational theory of the target language in \cref{fig:target-equality}:
 
@@ -354,6 +367,102 @@
   \end{enumerate}
 \end{proof}
 
+\begin{lemma}[Substitution]
+  \label{thm:substitution-translation}
+  For all values $V$,
+  \begin{enumerate}[(a)]
+  \item $\den{M\subst{x}{V}} = \den{M}\subst{x}{\den{V}}$,
+  \item $T\den{B\subst{x}{V}} = T\den{B}\subst{x}{\den{V}}$,
+  \item $E\den{O\subst{x}{V}} = E\den{O}\subst{x}{\den{V}}$.
+  \end{enumerate}
+\end{lemma}
+\begin{proof}
+  By mutual induction on the syntax of terms $M$, tempaltes $B$, and extensions $O$.
+\end{proof}
+
+\begin{lemma}[Compositionality]
+  \label{thm:compositional-translation}
+
+  There exists a translation of contexts $\den{C}$ such that
+  $\den{C[M]} = \den{C}{[\den{M}]}$.
+\end{lemma}
+\begin{proof}
+  By mutual induction on the syntax of terms, templates, and extensions.
+\end{proof}
+
+\thmconservativeextension*
+\begin{proof}
+  The proof strategy follows from proposition 1 of \cite{DownenAriola2014CSCC}.
+  
+  Reflexivity, transitivity, and symmetry of the equational theory follows immediately.
+
+  Congruence---$M = N$ implies $C[M] = C[N]$ for all contexts $C$---follows from
+  the fact that the translation is \emph{compositional}
+  (\cref{thm:compositional-translation}).  An equation $C[M] = C[N]$, derived
+  from congruence of $M = N$ inside $C$, can be derived by distributing the
+  translation across contexts to apply the underlying equality
+  $\den{M} = \den{N}$ gotten from soundness of $M = N$:
+  \begin{align*}
+    \den{C[M]}
+    &=
+    \den{C}{[\den{M}]}
+    &(\cref{thm:compositional-translation})
+    \\
+    &=
+    \den{C}{[\den{N}]}
+    \\
+    &=
+    \den{C[N]}
+    &(\cref{thm:compositional-translation})
+  \end{align*}
+
+  Finally, each individual axiom ($\beta$, $rec$, \etc) from the target language
+  immediately holds by the inductive hypothesis---because the definition of
+  translation for these cases does not change syntax---along with
+  \cref{thm:value-translation,thm:substitution-translation} for cases which
+  substitute.  For example, with the $\beta$ axiom, we have
+  \begin{align*}
+    \den{(\lambda x. M) ~ V}
+    &=
+    (\lambda x. \den{M}) ~ \den{V}
+    \\
+    &=
+    (\lambda x. \den{M}) ~ W
+    &(\cref{thm:value-translation})
+    \\
+    &=
+    \den{M}\subst{x}{W}
+    &(\beta)
+    \\
+    \den{M}\subst{x}{\den{V}}
+    &(\cref{thm:value-translation})
+    \\
+    \den{M\subst{x}{V}}
+    &(\cref{thm:substitution-translation})
+  \end{align*}
+  since values are only translated to values, $\den{V} = W$ up to the target equational theory (\cref{thm:value-translation}), which means that $\beta$-reduction still applies after translation.
+\end{proof}
+
+\subsection{Soundness of the source}
+
+\begin{lemma}[Pattern Translation]
+  \label{thm:pattern-translation}
+
+  $\den{P} = P$.
+\end{lemma}
+\begin{proof}
+  By induction on the syntax of $P$.
+\end{proof}
+
+\begin{lemma}[Apartness Translation]
+  \label{thm:apartness-translation}
+
+  If $P \apart V$ then $P \apart \den{V}$.
+\end{lemma}
+\begin{proof}
+  By induction on the derivation of apartness $P \apart V$.
+\end{proof}
+
 \thmsoundness*
 \begin{proof}
   Each axiom is derived up to the target equational theory in the following lemmas.
@@ -408,11 +517,8 @@
             &\quad T\den{\varepsilon; B} \\
             =& \quad \lambda s. ~ E\den{\varepsilon} ~T\den{B} ~s \\
             =& \quad \lambda s. ~ (\lambda b. \lambda s.~ b ~s) ~T\den{B} ~s \\
-            =& \quad \lambda s. ~ (\lambda b. \lambda s.~ b ~s) ~(\lambda s.~ M_0) ~s & (\cref{l-value})\\
-            =& \quad \lambda s. ~ (\lambda s.~ (\lambda s.~ M_0) ~s) ~s & (\beta)\\
-            =& \quad \lambda s. ~ (\lambda s.~ M_0) ~s & (\beta)\\
-            =& \quad \lambda s. ~ M_0 & (\beta) \\
-            =& \quad T\den{B} & (\cref{l-value})
+            =& \quad \lambda s. ~ T\den{B} ~s & (\beta, \cref{thm:value-translation})\\
+            =& \quad T\den{B} & (\alpha, \beta, \cref{l-value})
         \end{align*}
         \qed
     \end{proof}
@@ -422,124 +528,147 @@
   \\
   $ E\den{(O_1;O_2);O_3} = E\den{O_1;(O_2;O_3)}.$
 \end{lemma}
-    \begin{proof}
-        \begin{align*}
-            &\quad E\den{(O_1;O_2);O_3} \\
-            =& \quad \lambda b. \lambda s.~ E\den{O_1;O_2} ~(E\den{O_3} ~b) ~s \\
-            =& \quad \lambda b. \lambda s.~ (\lambda b. \lambda s.~ E\den{O_1} ~(E\den{O_2} ~b) ~s) ~(E\den{O_3} ~b) ~s \\
-            =& \quad \lambda b. \lambda s.~ (\lambda b. \lambda s.~ E\den{O_1} ~(E\den{O_2} ~b) ~s) ~((\lambda b. \lambda s.~ M_3) ~b) ~s & (\cref{l-value})\\
-            =& \quad \lambda b. \lambda s.~ (\lambda b. \lambda s.~ E\den{O_1} ~(E\den{O_2} ~b) ~s) ~(\lambda s.~ M_3) ~s & (\beta)\\
-            =& \quad \lambda b. \lambda s.~ (\lambda b. \lambda s.~ (\lambda b. \lambda s.~ M_1) ~(E\den{O_2} ~b) ~s) ~(\lambda s.~ M_3) ~s & (\cref{l-value})\\
-            =& \quad \lambda b. \lambda s.~ (\lambda b. \lambda s.~ (\lambda b. \lambda s.~ M_1) ~((\lambda b. \lambda s.~ M_2) ~b) ~s) ~(\lambda s.~ M_3) ~s & (\cref{l-value})\\
-            =& \quad \lambda b. \lambda s.~ (\lambda b. \lambda s.~ (\lambda b. \lambda s.~ M_1) ~(\lambda s.~ M_2) ~s) ~(\lambda s.~ M_3) ~s & (\beta) \\
-            =& \quad \lambda b. \lambda s.~ (\lambda b. \lambda s.~ (\lambda s.~ M_1\subst{b}{\lambda s.~ M_2}) ~s) ~(\lambda s.~ M_3) ~s & (\beta) \\
-            =& \quad \lambda b. \lambda s.~ (\lambda s.~ (\lambda s.~ M_1\subst{b}{\lambda s.~ M_2}\subst{b}{\lambda s.~ M_3}) ~s) ~s & (\beta) \\
-            =& \quad \lambda b. \lambda s.~ (\lambda s.~ M_1\subst{b}{\lambda s.~ M_2}\subst{b}{\lambda s.~ M_3}) ~s & (\beta) \\
-            =& \quad \lambda b. \lambda s.~ \color{red}{M_1\subst{b}{\lambda s.~ M_2}\subst{b}{\lambda s.~ M_3}} & (\beta)
-        \end{align*}
-
-        \begin{align*}
-            &\quad E\den{O_1;(O_2;O_3)} \\
-            =& \quad \lambda b. \lambda s.~ E\den{O_1} ~(\den{O_2;O_3} ~b) ~s \\
-            =& \quad \lambda b. \lambda s.~ E\den{O_1} ~((\lambda b. \lambda s.~ E\den{O_2} ~(E\den{O_3} ~b) ~s) ~b) ~s \\
-            =& \quad \lambda b. \lambda s.~ E\den{O_1} ~(\lambda s.~ E\den{O_2} ~(E\den{O_3} ~b) ~s) ~s & (\beta) \\
-            =& \quad \lambda b. \lambda s.~ (\lambda b. \lambda s.~ M_1) ~(\lambda s.~ E\den{O_2} ~(E\den{O_3} ~b) ~s) ~s & (\cref{l-value})\\
-            =& \quad \lambda b. \lambda s.~ (\lambda b. \lambda s.~ M_1) ~(\lambda s.~ (\lambda b. \lambda s.~ M_2) ~(E\den{O_3} ~b) ~s) ~s & (\cref{l-value})\\
-            =& \quad \lambda b. \lambda s.~ (\lambda b. \lambda s.~ M_1) ~(\lambda s.~ (\lambda b. \lambda s.~ M_2) ~((\lambda b. \lambda s.~ M_3) ~b) ~s) ~s & (\cref{l-value})\\
-            =& \quad \lambda b. \lambda s.~ (\lambda b. \lambda s.~ M_1) ~(\lambda s.~ (\lambda b. \lambda s.~ M_2) ~(\lambda s.~ M_3) ~s) ~s & (\beta)\\
-            =& \quad \lambda b. \lambda s.~ (\lambda b. \lambda s.~ M_1) ~(\lambda s.~ (\lambda s.~ M_2\subst{b}{\lambda s.~ M_3}) ~s) ~s & (\beta)\\
-            =& \quad \lambda b. \lambda s.~ (\lambda b. \lambda s.~ M_1) ~(\lambda s.~ M_2\subst{b}{\lambda s.~ M_3}) ~s & (\beta)\\
-            =& \quad \lambda b. \lambda s.~ (\lambda s.~ M_1\subst{b}{\lambda s.~ M_2\subst{b}{\lambda s.~ M_3}}) ~s & (\beta)\\
-            =& \quad \lambda b. \lambda s.~ \color{red}{M_1\subst{b}{\lambda s.~ M_2\subst{b}{\lambda s.~ M_3}}} & (\beta)
-        \end{align*}
-        \qed
-    \end{proof}
+\begin{proof}
+  The left-hand side simplifies as follows:
+  \begin{align*}
+    &\quad E\den{(O_1;O_2);O_3} \\
+    =& \quad \lambda b. \lambda s.~ E\den{O_1;O_2} ~(E\den{O_3} ~b) ~s \\
+    =& \quad \lambda b. \lambda s.~ (\lambda b. \lambda s.~ E\den{O_1} ~(E\den{O_2} ~b) ~s) ~(E\den{O_3} ~b) ~s \\
+    =& \quad \lambda b. \lambda s.~ (\lambda b. \lambda s.~ (\lambda b. \lambda s. M_1) ~((\lambda b. \lambda s. M_2) ~b) ~s) ~((\lambda b. \lambda s. M_3) ~b) ~s & (\cref{l-value}) \\
+    =& \quad \lambda b. \lambda s.~ (\lambda b. \lambda s.~ (\lambda b. \lambda s. M_1) ~((\lambda b. \lambda s. M_2) ~b) ~s) ~(\lambda s. M_3) ~s & (\beta) \\
+    =& \quad \lambda b. \lambda s.~ (\lambda b. \lambda s. M_1) ~((\lambda b. \lambda s. M_2) ~(\lambda s. M_3)) ~s & (\beta) \\
+    =& \quad \lambda b. \lambda s.~ (\lambda b. \lambda s. M_1) ~(\lambda s. M_2\subst{b}{(\lambda s. M_3)}) ~s & (\beta) \\
+    \\
+    =& \quad \lambda b. \lambda s.~ M_1\subst{b}{(\lambda s. M_2\subst{b}{(\lambda s. M_3)})} & (\beta) \\
+  \end{align*}
+  The right-hand side simplifies to the same term as follows:
+  \begin{align*}
+    &\quad E\den{O_1;(O_2;O_3)} \\
+    =& \quad \lambda b. \lambda s.~ E\den{O_1} ~(\den{O_2;O_3} ~b) ~s \\
+    =& \quad \lambda b. \lambda s.~ E\den{O_1} ~((\lambda b. \lambda s.~ E\den{O_2} ~(E\den{O_3} ~b) ~s) ~b) ~s \\
+    =& \quad \lambda b. \lambda s.~ E\den{O_1} ~(\lambda s.~ E\den{O_2} ~(E\den{O_3} ~b) ~s) ~s & (\beta)\\
+    =& \quad \lambda b. \lambda s.~ (\lambda b. \lambda s. M_1) ~(\lambda s.~ (\lambda b. \lambda s. M_2) ~((\lambda b. \lambda s. M_3) ~b) ~s) ~s & (\cref{l-value}) \\
+    =& \quad \lambda b. \lambda s.~ (\lambda b. \lambda s. M_1) ~(\lambda s.~ (\lambda b. \lambda s. M_2) ~(\lambda s. M_3) ~s) ~s & (\beta) \\
+    =& \quad \lambda b. \lambda s.~ (\lambda b. \lambda s. M_1) ~(\lambda s. M_2\subst{b}{(\lambda s. M_3)}) ~s & (\beta) \\
+    =& \quad \lambda b. \lambda s.~ M_1\subst{b}{(\lambda s. M_2\subst{b}{(\lambda s. M_3)})} & (\beta)
+  \end{align*}
+  \qed
+\end{proof}
 
 \begin{lemma}[Template Composition Associativity]
   \label{thm:templ-compose-assoc}
+  \\
   $ T\den{(O_1;O_2);B} = T\den{O_1;(O_2;B)}.$
 \end{lemma}
-    \begin{proof}
-        \begin{align*}
-            &\quad T\den{(O_1;O_2);B} \\
-            =& \quad \lambda s.~ E\den{O_1;O_2} ~T\den{B} ~s \\
-            =& \quad \lambda s.~ (\lambda b. \lambda s.~ E\den{O_1} ~(E\den{O_2} ~b) ~s) ~T\den{B} ~s \\
-            =& \quad \lambda s.~ (\lambda b. \lambda s.~ (\lambda b. \lambda s.~ M_1) ~(E\den{O_2} ~b) ~s) ~T\den{B} ~s & (\cref{l-value})\\
-            =& \quad \lambda s.~ (\lambda b. \lambda s.~ (\lambda b. \lambda s.~ M_1) ~((\lambda b. \lambda s.~ M_2) ~b) ~s) ~T\den{B} ~s & (\cref{l-value})\\
-            =& \quad \lambda s.~ (\lambda b. \lambda s.~ (\lambda b. \lambda s.~ M_1) ~(\lambda s.~ M_2) ~s) ~T\den{B} ~s & (\beta)\\
-            =& \quad \lambda s.~ (\lambda b. \lambda s.~ (\lambda s.~ M_1\subst{b}{\lambda s.~ M_2}) ~s) ~T\den{B} ~s & (\beta)\\
-            =& \quad \lambda s.~ (\lambda b. \lambda s.~ M_1\subst{b}{\lambda s.~ M_2}) ~T\den{B} ~s & (\beta)\\
-            =& \quad \lambda s.~ (\lambda b. \lambda s.~ M_1\subst{b}{\lambda s.~ M_2}) ~(\lambda s.~ M_B) ~s & (\cref{l-value})\\
-            =& \quad \lambda s.~ (\lambda s.~ M_1\subst{b}{\lambda s.~ M_2}\subst{b}{\lambda s.~ M_B}) ~s & (\beta)\\
-            =& \quad \color{red}{\lambda s.~ M_1\subst{b}{\lambda s.~ M_2}\subst{b}{\lambda s.~ M_B}} & (\beta)
-        \end{align*}
-        \begin{align*}
-            &\quad T\den{O_1;(O_2;B)} \\
-            =& \quad \lambda s.~ E\den{O_1} ~T\den{O_2;B} ~s \\
-            =& \quad \lambda s.~ E\den{O_1} ~(\lambda s. ~E\den{O_2} ~T\den{B} ~s) ~s \\
-            =& \quad \lambda s.~ E\den{O_1} ~(\lambda s. ~E\den{O_2} ~T\den{B} ~s) ~s \\
-            =& \quad \lambda s.~ E\den{O_1} ~(\lambda s. ~(\lambda b. \lambda s.~ M_2) ~T\den{B} ~s) ~s & (\cref{l-value})\\
-            =& \quad \lambda s.~ E\den{O_1} ~(\lambda s. ~(\lambda b. \lambda s.~ M_2) ~(\lambda s.~ M_B) ~s) ~s & (\cref{l-value})\\
-            =& \quad \lambda s.~ E\den{O_1} ~(\lambda s. ~(\lambda s.~ M_2\subst{b}{\lambda s.~ M_B}) ~s) ~s & (\beta) \\
-            =& \quad \lambda s.~ E\den{O_1} ~(\lambda s. ~M_2\subst{b}{\lambda s.~ M_B}) ~s & (\beta)\\
-            =& \quad \lambda s.~ (\lambda b. \lambda s.~ M_1) ~(\lambda s. ~M_2\subst{b}{\lambda s.~ M_B}) ~s & (\cref{l-value})\\
-            =& \quad \lambda s.~ (\lambda s.~ M_1\subst{b}{\lambda s. ~M_2\subst{b}{\lambda s.~ M_B}}) ~s & (\beta)\\
-            =& \quad \color{red}{\lambda s.~ M_1\subst{b}{\lambda s. ~M_2\subst{b}{\lambda s.~ M_B}}} & (\beta)
-        \end{align*}
-        \qed
-    \end{proof}
+\begin{proof}
+  The left-hand side simplifies as follows:
+  \begin{align*}
+    &\quad T\den{(O_1;O_2);B} \\
+    =& \quad \lambda s.~ E\den{O_1;O_2} ~T\den{B} ~s \\
+    =& \quad \lambda s.~ (\lambda b. \lambda s.~ E\den{O_1} ~(E\den{O_2} ~b) ~s) ~T\den{B} ~s \\
+    =& \quad \lambda s.~ E\den{O_1} ~(E\den{O_2} ~T\den{B}) ~s & (\beta, \cref{thm:value-translation}) \\
+    =& \quad \lambda s.~ (\lambda b.\lambda s. M_1) ~((\lambda b. \lambda s. M_2) ~T\den{B}) ~s & (\cref{l-value}) \\
+    =& \quad \lambda s.~ (\lambda b.\lambda s. M_1) ~(\lambda s. M_2\subst{b}{T\den{B}}) ~s & (\beta, \cref{thm:value-translation}) \\
+    =& \quad \lambda s.~ M_1\subst{b}{(\lambda s. M_2\subst{b}{T\den{B}})} & (\beta) \\
+  \end{align*}
+  The right-hand side simplifies to the same term as follows:
+  \begin{align*}
+    &\quad T\den{O_1;(O_2;B)} \\
+    =& \quad \lambda s.~ E\den{O_1} ~T\den{O_2;B} ~s \\
+    =& \quad \lambda s.~ E\den{O_1} ~(\lambda s. ~E\den{O_2} ~T\den{B} ~s) ~s \\
+    =& \quad \lambda s.~ (\lambda b. \lambda s. M_1) ~(\lambda s. ~(\lambda b. \lambda s.~ M_2) ~T\den{B} ~s) ~s & (\cref{l-value}) \\
+    =& \quad \lambda s.~ (\lambda b. \lambda s. M_1) ~(\lambda s. M_2\subst{b}{T\den{B}}) ~s & (\beta, \cref{thm:value-translation}) \\
+    =& \quad \lambda s.~ M_1\subst{b}{(\lambda s. M_2\subst{b}{T\den{B}})} & (\beta) \\
+  \end{align*}
+  \qed
+\end{proof}
 
 \begin{lemma}[Extension Commit]
   \label{thm:ext-commit}
   $ E\den{\Do M; O} = E\den{\Do M}.$
 \end{lemma}
-    \begin{proof}
-        \begin{align*}
-            &\quad E\den{\Do M; O} \\
-            =& \quad \lambda b. \lambda s.~ E\den{\Do M} ~(E\den{O} ~b) ~s \\
-            =& \quad \lambda b. \lambda s.~ E\den{\Do M} ~((\lambda b. \lambda s.~ M_O) ~b) ~s & (\cref{l-value})\\
-            =& \quad \lambda b. \lambda s.~ E\den{\Do M} ~(\lambda s.~ M_O) ~s & (\beta)\\
-            =& \quad \lambda b. \lambda s.~ E\den{\Try \_ \to \Else \_ \to M} ~(\lambda s.~ M_O) ~s \\
-            =& \quad \lambda b. \lambda s.~ (\lambda (x/\_). ~T\den{\Else \_ \to M}) ~(\lambda s.~ M_O) ~s \\
-            =& \quad \lambda b. \lambda s.~ (T\den{\Else \_ \to M}) ~s & (\beta)\\
-            =& \quad \lambda b. \lambda s.~ (T\den{\Continue \_ \to M}) ~s \\
-            =& \quad \lambda b. \lambda s.~ (\lambda(x/\_) ~ \den{M}) ~s \\
-            =& \quad \color{red}{\lambda b. \lambda s.~ \den{M}} & (\beta)
-        \end{align*}
-        \begin{align*}
-            &\quad E\den{\Do M} \\
-            =&\quad E\den{\Try \_ \to \Continue \_ \to M} \\
-            =& \quad \lambda \_. ~T\den{\Continue \_ \to M} \\
-            =& \quad \color{red}{\lambda \_. ~\lambda \_. ~  \den{M}}
-        \end{align*}
-        \qed
-    \end{proof}
+\begin{proof}
+  \begin{align*}
+    &\quad
+    E\den{\Do M; O}
+    \\
+    =& \quad
+    \lambda b. \lambda s.~ E\den{\Do M} ~(E\den{O} ~b) ~s
+    \\
+    =& \quad
+    \lambda b. \lambda s.~ E\den{\Do M} ~((\lambda b. \lambda s.~ M_O) ~b) ~s
+    & (\cref{l-value})
+    \\
+    =& \quad
+    \lambda b. \lambda s.~ E\den{\Do M} ~(\lambda s.~ M_O) ~s
+    & (\beta)
+    \\
+    =& \quad
+    \lambda b. \lambda s.~ E\den{\Try \_ \to \Continue \_ \to M} ~(\lambda s.~ M_O) ~s
+    \\
+    =& \quad
+    \lambda b. \lambda s.~ (\lambda \_. ~T\den{\Continue \_ \to M}) ~(\lambda s.~ M_O) ~s
+    \\
+    =& \quad
+    \lambda \_. \lambda s.~ T\den{\Continue \_ \to M} ~s
+    & (\beta, b \notin FV(M))
+    \\
+    =& \quad
+    \lambda \_. \lambda s.~ (\lambda \_. ~ \den{M}) ~s
+    \\
+    =& \quad
+    \lambda \_. \lambda \_.~ \den{M}
+    & (\beta, s \notin FV(M))
+    \\
+    =& \quad
+    \lambda \_. ~T\den{\Continue \_ \to M}
+    \\
+    =&\quad
+    E\den{\Try \_ \to \Continue \_ \to M}
+    \\
+    =&\quad
+    E\den{\Do M}
+  \end{align*}
+  \qed
+\end{proof}
 
 \begin{lemma}[Template Commit]
   \label{thm:template-commit}
   $ T\den{\Do M; B} = T\den{\Else M}.$
 \end{lemma}
-    \begin{proof}
-        \begin{align*}
-            &\quad T\den{\Else M} \\
-            =&\quad T\den{\Continue \_ \to M} \\
-            =&\quad \color{red}{\lambda \_. ~\den{M}} \\
-        \end{align*}
-        \begin{align*}
-            &\quad E\den{\Do M} \\
-            =&\quad E\den{\Try \_ \to \Continue \_ \to M} \\
-            =& \quad \lambda \_. ~T\den{\Continue \_ \to M} \\
-            =& \quad \lambda \_. ~\lambda \_. ~  \den{M}  
-        \end{align*}
-        \begin{align*}
-            &\quad T\den{\Do M; B} \\
-            =& \quad \lambda s. ~ E\den{\Do M} ~T\den{B} ~s \\
-            =& \quad \lambda s. ~ (\lambda \_. ~\lambda \_. ~  \den{M}) ~T\den{B} ~s \\
-            =& \quad \lambda s. ~ (\lambda \_. ~  \den{M}) ~s  & (\beta)\\
-            =& \quad \color{red}{\lambda s. ~ \den{M}}  & (\beta)
-        \end{align*}
-        \qed
-    \end{proof}
+\begin{proof}
+  \begin{align*}
+    &\quad
+    T\den{\Do M; B}
+    \\
+    =& \quad
+    \lambda s. ~ E\den{\Do M} ~T\den{B} ~s
+    \\
+    =& \quad
+    \lambda s. ~ E\den{\Try \_ \to \Continue \_ \to M} ~T\den{B} ~s
+    \\
+    =& \quad
+    \lambda s. ~ (\lambda \_. ~T\den{\Continue \_ \to M}) ~T\den{B} ~s
+    \\
+    =& \quad
+    \lambda s. ~ (\lambda \_. ~\lambda \_. ~  \den{M}) ~T\den{B} ~s
+    \\
+    =& \quad
+    \lambda s. ~ (\lambda \_. ~  \den{M}) ~s
+    & (\beta)
+    \\
+    =& \quad
+    \lambda \_. ~ \den{M}
+    & (\beta, s \notin FV(M))
+    \\
+    =& \quad
+    T\den{\Continue \_ \to M}
+    \\
+    =& \quad
+    T\den{\Else M}
+  \end{align*}
+  \qed
+\end{proof}
 
 \begin{lemma}[$\eta\lamstar$]
   \label{thm:eta-lamstar}
@@ -697,22 +826,17 @@
   \\
   $ \den{(\Template O; B) ~ V} = \den{(\Extension O) ~ (\Template B) ~ V}.$
 \end{lemma}
-    \begin{proof}
-        \begin{align*}
-            &\quad \den{(\Template O; B) ~ V} \\
-            =& \quad \den{(\Template O; B)} ~ \den{V} \\
-            =& \quad \den{(\Template O; B)} ~ W & (\cref{l-value}) \\
-            =& \quad (\lambda s. ~E\den{O} ~T\den{B} ~s) ~ W \\
-            =& \quad E\den{O} ~T\den{B} ~W
-        \end{align*}
-        \begin{align*}
-            &\quad  \den{(\Extension O) ~ (\Template B) ~ V} \\
-            =& \quad (\den{(\Extension O)} ~ \den{(\Template B)}) ~ \den{V} \\
-            =& \quad (\den{(\Extension O)} ~ \den{(\Template B)}) ~ W & (\cref{l-value})\\
-            =& \quad E\den{O} ~ T\den{B} ~ W
-        \end{align*}
-        \qed
-    \end{proof}
+\begin{proof}
+  \begin{align*}
+    &\quad \den{(\Template O; B) ~ V} \\
+    =& \quad \den{(\Template O; B)} ~ \den{V} \\
+    =& \quad (\lambda s. ~E\den{O} ~T\den{B} ~s) ~ \den{V} \\
+    =& \quad E\den{O} ~T\den{B} ~ \den{V} & (\beta, \cref{thm:value-translation}) \\
+    =& \quad E\den{\Extension O} ~T\den{\Template B} ~ \den{V} \\
+    =& \quad E\den{(\Extension O) ~ (\Template B) ~ V}
+  \end{align*}
+  \qed
+\end{proof}
 
 \begin{lemma}[Template Failure]
   \label{thm:templ-fail}
@@ -722,16 +846,10 @@
         \begin{align*}
             &\quad \den{(\Template \varepsilon) ~ V} \\
             =& \quad \den{(\Template \varepsilon)} ~ \den{V}\\
-            =& \quad \den{(\Template \varepsilon)} ~ W & (\cref{l-value})\\
-            =& \quad T\den{\varepsilon} ~ W \\
-            =& \quad (\lambda s. ~fail ~s) ~ W \\
-            =& \quad ~fail ~W 
-        \end{align*}
-        \begin{align*}
-            &\quad \den{\mathit{fail}~V} \\
-            =& \quad \den{\mathit{fail}} ~\den{V}\\
-            =& \quad \den{\mathit{fail}} ~W  & (\cref{l-value})\\
-            =& \quad \mathit{fail} ~W
+            =& \quad T\den{\varepsilon} ~ \den{V} \\
+            =& \quad (\lambda s. \mathit{fail} ~ s) ~ \den{V} \\
+            =& \quad \mathit{fail} ~ \den{V} &(\beta, \cref{thm:value-translation}) \\
+            =& \quad \den{\mathit{fail} ~ V}
         \end{align*}
         \qed
     \end{proof}
@@ -740,65 +858,99 @@
   \label{thm:templ-continue}
   $ \den{(\Template \Continue x \to M) ~ V} = \den{M\subst{x}{V}}.$
 \end{lemma}
-    \begin{proof}
-        \begin{align*}
-            &\quad \den{(\Template \Continue x \to M) ~ V} \\
-            =& \quad T\den{(\Continue x \to M)} ~ \den{V}\\
-            =& \quad T\den{(\Continue x \to M)} ~ W & (\cref{l-value})\\
-            =& \quad (\lambda x. ~\den{M}) ~ W \\
-            =& \quad \den{M}\subst{x}{W} & (\beta)
-        \end{align*}
-        \qed
-    \end{proof}
-
-\adriano{$\forall M V x, \den{M}\subst{x}{V} = \den{M\subst{x}{V}}$}
+\begin{proof}
+  \begin{align*}
+    &\quad \den{(\Template \Continue x \to M) ~ V} \\
+    =& \quad T\den{(\Continue x \to M)} ~ \den{V}\\
+    =& \quad (\lambda x. ~\den{M}) ~ \den{V} \\
+    =& \quad \den{M}\subst{x}{\den{V}} & (\beta, \cref{thm:value-translation}) \\
+    =& \quad \den{M\subst{x}{V}} &(\cref{thm:substitution-translation})
+  \end{align*}
+  \qed
+\end{proof}
 
 \begin{lemma}[Extension Try]
   \label{thm:ext-try}
     $ \den{(\Extension \Try x \to B) ~ V} = \Template B\subst{x}{V}.$
 \end{lemma}
-    \begin{proof}
-        \begin{align*}
-            &\quad \den{(\Extension \Try x \to B) ~ V}  \\
-            =& \quad \den{(\Extension \Try x \to B)} ~ \den{V}\\
-            =& \quad E\den{(\Try x \to B)} ~ \den{V}\\
-            =& \quad (\lambda x. ~T\den{B}) ~ \den{V}\\
-            =& \quad T\den{B}\subst{x}{\den{V}}
-        \end{align*}
-        \qed
-    \end{proof}
+\begin{proof}
+  \begin{align*}
+    &\quad \den{(\Extension \Try x \to B) ~ V}  \\
+    =& \quad \den{(\Extension \Try x \to B)} ~ \den{V}\\
+    =& \quad E\den{(\Try x \to B)} ~ \den{V}\\
+    =& \quad (\lambda x. ~T\den{B}) ~ \den{V}\\
+    =& \quad T\den{B}\subst{x}{\den{V}} &(\beta, \cref{thm:value-translation}) \\
+    =& \quad T\den{B\subst{x}{V}} &(\cref{thm:substitution-translation}) \\
+    =& \quad \den{\Template B\subst{x}{V}}
+  \end{align*}
+  \qed
+\end{proof}
 
 \begin{lemma}[Try Match]
   \label{thm:try-match}
   \\
-  $ \den{\Match P \gets V ~ O} = \den{O\subst{\many{x}}{\many{W}}} (\text{if } P\subst{\many{x}}{\many{W}} = V).$
+  $\den{\Match P \gets V ~ O} = \den{O\subst{\many{x}}{\many{W}}}
+  \qquad (\text{if } P\subst{\many{x}}{\many{W}} = V).$
 \end{lemma}
-    \begin{proof}
-        \begin{align*}
-            &\quad \den{\Match P \gets V ~ O}  \\
-            =&\quad \lambda b. \lambda s.
-            \begin{aligned}[t]
-              &\Match \den{V} \With \\
-              &\quad
-              \begin{aligned}[t]
-                \{~
-                P &\to E\den{O}~b~s; \\
-                \_ &\to b~s
-                ~\}
-              \end{aligned}
-            \end{aligned}  \\
-            =&\quad  \lambda b. \lambda s.~(E\den{O}~b~s)\subst{\many{x}}{\many{W}}  & (match) \\
-            =&\quad  \lambda b. \lambda s.~((\lambda b. \lambda s. ~M_O)~b~s)\subst{\many{x}}{\many{W}}  & (\cref{l-value}) \\
-            =&\quad  \lambda b. \lambda s.~M_O\subst{\many{x}}{\many{W}}  & (\beta)
-        \end{align*}
-        \begin{align*}
-            &\quad \den{O\subst{\many{x}}{\many{W}}}  \\
-            =& \quad \den{O}\subst{\many{x}}{\many{W}} \\
-            =& \quad (\lambda b. \lambda s. ~M_O)\subst{\many{x}}{\many{W}} & (\cref{l-value}) \\
-            =& \quad (\lambda b. \lambda s. ~M_O\subst{\many{x}}{\many{W}}) 
-        \end{align*}
-        \qed
-    \end{proof}
+\begin{proof}
+  By \cref{thm:substitution-translation,thm:pattern-translation},
+  \begin{math}
+    \den{V}
+    =
+    \den{P\subst{\many{x}}{\many{W}}}
+    =
+    \den{P}\subst{\many{x}}{\many{\den{W}}}
+    =
+    P\subst{\many{x}}{\many{\den{W}}}
+  \end{math}
+  in the following:
+  \begin{align*}
+    &\quad \den{\Match P \gets V ~ O}  \\
+    =&\quad \lambda b. \lambda s.
+    \begin{aligned}[t]
+      &\Match \den{V} \With \\
+      &\quad
+      \begin{aligned}[t]
+        \{~
+        P &\to E\den{O}~b~s; \\
+        \_ &\to b~s
+        ~\}
+      \end{aligned}
+    \end{aligned}  \\
+    =&\quad  \lambda b. \lambda s.~E\den{O}\subst{\many{x}}{\many{\den{W}}}~b~s  & (match) \\
+    =& \quad \lambda b. \lambda s.~E\den{O\subst{\many{x}}{\many{W}}}~b~s & (\cref{thm:substitution-translation})
+    \\
+    =& \quad E\den{O\subst{\many{x}}{\many{W}}} & (\alpha, \beta, \cref{thm:value-translation})
+  \end{align*}
+  \qed
+\end{proof}
+
+\begin{lemma}[Try Match Apart]
+  \label{thm:try-match-apart}
+  \\
+  $\den{\Match P \gets V ~ O} = \den{\varepsilon}
+  \qquad (\text{if } P \apart V).$
+\end{lemma}
+\begin{proof}
+  By \cref{thm:apartness-translation}, $P \apart \den{V}$ in the following:
+  \begin{align*}
+    &\quad \den{\Match P \gets V ~ O}  \\
+    =&\quad \lambda b. \lambda s.
+    \begin{aligned}[t]
+      &\Match \den{V} \With \\
+      &\quad
+      \begin{aligned}[t]
+        \{~
+        P &\to E\den{O}~b~s; \\
+        \_ &\to b~s
+        ~\}
+      \end{aligned}
+    \end{aligned}  \\
+    =&\quad  \lambda b. \lambda s.~b~s  & (apart) \\
+    =& \quad E\den{\varepsilon}
+  \end{align*}
+  \qed
+\end{proof}
 
 
 %%% Local Variables:

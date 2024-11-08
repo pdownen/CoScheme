@@ -73,45 +73,53 @@ Therefore, when we see an evaluation context with a leaf --- \scm{((search ('lea
 Now let us consider an arithmetic evaluator:
 
 \begin{minted}{scheme}
-;; eval* : Expr -> Number
-(define eval*
-  (lambda*
-    [(eval ('num n))   = n]
-    [(eval ('add l r)) = (+ (eval l) (eval r))]))
+  ;; eval* : Expr -> Number
+  (define* eval*
+    [(self 'eval ('num n))   = n]
+    [(self 'eval ('add l r)) = (+ (self 'eval l) (self 'eval r))])
 \end{minted}
 
 
 Fantastic, it works! 
 We have described an evaluator using copatterns matching the possible terms.
-One interesting remark is that we have two recursive calls in the addition case.
+One intriguing remark is the role of \scm{self} in this definition.
+Here, \scm{self}  is not a keyword, it is a pattern variable that matches the object's name.
+For example, we could have defined the number case as: \scm{[(eval* 'eval ('num n))   = n]}.
+Another thing to consider is the recursive calls, such as those in the addition case.
 The user must pay attention to this since we are working in call-by-value language.
 However, what if we wish to add a multiplication, a new operation, to our evaluator? 
 We could add one more observation to the previous definition with a copattern matching a \scm{'Mult} term and an outcome similar to the addition case.
+
 Nevertheless, we do not always want to modify existing working code.
 This is one of the concerns of the expression problem.
 We want to add more operations to our codata type without modifying what we already have.
-With that in mind, we could have defined this evaluator differently to solve this issue.
-We could create a new evaluator for each operator. Each new evaluator would only know how to deal with one operation, and we could recreate the original evaluator by composing all new evaluators.
+With that in mind, we could have defined this evaluator differently in a way that exploits one of the key characteristics of our notion of copatterns: \emph{composition}.
+We can break down each operation into an individual evaluator who only knows how to deal with that specific operation and obtain the desired evaluator by composing those evaluators.
+Since we separated each operation, we must pay attention to recursive calls. To clarify this issue, consider the addition case.
+In this case, we have two \scm{self} calls, one for each operand.
+This gives the desired result because we use a variable pattern to refer to the evaluator.
+If we attempted to write those calls using \scm{eval-add} instead of \scm{self}, we would not have the expected behavior.
 
 \begin{minted}{scheme}
-  ;; eval-num : ('num Number) -> Number
-  (define-object
-    [(eval-num 'eval ('num n)) = n])
-  
-  ;; eval-add : ('add e e) <: e -> Number
-  (define-object (eval-add <: meta)
+  (define-object eval-num [(self 'eval ('num n)) = n])
+
+  (define-object eval-add
     [(self 'eval ('add l r)) = (+ (self 'eval l) (self 'eval r))])
   
-  ;; eval-mul : ('mul e e) <: e -> Number
-  (define eval-mul
-    (object [(self 'eval ('mul l r)) = (* (self 'eval l) (self 'eval r))]))
+  (define-object eval-mul
+    [(self 'eval ('mul l r)) = (* (self 'eval l) (self 'eval r))])
   
   (define eval-arith
-    (eval-num 'compose eval-add eval-mul))
-
+    (eval-num 'compose eval-add eval-mul))  
 \end{minted}
 
-\adriano{TODO: lambda*, define*, define-object}
+You might notice that we did not use \scm{define*} in this last definition. \scm{define*} is used to declare closed objects.
+In other words, objects with a fixed value for \scm{self}. 
+Since we want to combine objects and expect that when we do recursive calls, we do it over the object we get after the composition, we need to work with open objects.
+Those objects are not ready for use, but they are malleable since they do not have a fixed value for \scm{self}.
+This allows us to blend objects, which refer to an abstract \scm{self}, and then tie the knot by providing a value for \scm{self}.
+This last step is done by the \scm{composition} operation, which expects open objects, and it will plug a value for \scm{self} after the whole composition.
+The \scm{define-object} is a macro that allows us to define those open objects.
 
 This approach emphasizes our crown jewel: \emph{Composition}.
 To be more precise, this is a vertical composition since we are adding more cases to the list of observations.
@@ -119,4 +127,100 @@ To help visualize this, you can think that the list of possible observations has
 Another approach to composition, also supported by our implementation, is to extend some copattern with other copatterns.
 In that case, we are extending the size of a specific line, thus creating a horizontal composition.
 
-\adriano{I have three topics: constant folding, evaluator with variables, and a horizontal composition example.}
+This modular approach is not only limited to simple arithmetic operations.
+We can even expand our current languages with other sophisticated constructs, such as variables.
+We can use copatterns to define both the evaluator and the environment containing our variables.
+For the environment, we can define an observation that returns the first value after asserting that the first key in the environment is what we are looking for and recursing with the rest of the environment otherwise.
+For the variable evaluator, we can perform the variable lookup using our current environment.
+
+\begin{minted}{scheme}
+  (define*
+    [(lookup ((key1 . val1) . env) key)
+      (try-if (eq? key1 key))            = val1]
+    [(lookup ((key1 . val1) . env) key) = (lookup env key)])
+
+  (define-object [(eval-var 'eval env ('var x)) = (lookup env x)])
+\end{minted}
+
+Okay this is neat.
+We just defined one more operation using copatterns.
+So we can just compose this new operation with our previous evaluator --- \scm{(define eval-alg-wrong (eval-arith 'compose eval-var))} --- and called the day, right?
+Sadly, if we do that, we will not achieve our desired result because the observations in \scm{eval-arith} are not ready to deal with our variable environment. 
+We could adapt the \scm{eval-arith} definition to pipe down the environment, but this is the same issue we are trying to avoid.
+What we can do is define an evaluator transformer, a codata object that will capture this idea of threading the environment around.
+This is precisely the role of \scm{with-environment}, where we use a copattern to adapt an evaluator to pass the environment around.
+The \scm{override-lambda*} adds a new observation with a higher precedence.
+We use it to ensure that we first try to pass the environment around, and then, if we fail, we try the original observations.
+With that, we can use the \scm{'unplug} method to get an open object, reify it with \scm{with-environment}, and then compose it with our variable evaluator, thus obtaining a new evaluator that knows how to deal with both variables and arithmetic expressions.
+
+\begin{minted}{scheme}
+  (define (with-environment eval-ext)
+    (object
+    [(self 'eval env expr)
+     (with-self
+        (override-lambda* self
+         [(_ 'eval sub-expr) = (self 'eval env sub-expr)])
+      (try-apply-forget eval-ext 'eval expr))]))
+
+  (define eval-alg*
+    ((with-environment (eval-arith 'unplug)) 'compose eval-var))
+\end{minted}
+
+However, copattern composition is not only used to declare new operations.
+We can use them to implement optimizations.
+One compelling example is the constant folding optimization, where we evaluate every possible computation in our reach.
+In other words, we leave variables alone and evaluate every other expression that can be reduced to numbers.
+
+We want to encode this idea of only evaluating expressions formed by numbers.
+One way to achieve that is to reform each operation instead of performing them directly.
+To illustrate, instead of execution \scm{+} with the results of the evaluation of each branch, we can return a new evaluation context where we have \scm{'add}, our reformed operation, in the place of \scm{'eval}.
+This enables us to evaluate the operands in this first step and then, in the next step, with a new evaluation context, check if both operands were reduced to numbers before doing the operation.
+
+\begin{minted}{scheme} 
+  (define-object eval-add-safe
+    [(self 'eval ('add l r))
+    = (self 'add (self 'eval l) (self 'eval r))]
+    [(self 'add x y)
+    (try-if (and (number? x) (number? y)))
+    = (+ x y)])
+
+  (define-object eval-mul-safe
+    [(self 'eval ('mul l r))
+    = (self 'mul (self 'eval l) (self 'eval r))]
+    [(self 'mul x y)
+    (try-if (and (number? x) (number? y)))
+    = (* x y)])
+
+  (define eval-arith-safe
+    (eval-num 'compose eval-add-safe eval-mul-safe))
+\end{minted}
+
+Nevertheless, we still need to handle variables.
+When we attempt to evaluate an expression that has a variable and a complex expression that can be reduced to a number as its operands, we expect a result with the form of \scm{op (var x) (num n)} and not with the shape of \scm{op (var x) n}. 
+Since we do not want to bother evaluating the variables, we can define an observation that returns the variable as its outcome.
+However, we need to amend the result of the evaluation of our operands.
+If we manage to reduce to a number \scm{n}, we need to adapt this result to \scm{(num n)}. 
+We can do that by defining a new observation where if we find a reformed operation  --- \scm{try-if (operation? op)} ---, we do this value uplifting.
+
+\begin{minted}{scheme}
+  (define-object
+    [(leave-variables 'eval ('var x)) = (list 'var x)])
+
+  (define (operation? s)
+    (or (equal? s 'add) (equal? s 'mul)))
+
+  (define-object reform-operations*
+  [(reform op l r) (try-if (operation? op))
+                   (extension
+                    [_ (try-if (number? l)) = (reform op (list 'num l) r)]
+                    [_ (try-if (number? r)) = (reform op l (list 'num r))]
+                    [_                      = (list op l r)])])
+\end{minted}
+
+With that machinery in place, we can define our constant folding operation.
+We do that by composing our safe evaluator with evaluator that handles variables and our reformer. 
+
+\begin{minted}{scheme}
+  (define constant-fold
+  (eval-arith-safe 'compose leave-variables reform-operations*))
+\end{minted}

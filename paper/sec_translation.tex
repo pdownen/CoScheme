@@ -139,7 +139,7 @@ As shorthand, we write a list of patterns $P_1 ~ P_2 ~ \dots ~ P_n$ for $(\Cons 
 To model the patterns found in typed functional languages like ML and Haskell, such as constructor applications $K ~ \many{P}$, we can represent the constructor  as a quoted symbol $\q{K}$ and the application as a list $\q{K} ~ \many{P}$.
 The specifics of patterns themselves are surprisingly not essential to the main copattern translation, and could be extended with other features found in more specific implementations.
 
-\begin{figure}
+\begin{figure}[t]
 \centering
 \begin{alignat*}{2}
   \mathit{Variable} &\ni{}& x, y, z
@@ -176,7 +176,7 @@ For simplicity, this translation begins from a small source language with copatt
   Arbitrary first-class values can passed in as the next option ($V$) and the self object ($W$) as $\Extension O ~ V ~ W$.
 \end{itemize}
 
-\begin{figure}
+\begin{figure}[t]
 \centering
 
 \begin{alignat*}{2}
@@ -275,7 +275,7 @@ Even though this is dynamically-typed, we can view the type of templates as obje
   &= Template \to Object \to Object'
 \end{align*}
 
-\begin{figure}
+\begin{figure}[t]
 \centering
 Translating new terms:  
 \begin{align*}

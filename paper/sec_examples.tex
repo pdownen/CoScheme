@@ -1,226 +1,253 @@
-To increase our familiarity with copatterns in Scheme, let us stress their main traits and introduce our syntax.
-One of the entry points of our extension is the macro \scm{define*}.
-This macro enables us to declare codata objects through a list of observations.
-Each observation is a pair containing a copattern and an outcome.
-Every copattern starts with the object's name, which can be followed by an arbitrarily long sequence of patterns. 
-The fact that we can create \emph{nested} copatterns allows us to perform equational reasoning. This happens because we can always add one more pattern to the copattern, thus dictating a more specific evaluation context to be matched. The key idea behind observations is that if we find an evaluation context that satisfies our copattern, we can substitute the context with the outcome of the respective observation.
+Let's consider some examples of programming by equational reasoning to get familiar with copatterns and how they can be used in Scheme.
+In these examples, it can help to think about types informally to keep ourselves oriented.
+For example, even in a dynamically-typed language like Scheme, linked lists can be thought of as an inductively-defined type combining two constructed forms: \scm#List a = null | (cons a (List a))#.
+Similarly, infinite streams can be understood as a procedure which exhibits two different behaviors at the same time: \scm#Stream a = 'head -> a & 'tail -> Stream a#.
+In other words, any \scm|Stream a| procedure takes one symbolic argument, and its response depends on the exact value: given \scm|'head| an \scm|a| is returned, and given \scm|'tail| another \scm|Stream a| is returned.
 
+In order to define new coinductive processes, one of the main entry points is the top-level, multi-line\scm{define*} macro.
+This macro enables us to declare codata objects through a list of equations between copattern on the left-hand side and an expression on the right-hand side.
+At the root of every copattern is a name for the object \emph{itself}, which can be inside any number of applications --- the applications may just list parameter names or more specific patterns narrowing down the concrete arguments that match.
+% The fact that we can create \emph{nested} copatterns allows us to perform equational reasoning.
+% This happens because we can always add one more pattern to the copattern, thus dictating a more specific evaluation context to be matched.
+% The key idea behind observations is that if we find an evaluation context that satisfies our copattern, we can substitute the context with the outcome of the respective observation.
+The simplest of a stream is all \scm|zeroes| --- whose \scm|'head| is \scm|0| and whose \scm|'tail| is more \scm|zeroes| --- which can be defined as:
 \begin{minted}{scheme}
-;; stutter : Stream Nat
-(define*
-  [ ((stutter n) 'head)        = n]
-  [(((stutter n) 'tail) 'head) = n]
-  [(((stutter n) 'tail) 'tail) = (stutter (+ n 1))])
+(define* [(zeroes 'head) = 0]
+         [(zeroes 'tail) = zeroes])
 \end{minted}
-
-To illustrate this feature, let us materialize a simple example from the ground up.
-Still considering the classic stream scenario, we can define streams in terms of their response to the \scm{head} and \scm{tail} destructors. 
-So, to create fancier streams, it suffices to specify copatterns containing those destructors.
-Let us target a stream that, starting from a number \scm{n}, counts the same number twice before incrementing it. 
-Since we want to start from a given number, we need to specify a context that represents this idea: \scm{stutter n}.
-We could have selected another initial context, such as \scm{stutter} and \scm{stutter n m}, but those do not describe a context with only a single initial value.
-
-Now, we need to describe the behavior of our destructors.
-We can represent our destructors as quoted values.
-For example, \scm{(stutter n) 'head} represents an evaluation context where we have a stutter stream, with the state \scm{n}, followed by the destructor \scm{'head}.
-What should we do when we have this previous context?
-In other words, what should be the outcome of that observation? 
-For the \scm{head} destructor, we can return our current state \scm{n}.
-However, what should we do with \emph{tail}? We want our second element to be \scm{n}, yet we want our third element to be the successor of \scm{n}.
-We want to depict the behavior that we increment the current state in every two elements. 
-It is not clear what we should do because the outcome depends on the \emph{next} action after \scm{tail}. 
-This is where copatterns take the spotlight.
-Since copatterns can be defined with arbitrarily long contexts, we can spell out the desired behavior using multiple observations.
-So, when we ask for the second element --- \scm{(((stutter n) 'tail) 'head)} --- we return our current state \scm{n}.
-But if we passed over two elements --- \scm{(((stutter n) 'tail) 'tail)} ---,
-we can return a new stream with a new state \scm{n + 1}. 
-
-It may not seem to, but this is enough to define our desired stream.
-This specific combination of copatterns containing the stream's destructors covers all possible evaluation contexts.
-We specified that we return the current state for the first two elements, and if we have a context with at least two \scm{tail} destructors, we replace this context fragment with a new stream with the incremented state.   
-
-Reasoning about the coverage of our copatterns is important since our implementation does not provide coverage analysis.
-If we encounter an uncovered case, our implementation emits a runtime error, explaining that this is an uncovered copattern.
-Non-total configurations, akin to partial functions, are not always undesirable. They can simplify the development during a prototyping phase, and if the missing case does not make sense, they can be the most semantic thing to do.
-
-This framework is not limited by matching a single value in the initial group.
-To illustrate, we can define a stream that intercalates elements from two different streams using a similar configuration, but observing two arguments instead of one.
-
-\adriano{Maybe we can put those examples side by side in a single figure if we decrease the font size}
-
+Streams like \scm|zeroes| are black boxes, that can only be observed by passing \scm|'head| or \scm|'tail| as arguments to get their response.
+Still, this is enough for many useful operations, like taking the first \scm|n| elements, which can be \scm|define*|d as:
 \begin{minted}{scheme}
-;; zigzag : (Stream a, Stream a) -> Stream a
-(define*
-  [ ((zigzag xs ys) 'head)        = (xs 'head)]
-  [(((zigzag xs ys) 'tail) 'head) = (ys 'head)]
-  [(((zigzag xs ys) 'tail) 'tail) = (zigzag (xs 'tail) (ys 'tail))])
+;; takes : (Stream a, Nat) -> List a
+(define* [(takes s 0) = '()]
+         [(takes s n) = (cons (s 'head) (takes (s 'tail) (- n 1)))])
 \end{minted}
-
-However, copatterns are not exclusively used with streams and infinite data.
-In particular, we can define a depth-first search on a finite binary tree.
-For this goal, we need to specify what should happen in contexts containing leaves and nodes of a tree.
-We can create observations that match a specific shape of the input.
-Therefore, when we see an evaluation context with a leaf --- \scm{((search ('leaf e)) 'dfs)} ---, we return a singleton, and when we see a node --- \scm{((search ('node l e r)) 'dfs)} ---, we recurse on both children and append their results.
-\adriano{Do I need to talk about how DFS works?}
-
+So that \scm|(takes zeroes 5) = '(0 0 0 0 0)|.
+A constant stream is not particularly useful; more interesting streams will change over time.
+For example, imagine a ``stuttering'' stream ($0, 0, 1, 1, 2, 2, 3, 3, \dots$) that repeats numbers twice before moving on.
+This stream can be defined by copattern-matching equations:
 \begin{minted}{scheme}
-  (define*
-    [((search ('leaf e)) 'dfs) = (list e)]
-    [((search ('node l e r)) 'dfs) = (append ((search l) 'dfs) (list e)
-                                             ((search r) 'dfs))])
-  \end{minted}
-
-Now let us consider an arithmetic evaluator:
-
-\begin{minted}{scheme}
-  ;; eval* : Expr -> Number
-  (define* eval*
-    [(self 'eval ('num n))   = n]
-    [(self 'eval ('add l r)) = (+ (self 'eval l) (self 'eval r))])
+;; stutter : Nat -> Stream Nat
+(define* [ ((stutter n) 'head)        = n]
+         [(((stutter n) 'tail) 'head) = n]
+         [(((stutter n) 'tail) 'tail) = (stutter (+ n 1))])
 \end{minted}
+So that \scm|(takes (stutter 1) 10) = '(1 1 2 2 3 3 4 4 5 5)|,% 
+\footnote{
+  Try it!
+  The code provided in the supplemental materials implements \scm|define*| and related macros.
+  All examples shown here are executable Scheme and Racket code.
+}
+%
+because the first and second elements --- \scm|((stutter n) 'head)| and \scm|(((stutter n) 'tail) 'head)| respectively --- return the same \scm|n| before incrementing.
 
-
-Fantastic, it works! 
-We have described an evaluator using copatterns matching the possible terms.
-One intriguing remark is the role of \scm{self} in this definition.
-Here, \scm{self}  is not a keyword, it is a pattern variable that matches the object's name.
-For example, we could have defined the number case as: \scm{[(eval* 'eval ('num n))   = n]}.
-Another thing to consider is the recursive calls, such as those in the addition case.
-The user must pay attention to this since we are working in call-by-value language.
-However, what if we wish to add a multiplication, a new operation, to our evaluator? 
-We could add one more observation to the previous definition with a copattern matching a \scm{'Mult} term and an outcome similar to the addition case.
-
-Nevertheless, we do not always want to modify existing working code.
-This is one of the concerns of the expression problem.
-We want to add more operations to our codata type without modifying what we already have.
-With that in mind, we could have defined this evaluator differently in a way that exploits one of the key characteristics of our notion of copatterns: \emph{composition}.
-We can break down each operation into an individual evaluator who only knows how to deal with that specific operation and obtain the desired evaluator by composing those evaluators.
-Since we separated each operation, we must pay attention to recursive calls. To clarify this issue, consider the addition case.
-In this case, we have two \scm{self} calls, one for each operand.
-This gives the desired result because we use a variable pattern to refer to the evaluator.
-If we attempted to write those calls using \scm{eval-add} instead of \scm{self}, we would not have the expected behavior.
-
+But why is \scm|stutter| well-defined, and how can we understand its meaning?
+As in many functional languages, the \scm|=| in code really implies equality between the two sides, and this equality still holds when we plug in real values for placeholder variables like \scm|n|.
+So to determine the first \scm|'head| element, of \scm|(stutter 1)|, we match the left-hand side and replace it with the right to get \scm|((stutter 1) 'head) = 1|.
+Similarly, the second element is \scm|(((stutter 1) 'tail) 'head) = 1| as well.
+The third element is accessed by two \scm|'tail| projections and then a \scm|'head| as the nested applications \scm|((((stutter 1) 'tail) 'tail) 'head)|, which doesn't exactly match any left-hand side.
+However, equality holds in any context, and the inner application \scm|(((stutter 1) 'tail) 'tail)| \emph{does} match the third equation.
+Thus, we can apply a few steps of equational reasoning to derive the expected answer \scm|2|:
 \begin{minted}{scheme}
-  (define-object eval-num [(self 'eval ('num n)) = n])
-
-  (define-object eval-add
-    [(self 'eval ('add l r)) = (+ (self 'eval l) (self 'eval r))])
-  
-  (define-object eval-mul
-    [(self 'eval ('mul l r)) = (* (self 'eval l) (self 'eval r))])
-  
-  (define eval-arith
-    (eval-num 'compose eval-add eval-mul))  
+((((stutter 1) 'tail) 'tail) 'head) = ((stutter (+ 1 1)) 'tail)  ; line 3
+                                    = ((stutter 2) 'head)        ; +
+                                    = 2                          ; line 1
 \end{minted}
+So these three examples work, but is every case really covered?
+The \scm|Stream Nat| interface that \scm|stutter|'s output follows allows for any number of \scm|'tail| projections followed by a final application to \scm|'head| that returns a natural number.
+\scm|stutter| works its way through these projections in groups of two, eliminating a pair of \scm|'tail| projections at a time, until it gets to the end case which is either a \scm|'head| (if the total number of \scm|'tail|s is even) or a \scm|'tail| followed by \scm|'head| (if the total number of \scm|'tail|s is odd).
+So \scm|stutter| behavior is defined no matter what is asked of it.
+Even with other observations like \scm|takes|, which passes around partial applications of \scm|stutter| as a first-class value, internally \scm|stutter| only ``sees'' the \scm|'head| and \scm|'tail| applications from \scm|takes|, and is dormant otherwise.
 
-You might notice that we did not use \scm{define*} in this last definition. \scm{define*} is used to declare closed objects.
-In other words, objects with a fixed value for \scm{self}. 
-Since we want to combine objects and expect that when we do recursive calls, we do it over the object we get after the composition, we need to work with open objects.
-Those objects are not ready for use, but they are malleable since they do not have a fixed value for \scm{self}.
-This allows us to blend objects, which refer to an abstract \scm{self}, and then tie the knot by providing a value for \scm{self}.
-This last step is done by the \scm{composition} operation, which expects open objects, and it will plug a value for \scm{self} after the whole composition.
-The \scm{define-object} is a macro that allows us to define those open objects.
+% Reasoning about the coverage of our copatterns is important since our implementation does not provide coverage analysis.
+% If we encounter an uncovered case, our implementation emits a runtime error, explaining that this is an uncovered copattern.
+% Non-total configurations, akin to partial functions, are not always undesirable. They can simplify the development during a prototyping phase, and if the missing case does not make sense, they can be the most semantic thing to do.
 
-This approach emphasizes our crown jewel: \emph{Composition}.
-To be more precise, this is a vertical composition since we are adding more cases to the list of observations.
-To help visualize this, you can think that the list of possible observations has one entry per line, and we are adding more lines to that list, thus vertical composition.
-Another approach to composition, also supported by our implementation, is to extend some copattern with other copatterns.
-In that case, we are extending the size of a specific line, thus creating a horizontal composition.
+% This framework is not limited by matching a single value in the initial group.
+% To illustrate, we can define a stream that intercalates elements from two different streams using a similar configuration, but observing two arguments instead of one.
 
-This modular approach is not only limited to simple arithmetic operations.
-We can even expand our current languages with other sophisticated constructs, such as variables.
-We can use copatterns to define both the evaluator and the environment containing our variables.
-For the environment, we can define an observation that returns the first value after asserting that the first key in the environment is what we are looking for and recursing with the rest of the environment otherwise.
-For the variable evaluator, we can perform the variable lookup using our current environment.
+% \adriano{Maybe we can put those examples side by side in a single figure if we decrease the font size}
 
-\begin{minted}{scheme}
-  (define*
-    [(lookup ((key1 . val1) . env) key)
-      (try-if (eq? key1 key))            = val1]
-    [(lookup ((key1 . val1) . env) key) = (lookup env key)])
+% \begin{minted}{scheme}
+% ;; zigzag : (Stream a, Stream a) -> Stream a
+% (define*
+%   [ ((zigzag xs ys) 'head)        = (xs 'head)]
+%   [(((zigzag xs ys) 'tail) 'head) = (ys 'head)]
+%   [(((zigzag xs ys) 'tail) 'tail) = (zigzag (xs 'tail) (ys 'tail))])
+% \end{minted}
 
-  (define-object [(eval-var 'eval env ('var x)) = (lookup env x)])
+However, definition by copatterns useful for more programming tasks than just streams and other infinite objects.
+% In particular, we can define a depth-first search on a finite binary tree.
+% For this goal, we need to specify what should happen in contexts containing leaves and nodes of a tree.
+% We can create observations that match a specific shape of the input.
+% Therefore, when we see an evaluation context with a leaf --- \scm{((search ('leaf e)) 'dfs)} ---, we return a singleton, and when we see a node --- \scm{((search ('node l e r)) 'dfs)} ---, we recurse on both children and append their results.
+% \adriano{Do I need to talk about how DFS works?}
+% \begin{minted}{scheme}
+%   (define* [((search ('leaf e)) 'dfs)     = (list e)]
+%            [((search ('node l e r)) 'dfs) = (append ((search l) 'dfs)
+%                                                     (list e)
+%                                                     ((search r) 'dfs))])
+% \end{minted}
+For example, consider the usual definition of a simple arithmetic expression evaluator in typed functional languages like Haskell and OCaml (we use Haskell syntax here):
+\begin{minted}{haskell}
+data Expr = Num Int | Add Expr Expr
+
+eval :: Expr -> Int
+eval (Num n)   = n
+eval (Add l r) = eval l + eval r
 \end{minted}
-
-Okay this is neat.
-We just defined one more operation using copatterns.
-So we can just compose this new operation with our previous evaluator --- \scm{(define eval-alg-wrong (eval-arith 'compose eval-var))} --- and called the day, right?
-Sadly, if we do that, we will not achieve our desired result because the observations in \scm{eval-arith} are not ready to deal with our variable environment. 
-We could adapt the \scm{eval-arith} definition to pipe down the environment, but this is the same issue we are trying to avoid.
-What we can do is define an evaluator transformer, a codata object that will capture this idea of threading the environment around.
-This is precisely the role of \scm{with-environment}, where we use a copattern to adapt an evaluator to pass the environment around.
-The \scm{override-lambda*} adds a new observation with a higher precedence.
-We use it to ensure that we first try to pass the environment around, and then, if we fail, we try the original observations.
-With that, we can use the \scm{'unplug} method to get an open object, reify it with \scm{with-environment}, and then compose it with our variable evaluator, thus obtaining a new evaluator that knows how to deal with both variables and arithmetic expressions.
-
+While Scheme does not have algebraic data types, we can encode them as a list starting with the constructor name as a quoted symbol, and the arguments as the remainder of the list.
+So \hs|Num 5| would be represented as the quoted list \scm|'(num 5)|, and \scm|Add l r| would be represented as the \emph{quasiquote} \scm|`(add ,l ,r)| which plugs in the values bound to variables \scm|l| and \scm|r| as the second and third elements of the list (denoted by the ``unquote'' comma \scm|,| before the variable names).
+We can then use the facilities of \scm|define*| to write almost identical code in Scheme like so:
 \begin{minted}{scheme}
-  (define (with-environment eval-ext)
-    (object
-    [(self 'eval env expr)
+(define* [(eval `(num ,n))    = n]
+         [(eval `(add ,l ,r)) = (+ (eval l) (eval r))])
+\end{minted}
+Fantastic, it works!
+Both the Scheme and Haskell code have the same structure.
+And on the surface, they both share the same strengths and weakness.
+From the lens of the \emph{expression problem}~\cite{ExpressionProblem}, it is easy to add new operations to the existing expression language --- such as listing the numeric literals in an expression
+\begin{minted}{scheme}
+(define* [(list-nums `(num ,n))    = (list n)]
+         [(list-nums `(add ,l ,r)) = (append (list-nums l) (list-nums r))])
+\end{minted}
+--- but hard to add new classes of expressions.
+For example, if wanted to support multiplication, we could add a \hs|Mult| constructor to the \hs|Expr| data type, but this would require modifying \emph{all} existing operations and case-splitting expressions over \hs|Expr| values.
+Even worse, if we wanted to support both expression languages --- with or without multiplication --- we would have to copy the code and maintain both versions.
+
+Thankfully, our implementation of copattern-matching in Scheme includes new facilities for composing code snippets compared to current functional (or object-oriented) langauges.
+However, to avoid unwanted surprises, the programmer does have to ask for them.
+This is a small request, and can be done by replacing \scm|define*| with \scm|define-object|, such as:
+\begin{minted}{scheme}
+(define-object
+  [(list-nums* `(num ,n))    = (list n)]
+  [(list-nums* `(add ,l ,r)) = (append (list-nums* l) (list-nums* r))])
+\end{minted}
+The \scm|list-nums*| object behaves exactly like \scm|list-nums| in all the same contexts it works in, but in addition it implicitly inherits additional functionality for composition defined elsewhere.
+This new composition lets us break existing multi-line definitions into individual parts, and recompose them later.
+For example, the evaluator can be composed in terms of separate objects for each line like so:
+\begin{minted}{scheme}
+(define-object [(eval-num `(num ,n)) = n])
+(define-object [(eval-add `(add ,l ,r)) = (+ (eval-add l) (eval-add r))])
+(define eval* (eval-num 'compose eval-add))
+\end{minted}
+So that \scm|(eval expr)| is the same as \scm|(eval* expr)| for any well-formed expression argument.
+Why program in this way?
+Now, if we want to extend the functionality of existing operations --- like evaluation and listing literals --- to support a new class of expression, we can define the new special cases separately as a patch and then \emph{compose} them with the existing code as-is like so:
+\begin{minted}{scheme}
+(define-object [(eval-mul `(mul ,l ,r)) = (* (eval-mul l) (eval-mul r))])
+(define-object [(list-mul `(mul ,l ,r)) = (append (list-mul l) (list-mul r))])
+
+(define eval-arith (eval* 'compose eval-mul))
+(define list-nums-arith (list-nums* 'compose list-mul))
+\end{minted}
+So for an expression \scm|(define expr1 '(add (mul (num 2) (num 3)) (num 4)))|, the extended code successfully yields the correct answers \scm|(eval-arith expr1) = 10| and \scm|(list-nums-arith expr1) = '(2 3 4)| whereas the original code fails at the \scm|'mul| case.%
+\footnote{
+  The astute reader might notice that for this to work, the recursive calls to \scm|eval-mul| can't be specifically tied to this definition, because it only says what to do with multiplication and fails to handle the other cases.
+  Instead, recursive calls to \scm|eval-mul| must \emph{also} open to invoking the other code associated with \scm|eval-num| and \scm|eval-add| even though it not known to be associated with them yet.}
+%
+Note that this composition automatically generates \emph{new} functions and leaves the original code in tact, which can still be used for the smaller expression language with only numbers and addition.
+
+This example emphasizes our guiding principle: \emph{composition}.
+We call combinations like \scm|(eval-num 'compose eval-add eval-mul)| \emph{vertical composition} since they behave as if we simply stacked their internal cases vertically, like in the original definition of \scm|eval|.
+
+Not all types of language extensions are this simple, though.
+Consider what happens if we want support algebraic expressions which might have variables in them.
+To evaluate a variable, we need to be given an environment --- mapping names to numbers --- which we can use to look up the value of the variable.
+\begin{minted}{scheme}
+(define-object [(eval-var env `(var ,x)) = (lookup env x)])
+\end{minted}
+However, it is wrong to just vertically compose this variable evaluator with the existing code --- \scm|(eval-arith 'compose eval-var)| --- because the arithmetic evaluator only takes a single expression as an argument whereas the variable evaluator needs \emph{both} an environment and an expression.
+The manual way to perform this extension is routine for functional programmers: in addition to adding a new case, we have to add an extra parameter to each case, which then gets passed along on all recursive calls.
+On an individual equation, this transformation looks like:
+\begin{minted}{scheme}
+[(eval     some-expr-pattern) (... (eval     sub-expr) ... )]
+==>
+[(eval env some-expr-pattern) (... (eval env sub-expr) ...)]
+\end{minted}
+It would be highly dissapointing to have to rewrite our existing code in-place to do this extension.
+
+Fortunately, our copattern language allows for another type of composition --- \emph{horizontal composition} --- which allows us to combine sequences of steps one after another, and automatically fall through to the next case if something fails.
+For this example, we can define a general procedure \scm|with-environment| to perform the above tranformation, taking any extensible evaluator object expecting just an expression and adding an environment to be threaded along each recursive call.
+This in turn lets us patch our existing arithmetic evaluator with an environment, and then compose it with variable evaluation like so:
+\begin{minted}{scheme}
+(define (with-environment eval-ext)
+  (object
+    [(self env expr)
      (with-self
         (override-lambda* self
-         [(_ 'eval sub-expr) = (self 'eval env sub-expr)])
-      (try-apply-forget eval-ext 'eval expr))]))
+         [(_ sub-expr) = (self env sub-expr)])
+      (try-apply-forget eval-ext expr))]))
 
-  (define eval-alg*
-    ((with-environment (eval-arith 'unplug)) 'compose eval-var))
+(define eval-alg ((with-environment (eval-arith 'unplug)) 'compose eval-var))
 \end{minted}
+The \scm|with-environment| function is the most complex code we've seen so far, but it just spells out the usual steps a functional programmer uses to modify existing code with an environment.
+\begin{itemize}
+\item Given the evaluator \scm|eval-ext|, it returns a new first-class \scm|object| (which is the same as \scm|define-object| without assigning a name) that expects both an environment and expression to process.
+\item This new object then invokes \scm|eval-ext| by passing just the expression, except that if \scm|eval-ext| ever tries to recurse on itself with a sub-expression, the calls \scm|(self sub-expr)| gets replaced with \scm|(self env sub-expr)| just like the template transformation.
+\item This transformation of the evaluator's notion of self is done by the \scm|with-self| operation, than can override the original recursive \scm|self|.
+\item Finally, if none of the clauses of \scm|eval-ext| succeed, then this updated evaluator also falls through as before, forgetting the application had ever happened via \scm|try-apply-forget|.
+\end{itemize}
+The complete algebraic evaluator can then be made from an open-ended, extensible version of the arithmetic evaluator --- retrieved from \scm|(eval-arith 'unplug)| --- horizontally composed to take an environment and vertically composed with the single-line \scm|eval-var|.
+It can now successfully evaluate algebraic expressions, such as \scm|(define expr2 '(add (var x) (mul (num 3) (var y))))|, so that running \scm|(eval-arith '((x . 10) (y . 20)) expr)| returns \scm|70| because the environment maps \scm|x| to \scm|10| and \scm|y| to \scm|20|.
 
-However, copattern composition is not only used to declare new operations.
-We can use them to implement optimizations.
-One compelling example is the constant folding optimization, where we evaluate every possible computation in our reach.
-In other words, we leave variables alone and evaluate every other expression that can be reduced to numbers.
+Another possible way to evaluate expressions with variables is \emph{constant folding}, a common optimization where operations are simplified unless they are blocked by variables whose values are unknown.
+In other words, the evaluator might return a blocked expression if it can't fully calculate the final number.
+Ideally, we would like to just extend our existing evaluator as-is with the additional cases when blocked expressions are encountered.
+However, as written, the equation handling \scm|(eval `(add ,l ,r))| already commits to a real numeric addition, even if evaluating \scm|l| or \scm|r| doesn't give a numeric result.
 
-We want to encode this idea of only evaluating expressions formed by numbers.
-One way to achieve that is to reform each operation instead of performing them directly.
-To illustrate, instead of execution \scm{+} with the results of the evaluation of each branch, we can return a new evaluation context where we have \scm{'add}, our reformed operation, in the place of \scm{'eval}.
-This enables us to evaluate the operands in this first step and then, in the next step, with a new evaluation context, check if both operands were reduced to numbers before doing the operation.
-
+To avoid over-committing before we know whether evaluation with successfully calculate a final number or not, we can --- for the first time --- rewrite the basic clauses of evaluation in a more defensive style.
+Essentially, this just splits evaluation into two separate steps:
+\begin{enumerate*}[(1)]
+\item check which operation we are supposed to do and evaluate the two sub-expressions,
+\item combine the two expressions according to that operation.
+\end{enumerate*}
+For example, the two steps for addtion look like:
 \begin{minted}{scheme} 
-  (define-object eval-add-safe
-    [(self 'eval ('add l r))
-    = (self 'add (self 'eval l) (self 'eval r))]
-    [(self 'add x y)
-    (try-if (and (number? x) (number? y)))
-    = (+ x y)])
-
-  (define-object eval-mul-safe
-    [(self 'eval ('mul l r))
-    = (self 'mul (self 'eval l) (self 'eval r))]
-    [(self 'mul x y)
-    (try-if (and (number? x) (number? y)))
-    = (* x y)])
-
-  (define eval-arith-safe
-    (eval-num 'compose eval-add-safe eval-mul-safe))
+(define-object eval-add-safe
+  [(self 'eval ('add l r))
+  = (self 'add (self 'eval l) (self 'eval r))]
+  [(self 'add x y) (try-if (and (number? x) (number? y)))
+  = (+ x y)])
 \end{minted}
-
-Nevertheless, we still need to handle variables.
-When we attempt to evaluate an expression that has a variable and a complex expression that can be reduced to a number as its operands, we expect a result with the form of \scm{op (var x) (num n)} and not with the shape of \scm{op (var x) n}. 
-Since we do not want to bother evaluating the variables, we can define an observation that returns the variable as its outcome.
-However, we need to amend the result of the evaluation of our operands.
-If we manage to reduce to a number \scm{n}, we need to adapt this result to \scm{(num n)}. 
-We can do that by defining a new observation where if we find a reformed operation  --- \scm{try-if (operation? op)} ---, we do this value uplifting.
-
+Here, the evaluation step is explicated by a \scm|'eval| tag, to help distinguish from the other operation \scm|'add| for adding the left and right results.
+Note that in this code, the \scm|'add| clause only performs a numeric addition \scm|+| if it knows for sure that \emph{both} of the arguments are actually numbers, check by the \scm|try-if| guards.
+We can now compose the original base-case for evaluating numbers with this ``safer'' version of addition that fails to match cases where sub-expressions don't evaluate to numbers (multiplication could be added as well in a similar style):
 \begin{minted}{scheme}
-  (define-object
-    [(leave-variables 'eval ('var x)) = (list 'var x)])
-
-  (define (operation? s)
-    (or (equal? s 'add) (equal? s 'mul)))
-
-  (define-object reform-operations*
-  [(reform op l r) (try-if (operation? op))
-                   (extension
-                    [_ (try-if (number? l)) = (reform op (list 'num l) r)]
-                    [_ (try-if (number? r)) = (reform op l (list 'num r))]
-                    [_                      = (list op l r)])])
+(define eval-arith-safe (eval-num 'compose eval-add-safe))
 \end{minted}
+So that \scm|(eval-arith-safe expr1)| still evaluates to \scm|70|, but \scm|(eval-arith-safe expr2)| fails when it finds a variable sub-expression.
 
-With that machinery in place, we can define our constant folding operation.
-We do that by composing our safe evaluator with evaluator that handles variables and our reformer. 
-
+If it finds a variable, constant folding will just leave it alone, and return an unevaluated expression rather than a final number.
+Because the \scm|'eval| operation might return a (partially) unevaluated expression, we now need to handle cases where the left or right (or both) sub-expressions don't evaluate to numbers.
+In each of those cases, we must reform the addition expression out of what we find, converting numbers \scm|n| into a syntax tree of the form \scm|`(num ,n)|.
 \begin{minted}{scheme}
-  (define constant-fold
-  (eval-arith-safe 'compose leave-variables reform-operations*))
+(define-object
+  [(leave-variables 'eval ('var x)) = (list 'var x)])
+
+(define-object reform-addition
+  [(reform 'add l r)
+    (extension [_ (try-if (number? l)) = (reform 'add `(num ,l) r)]
+               [_ (try-if (number? r)) = (reform 'add l `(num ,r))]
+               [_                      = (list 'add l r)])])
 \end{minted}
+The final constant-folding algorithm can be composed from this ``safe'' version of evaluation, along with the cases for leaving variables alone and reforming partially-evaluated additions:
+\begin{minted}{scheme}
+(define constant-fold
+  (eval-arith-safe 'compose leave-variables reform-addition))
+\end{minted}
+So now \scm|(constant-fold 'eval expr2)| sucessfully returns \scm|expr2| itself (because there are no operations to perform without knowing values of variables \scm|x| and \scm|y|).
+And running \scm|(constant-fold 'eval expr3)| on the expression
+\begin{minted}{scheme}
+(define expr3 '(add (add (num 1) (num 1))
+                    (mul (var x)
+                         (mul (num 2) (add (num 2) (num 3))))))
+\end{minted}
+simplifies it down to \scm|'(add (num 2) (mul (var x) (num 10)))|.
+To add other operations, like multiplication, we can easily define similar \scm|eval-mul-safe| and \scm|reform-multiplication|, and \scm|'compose| them with \scm|constant-fold| without having to rewrite any code.
+
+
+%%% Local Variables:
+%%% mode: LaTeX
+%%% TeX-master: "coscheme"
+%%% End:

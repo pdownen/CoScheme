@@ -81,27 +81,27 @@
 
 ;; expr? : Any -> Bool
 (define*
-  [(expr? (list 'num n))   = (number? n)]
-  [(expr? (list 'add l r)) = (and (expr? l) (expr? r))]
-  [(expr? (list 'mul l r)) = (and (expr? l) (expr? r))]
-  [(expr? _)               = false])
+  [(expr? `(num ,n))    = (number? n)]
+  [(expr? `(add ,l ,r)) = (and (expr? l) (expr? r))]
+  [(expr? `(mul ,l ,r)) = (and (expr? l) (expr? r))]
+  [(expr? _)            = false])
 
 ;; eval : Expr -> Number
 (define*
-  [(eval (list 'num n))   = n]
-  [(eval (list 'add l r)) = (+ (eval l) (eval r))]
-  [(eval (list 'mul l r)) = (* (eval l) (eval r))])
+  [(eval `(num ,n))    = n]
+  [(eval `(add ,l ,r)) = (+ (eval l) (eval r))]
+  [(eval `(mul ,l ,r)) = (* (eval l) (eval r))])
 
 ;; eval* : Expr -> Number
 (define eval*
-  (λ* [(eval (list 'num n))   = n]
-      [(eval (list 'add l r)) = (+ (eval l) (eval r))]
-      [(eval (list 'mul l r)) = (* (eval l) (eval r))]))
+  (λ* [(eval `(num ,n))    = n]
+      [(eval `(add ,l ,r)) = (+ (eval l) (eval r))]
+      [(eval `(mul ,l ,r)) = (* (eval l) (eval r))]))
 
 (define-object list-nums
-  [(self (list 'num n))   = (list n)]
-  [(self (list 'add l r)) = (append (self l) (self r))]
-  [(self (list 'mul l r)) = (append (self l) (self r))])
+  [(self `(num ,n))    = (list n)]
+  [(self `(add ,l ,r)) = (append (self l) (self r))]
+  [(self `(mul ,l ,r)) = (append (self l) (self r))])
 
 (define list-nums+sub
   (list-nums
@@ -110,21 +110,21 @@
 
 ;; eval-num : (list 'num Number) -> Number
 (define-object
-  [(eval-num 'eval (list 'num n)) = n])
+  [(eval-num `(num ,n)) = n])
 
 ;; eval-add : (list 'add e e) <: e -> Number
 (define-object (eval-add <: meta)
-  [(self 'eval (list 'add l r)) = (+ (self 'eval l) (self 'eval r))])
+  [(self `(add ,l ,r)) = (+ (self l) (self r))])
 
 ;; eval-mul : (list 'mul e e) <: e -> Number
 (define eval-mul
-  (object [(self 'eval (list 'mul l r)) = (* (self 'eval l) (self 'eval r))]))
+  (object [(self `(mul ,l ,r)) = (* (self l) (self r))]))
 
 (define eval-arith
   (eval-num 'compose eval-add eval-mul))
 
 (define-object
-  [(eval-sub 'eval (list 'sub l r)) = (- (eval-sub 'eval l) (eval-sub 'eval r))])
+  [(eval-sub `(sub ,l ,r)) = (- (eval-sub l) (eval-sub r))])
 
 (define eval-arith+sub
   (eval-arith 'compose eval-sub))
@@ -137,9 +137,9 @@
 
 ;; eval-arith : Expr -> Number
 
-(eval-arith 'eval expr1)
+(eval-arith expr1)
 
-(eval-arith+sub 'eval (list 'sub expr1 '(num 1)))
+(eval-arith+sub (list 'sub expr1 '(num 1)))
 
 ;; TODO: Figure out how types work with composition and partial objects that handle only a specific subset of cases, especially with recursive types like Expr
 
@@ -155,82 +155,84 @@
 
 ;; eval-var : ((Symbol |-> Number), (list 'var Symbol)) -> Number
 (define-object
-  [(eval-var 'eval env (list 'var x)) = (dict-ref env x)])
+  [(eval-var env `(var ,x)) = (dict-ref env x)])
 
 (define eval-alg-wrong
   (eval-arith 'compose eval-var))
 
 (define (fix-environment evaluator env)
   (object
-   [(_ 'eval expr) = (evaluator 'eval env expr)]))
+   [(_ expr) = (evaluator env expr)]))
 
 (define (fix-environment* evaluator-ext env)
   (object
-   [(_ 'eval expr) (try-apply-forget evaluator-ext 'eval env expr)]))
+   [(_ expr) (try-apply-forget evaluator-ext env expr)]))
 
 (define-object eval-alg
-  [(_ 'eval env expr)
+  [(_ env expr)
    =
    (((fix-environment* (eval-var 'unplug) env) 'compose eval-arith)
-    ' eval expr)])
+    expr)])
 
-(eval-alg 'eval env-xy '(var y))
+(eval-alg env-xy '(var y))
 
-(eval-alg 'eval env-xy expr1)
+(eval-alg env-xy expr1)
 
-(eval-alg 'eval env-xy expr2)
+(eval-alg env-xy expr2)
 
 (define (with-environment eval-ext)
   (object
-   [(self 'eval env expr)
+   [(self env expr)
     (with-self
         (override-λ* self
-         [(_ 'eval sub-expr) = (self 'eval env sub-expr)])
-      (try-apply-forget eval-ext 'eval expr))]))
+         [(_ sub-expr) = (self env sub-expr)])
+      (try-apply-forget eval-ext expr))]))
 
 (define eval-alg*
   ((with-environment (eval-arith 'unplug)) 'compose eval-var))
 
-(eval-alg* 'eval env-xy '(var y))
-(eval-alg* 'eval env-xy expr1)
-(eval-alg* 'eval env-xy expr2)
+(eval-alg* env-xy '(var y))
+(eval-alg* env-xy expr1)
+(eval-alg* env-xy expr2)
 
+(define-object eval-num-safe
+  [(self 'eval `(num ,n)) = n])
 
 (define-object eval-add-safe
-  [(eval 'eval (list 'add l r))
-   = (eval 'add (eval 'eval l) (eval 'eval r))]
-  [(eval 'add x y)
+  [(self 'eval `(add ,l ,r))
+   = (self 'add (self 'eval l) (self 'eval r))]
+  [(self 'add x y)
    (try-if (and (number? x) (number? y)))
    = (+ x y)])
 
 (define-object eval-mul-safe
-  [(eval 'eval (list 'mul l r))
-   = (eval 'mul (eval 'eval l) (eval 'eval r))]
-  [(eval 'mul x y)
+  [(self 'eval `(mul ,l ,r))
+   = (self 'mul (self 'eval l) (self 'eval r))]
+  [(self 'mul x y)
    (try-if (and (number? x) (number? y)))
    = (* x y)])
 
 (define eval-arith-safe
-  (eval-num 'compose eval-add-safe eval-mul-safe))
+  (eval-num-safe 'compose eval-add-safe eval-mul-safe))
 
 (eval-arith-safe 'eval expr1)
 
 (define-object
-  [(leave-variables 'eval (list 'var x)) = (list 'var x)])
+  [(leave-variables 'eval `(var ,x)) = `(var ,x)])
 
 (define (operation? s)
   (or (equal? s 'add) (equal? s 'mul)))
 
 (define-object reform-operations
-  [(reform op l r) (try-if (and (operation? op) (number? l))) = (reform op (list 'num l) r)]
-  [(reform op l r) (try-if (and (operation? op) (number? r))) = (reform op l (list 'num r))]
+  [(reform op l r) (try-if (and (operation? op) (number? l))) = (reform op `(num ,l) r)]
+  [(reform op l r) (try-if (and (operation? op) (number? r))) = (reform op l `(num ,r))]
   [(reform op l r) (try-if (operation? op))                   = (list op l r)])
 
 (define-object reform-operations*
   [(reform op l r) (try-if (operation? op))
                    (extension
-                    [_ (try-if (number? l)) = (reform op (list 'num l) r)]
-                    [_ (try-if (number? r)) = (reform op l (list 'num r))]
+                    [_ (try-if (number? l)) = (reform op `(num ,l) r)]
+                    [_ (try-if (number? r)) = (reform op l `(num ,r))]
                     [_                     = (list op l r)])])
 
 (define constant-fold

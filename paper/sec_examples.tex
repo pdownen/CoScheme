@@ -172,12 +172,10 @@ For this example, we can define a general procedure \scm|with-environment| to pe
 This in turn lets us patch our existing arithmetic evaluator with an environment, and then compose it with variable evaluation like so:
 \begin{minted}{scheme}
 (define (with-environment eval-ext)
-  (object
-    [(self env expr)
-     (with-self
-        (override-lambda* self
-         [(_ sub-expr) = (self env sub-expr)])
-      (try-apply-forget eval-ext expr))]))
+  (object [(self env expr)
+           (with-self (override-lambda* self
+                        [(_ sub-expr) = (self env sub-expr)])
+             (try-apply-forget eval-ext expr))]))
 
 (define eval-alg ((with-environment (eval-arith 'unplug)) 'compose eval-var))
 \end{minted}
@@ -222,14 +220,12 @@ If it finds a variable, constant folding will just leave it alone, and return an
 Because the \scm|'eval| operation might return a (partially) unevaluated expression, we now need to handle cases where the left or right (or both) sub-expressions don't evaluate to numbers.
 In each of those cases, we must reform the addition expression out of what we find, converting numbers \scm|n| into a syntax tree of the form \scm|`(num ,n)|.
 \begin{minted}{scheme}
-(define-object
-  [(leave-variables 'eval ('var x)) = (list 'var x)])
+(define-object [(leave-variables 'eval ('var x)) = (list 'var x)])
 
 (define-object reform-addition
-  [(reform 'add l r)
-    (extension [_ (try-if (number? l)) = (reform 'add `(num ,l) r)]
-               [_ (try-if (number? r)) = (reform 'add l `(num ,r))]
-               [_                      = (list 'add l r)])])
+  [(reform 'add l r) (try-if (number? l)) = (reform 'add `(num ,l) r)]
+  [(reform 'add l r) (try-if (number? r)) = (reform 'add l `(num ,r))]
+  [(reform 'add l r)                      = (list 'add l r)])
 \end{minted}
 The final constant-folding algorithm can be composed from this ``safe'' version of evaluation, along with the cases for leaving variables alone and reforming partially-evaluated additions:
 \begin{minted}{scheme}

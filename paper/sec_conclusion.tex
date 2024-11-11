@@ -1,0 +1,14 @@
+This paper's main contribution is a Scheme and a Racket implementation of copatterns.
+The implementation focuses on providing a compositional abstraction, in which you have more than one notion of composition --- vertical and horizontal ---.
+Our work allows us to perform equational reasoning, and this new composition approach enables us to encode useful design patterns from object-oriented and functional paradigms, thus permitting a new approach to the expression problem.
+In addition to the implementation, we have described two core $\lambda$-caculus. The source language captures the characteristics of our implementation, and it can be translated to the target language, which contains fewer features.
+This translation is a conservative extension since it does not add anything substantial to the expressiveness power of the target language and shows that we can represent copatterns with regular pattern matching and recursive objects.
+
+\adriano{I am not sure about what we are planning to include in the future work section: some ideas
+Coverage analysis;
+Types
+Formalization
+}
+In the future, we want to extend this work by adding support to coverage analysis, with intention to provide insights about the user's current observations.
+We also plan to design a type system for copatterns and bring copatterns to typed scenarios, such as statically typed language, like OCaml, or to gradually typed language, like Typed Racket.
+Additionally, we scheme to develop a formalization of our core theory in a theorem prover, such as Coq.

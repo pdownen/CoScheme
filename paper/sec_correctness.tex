@@ -1,3 +1,17 @@
+We have defined a translation to a core $\lambda$-calculus, but we still need to specify tools that enable us to confirm that the results of our translation carry their expected meaning.
+With that in mind, we can describe equational theories that teach us how to evaluate programs in both the target and the source language and then prove that our translation is semantically preserving.  
+
+Since we are in a call-by-value context, we must define our values for both languages. In our target language, values are variables ($x$), lambdas ($\lambda x. ~M$), and patterns ($\Null ~|~ \Null ~V ~W ~|~ \q{x} $).
+We have ordinary evaluation contexts that show us where we can apply our axioms and regular call-by-value $\beta$ reductions.
+In addition, we have $\mathit{match}$ and $\mathit{apart}$ that teach us how to deal with pattern matching.
+Both have two branches, one specifying what to do if the pattern is satisfied and the other what to do if the pattern is not fulfilled.
+For the $\mathit{match}$ case, we assume a decomposition of our value $V$ in terms of the pattern.
+The $\mathit{rec}$ describes how to unfold a step in a recursive object.
+
+The remainder inference rules tell us how to verify if a pattern is not satisfied.
+Those rules make the failure pattern cases explicit.
+A variable pattern can not fail, a $\q{x}$ pattern needs exactly a $\q{x}$ value, a $\Null$ pattern needs itself, and a $\Cons$ pattern needs a cons object that fulfills its patterns.
+
 \begin{figure}
 \centering
   
@@ -136,6 +150,23 @@ Apartness between patterns and values ($P \apart V$):
 \caption{Untyped equational axioms of the target language.}
 \label{fig:target-equality}
 \end{figure}
+
+With those rules, we can prove that our translation respects equalities in the target language.
+That is, if two terms are equal up to the target equational theory, their translation will also be equal.
+This property (\cref{thm:conservative-extension}) tells us that we have a conservative extension \cite{ExpressivePower}, and the proof mainly follows by the fact that our translation is compositional, where we can separate a term and a context inside a translation.
+
+
+\begin{restatable}[Conservative Extension]{proposition}{thmconservativeextension}
+  \label{thm:conservative-extension}
+  If $M = N$ in the equational theory of the target
+  (\cref{fig:target-equality}), then so too does $\den{M} = \den{N}$.
+\end{restatable}
+
+The source language values extend the target language values with new abstractions: templates, extensions, and $\lamstar$'s.
+In addition to the axioms of the target language, the source language has many equalities that capture the desired semantics of our operations. Those equalities present properties such as a neutral element for composition ($\varepsilon$), that composition is associative, that we need to commit to a branch with $\Do$, and how to work with our new abstractions.
+We also extend our apartness rules to copatterns and contexts.
+If it is the case that a pattern is not satisfied in a copattern, then the full copattern is not satisfied.
+For contexts, if we know that a copattern is not fulfilled in context, then we see that it will not be fulfilled in a derived context.
 
 \begin{figure}
 \centering
@@ -346,11 +377,11 @@ Apartness between copatterns and contexts ($Q \apart C$):
 \label{fig:source-equality}
 \end{figure}
 
-\begin{restatable}[Conservative Extension]{proposition}{thmconservativeextension}
-  \label{thm:conservative-extension}
-  If $M = N$ in the equational theory of the target
-  (\cref{fig:target-equality}), then so too does $\den{M} = \den{N}$.
-\end{restatable}
+
+With those equations, we can assert that our translation preserves the desired meaning of each abstraction (\cref{thm:soundness}).
+By verifying that our translation preserves equalities on both the source and target language, we know that our translation is sound up to our equational theory.
+This is also highlighted by our implementation.
+Since we used macros, we are not adding anything substantially new to the language.
 
 \begin{restatable}[Soundness]{proposition}{thmsoundness}
   \label{thm:soundness}

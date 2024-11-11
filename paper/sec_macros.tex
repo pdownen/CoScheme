@@ -39,9 +39,12 @@ Thus, we provide two different implementations to illustrate how copatterns may 
 \item
   A Racket implementation that uses its standard pattern-matching constructs \rkt|match| and \rkt|match-lambda*|.
   Thus, the $\Match$  from the target language in \cref{fig:target-syntax} is interpreted as Racket's \rkt|match|, and the translation of $E\den{\lambda P. O}$ is implemented directly as \rkt|match-lambda*| instead of separating the $\lambda$ from the pattern as in \cref{fig:translation}.
-  This choice makes sure that the pattern language implemented is exactly the same as the pattern language already used in Racket programs.
+  This choice ensures the pattern language implemented is exactly the same as the pattern language already used in Racket programs.
 \item
-  A general implementation that works for any R${}^6$RS-compliant Scheme, which internally implements its own pattern-matching macro, \scm|try-match|, by expanding into other primitives like \scm|if| and comparison predicates.
+  A general implementation intended to work for any R${}^6$RS-compliant Scheme,%
+  \footnote{We have explicitly tested this implementation against Chez Scheme.}
+  %
+  which internally implements its own pattern-matching macro, \scm|try-match|, by expanding into other primitives like \scm|if| and comparison predicates.
   Of note, due to only having to handle a single line of pattern-matching at a time, this implementation is 75 lines of Scheme and supports quasiquoting forms of patterns.
   This gives a sufficiently expressive intersection between Racket's pattern-matching syntax and the manually implemented R${}^6$RS version.
 \end{itemize}

@@ -90,14 +90,14 @@
 
 ;; eval : Expr -> Number
 (define*
-  [(eval ('num n))   = n]
-  [(eval ('add l r)) = (+ (eval l) (eval r))]
-  [(eval ('mul l r)) = (* (eval l) (eval r))])
+  [(eval `(num ,n))    = n]
+  [(eval `(add ,l ,r)) = (+ (eval l) (eval r))]
+  [(eval `(mul ,l ,r)) = (* (eval l) (eval r))])
 
 ;; eval* : Expr -> Number
 (define eval*
   (lambda*
-   [(eval ('num n))   = n]
+   [(eval (num n))   = n]
    [(eval ('add l r)) = (+ (eval l) (eval r))]
    [(eval ('mul l r)) = (* (eval l) (eval r))]))
 

@@ -434,9 +434,11 @@
     \den{M}\subst{x}{W}
     &(\beta)
     \\
+    &=
     \den{M}\subst{x}{\den{V}}
     &(\cref{thm:value-translation})
     \\
+    &=
     \den{M\subst{x}{V}}
     &(\cref{thm:substitution-translation})
   \end{align*}
@@ -803,7 +805,7 @@
     (\Rec \mathit{self} = T\den{F; B} ~ (\lambda x. \mathit{self} ~ x))
     ~ x)
     )
-    & (\beta rec)
+    & (\beta, rec)
     \\
     =& \quad
     T\den{F; B} ~ (\lambda x. \den{\lamstar(F; B)} ~ x)

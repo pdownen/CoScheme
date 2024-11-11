@@ -954,6 +954,96 @@
   \qed
 \end{proof}
 
+\begin{lemma}[Template Do Match]
+  \label{thm:template-do-match}
+  \\
+  $\den{(\Template{} (\lambda P. \Do M); B) ~ V' ~ V} = \den{M\subst{\many{x}}{\many{W}}}
+  \qquad (\text{if } P\subst{\many{x}}{\many{W}} = V$)
+\end{lemma}
+\begin{proof}
+  If P is a variable:
+  \begin{align*}
+    &\quad \den{(\Template{} (\lambda P. \Do M); B) ~ V' ~ V}\\
+    =&\quad (\lambda s. E\den{\lambda P. \Do M} ~T\den{B} ~s) ~\den{V'} ~\den{V}\\
+    =&\quad E\den{\lambda P. \Do M} ~T\den{B} ~\den{V'} ~\den{V} & (\beta)\\
+    =&\quad (\lambda b. \lambda s.(\lambda x.E\den{\Do M} ~(\lambda s'. b ~s' ~x) ~s)) ~T\den{B} ~\den{V'} ~\den{V}\\
+    =&\quad E\den{\Do M}\subst{x}{\den{V}} ~(\lambda s'. T\den{B} ~s' ~\den{V}) ~\den{V'} & (\beta)\\
+    =&\quad (\lambda \_. \lambda  \_. \den{M}\subst{x}{\den{V}}) ~(\lambda s'. T\den{B} ~s' ~\den{V}) ~\den{V'}\\
+    =&\quad \den{M}\subst{x}{\den{V}} & (\beta)
+  \end{align*}
+  Otherwise:
+  \begin{align*}
+    &\quad \den{(\Template{} (\lambda P. \Do M); B) ~ V' ~ V}\\
+    =&\quad (\lambda s. E\den{\lambda P. \Do M} ~T\den{B} ~s) ~\den{V'} ~\den{V}\\
+    =&\quad E\den{\lambda P. \Do M} ~T\den{B} ~\den{V'} ~\den{V} & (\beta)\\
+    =&\quad E\den{\lambda x. \Match P \gets x ~(\Do M)} ~T\den{B} ~\den{V'} ~\den{V} \\
+    =&\quad (\lambda b. \lambda s. (\lambda x. E\den{\Match P \gets x ~(\Do M)} ~(\lambda s'. b ~s' ~x) ~s)) ~T\den{B} ~\den{V'} ~\den{V} \\
+    =&\quad E\den{\Match P \gets x ~(\Do M)}\subst{x}{\den{V}} ~(\lambda s'. T\den{B} ~s' ~\den{V}) ~\den{V'} & (\beta) \\
+    =&\quad E\den{\Do M}\subst{x}{\den{V}}\subst{\many{x}}{\many{\den{W}}} ~(\lambda s'. T\den{B} ~s' ~\den{V}) ~\den{V'} & (\beta, match) \\
+    =&\quad (\lambda \_. \lambda  \_. \den{M}\subst{\many{x}}{\many{\den{W}}}) ~(\lambda s'. T\den{B} ~s' ~\den{V}) ~\den{V'} & \\
+    =&\quad \den{M}\subst{\many{x}}{\many{\den{W}}} & (\beta) \\
+  \end{align*}
+  \qed
+\end{proof}
+
+\begin{lemma}[Template Do Apart]
+  \label{thm:template-do-apart}
+  \\
+  $\den{(\Template{} (\lambda P. O); B) ~ V' ~ V} = \den{(\Template B) ~ V' ~ V}
+  \qquad (\text{if } P \apart V)$
+\end{lemma}
+Since a variable pattern is always fulfilled, we can skip this case.
+\begin{proof}
+  \begin{align*}
+    & \qquad \den{(\Template{} (\lambda P. O); B) ~ V' ~ V} \\
+    =& \qquad E\den{\lambda P. O} ~T\den{B} ~\den{V'} ~\den{V} & (\beta)\\
+    =& \qquad (\lambda s'. T\den{B} ~s' ~\den{V}) ~\den{V'} & (\beta, apart)\\
+    =& \qquad T\den{B} ~ \den{V'} ~ \den{V} & (\beta) \\
+    =& \qquad \den{(\Template B)} ~ \den{V'} ~ \den{V}
+  \end{align*}
+  \qed
+\end{proof}
+
+\begin{lemma}[Context Match]
+  \label{thm:context-match}
+  \\
+  $\den{C[(\Template{} (Q[y] = M); B) ~ V]} = \den{M\subst{y}{V}\subst{\many{x}}{\many{W}}}
+  \quad (\text{if } Q\subst{\many{x}}{\many{W}} = C)$
+\end{lemma}
+\begin{proof}
+  \qed
+\end{proof}
+
+\begin{lemma}[Context Apart]
+  \label{thm:context-apart}
+  \\
+  $\den{C[(\Template{} (Q[y] ~ O); B) ~ V]} = \den{  C[(\Template B) ~ V]}
+  \quad (\text{if } Q \apart C)$
+\end{lemma}
+\begin{proof}
+  \qed
+\end{proof}
+
+\begin{lemma}[Context $\lamstar$ Match]
+  \label{thm:context-lamstar-match}
+  \\
+  $\den{C[\lamstar (Q[y] = M); B]} = \den{M\subst{y}{(\lamstar (Q[y] = M); B)}\subst{\many{x}}{\many{W}}}
+  \\
+  (\text{if } Q\subst{\many{x}}{\many{W}} = C)$
+\end{lemma}
+\begin{proof}
+  \qed
+\end{proof}
+
+\begin{lemma}[Context $\lamstar$ Apart]
+  \label{thm:context-lamstar-apart}
+  \\
+  $\den{C[\lamstar (Q[y] ~ O); \Else M]} = \den{C[M]}
+  \qquad (\text{if } Q \apart C)$
+\end{lemma}
+\begin{proof}
+  \qed
+\end{proof}
 
 %%% Local Variables:
 %%% mode: LaTeX

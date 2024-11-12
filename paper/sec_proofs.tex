@@ -387,7 +387,7 @@
   $\den{C[M]} = \den{C}{[\den{M}]}$.
 \end{lemma}
 \begin{proof}
-  By mutual induction on the syntax of terms, templates, and extensions.
+  By induction on the context $C$.
 \end{proof}
 
 \thmconservativeextension*
@@ -1248,10 +1248,10 @@
       \den{C[(\Template{} (Q[y] ~ O); B) ~ V]}
       \\
       =&\quad
-      \den{(\Template{} (y ~ P ~ O); B) ~ V ~ V'}
+      \den{(\Template{} ((y ~ P) ~ O); B) ~ V ~ V'}
       \\
       =&\quad
-      \den{(\Template{} (y ~ \lambda P. O); B) ~ V ~ V'}
+      \den{(\Template{} (y ~ (\lambda P. O)); B) ~ V ~ V'}
       \\
       =&\quad
       \den{(\Template{} (\lambda P. O\subst{y}{V}); B) ~ V ~ V'}

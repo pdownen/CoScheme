@@ -1,7 +1,7 @@
 #!r6rs
 
 (import (rnrs)
-        (compose))
+        (composable))
 
 ;; List a = (cons a (List a)) | null
 
@@ -10,7 +10,7 @@
 
 ;; takes : (Stream a, Nat) -> List a
 (define*
-  [(takes s 0) = '()]
+  [(takes s 0) = (list)]
   [(takes s 1) = (list (s 'head))]
   [(takes s n) = (cons (s 'head)
                        (takes (s 'tail) (- n 1)))])

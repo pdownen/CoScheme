@@ -1,6 +1,6 @@
 #!r6rs
 
-(library (compose)
+(library (composable)
 
 (export define* lambda* override-lambda* define-object object <: extends meta
         extension apply-extension template apply-template
@@ -180,7 +180,7 @@
   (try next self
        (let ([name expr] ...) (apply-extension ext next self))))
 
-;; try-match : Expr -> Pattern -> Extension -> Extension
+;; try-match : (Expr, Pattern, Extension) -> Extension
 ;; Attempt to match the given expression against the pattern: if the match is successful, run the given extension under the pattern's bindings, and the match fails, fall through to the next option.
 (define-syntax try-match
   (lambda(stx)
@@ -208,6 +208,8 @@
        #'(try-let ([val expr])
            (try-match-inline val (pat1 . pats) ext))])))
 
+;; try-match-inline : (Expr, Pattern, Extension) -> Extension
+;; a variant of try-match that will inline the first parameter (the expression to pattern-match on) into each place it is used. **CAUTION** This inlining can duplicate the first expression multiple times. There may be exponentially more copies of the first parameter compared to the syntax of the pattern. Only use this macro to pattern-match on expressions that are syntactically small, so that this copying does not explode the size of the code.
 (define-syntax try-match-inline
   (syntax-rules (quote quasiquote)
     [(try-match-inline val (quote sexp) ext)
@@ -223,6 +225,8 @@
     [(try-match-inline val pat ext)
      (try-match val pat ext)]))
 
+;; try-match-quasiquote : (Expr, QQPattern, QQContinuation, Extension) -> Extension
+;; process a quasiquote pattern, treating identifiers as literal symbols, until an inner "unquote" is found, which resumes ordinary pattern matching again. The third (QQContinuation) parameter is a continuation which keeps track of progress through the quasiquote pattern, so that later parts of a quasiquote list can be processed after the current element is done.
 (define-syntax try-match-quasiquote
   (lambda(stx)
     (syntax-case stx (unquote)
@@ -244,6 +248,8 @@
       [(try-match-quasiquote expr qpat ext)
        #'(try-match-quasiquote expr qpat () ext)])))
 
+;; try-match-splice : (Expr, Pattern, QQContinuation, Extension) -> Extension
+;; splice in a base case, such as a literal symbol or an unquoted sub-pattern, into a larger quasiquote pattern match.
 (define-syntax try-match-splice
   (syntax-rules (unquote)
     [(try-match-splice expr pat ((pats ...) () cont) ext)
@@ -259,6 +265,8 @@
     [(try-match-splice expr pat () ext)
      (try-match expr pat ext)]))
 
+;; try-match* : (Expr^n, Pattern^n, Extension) -> Extension
+;; simultaneously match multiple expressions against multiple patterns at the same time. The two lists of expressions and patterns must be of the same length.
 (define-syntax try-match*
   (syntax-rules ()
     [(try-match* () () ext)

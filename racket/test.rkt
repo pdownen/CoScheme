@@ -1,8 +1,6 @@
-#!r6rs
+#lang racket
 
-(import (rnrs)
-        (composable))
-
+(require "composable.rkt")
 
 (define*
   [(away-from0 x) (try-if (>= x 0)) = (+ x 1)]
@@ -38,7 +36,7 @@
 (define (double x) (+ x x))
 
 (define (divides x y)
-  (= (mod x y) 0))
+  (= (modulo x y) 0))
 
 (define-object (fizz-buzz-wrong <: meta)
   [(_ 'show n) (try-if (divides n 3)) = "fizz"]

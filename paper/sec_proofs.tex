@@ -527,7 +527,7 @@
 
 \begin{lemma}[Extension Composition Associativity]
   \label{thm:ext-compose-assoc}
-  \\
+
   $ E\den{(O_1;O_2);O_3} = E\den{O_1;(O_2;O_3)}.$
 \end{lemma}
 \begin{proof}
@@ -559,7 +559,7 @@
 
 \begin{lemma}[Template Composition Associativity]
   \label{thm:templ-compose-assoc}
-  \\
+
   $ T\den{(O_1;O_2);B} = T\den{O_1;(O_2;B)}.$
 \end{lemma}
 \begin{proof}
@@ -825,7 +825,7 @@
 
 \begin{lemma}[Template Extension]
   \label{thm:templ-ext}
-  \\
+
   $ \den{(\Template O; B) ~ V} = \den{(\Extension O) ~ (\Template B) ~ V}.$
 \end{lemma}
 \begin{proof}
@@ -858,6 +858,7 @@
 
 \begin{lemma}[Template Continue]
   \label{thm:templ-continue}
+  
   $ \den{(\Template \Continue x \to M) ~ V} = \den{M\subst{x}{V}}.$
 \end{lemma}
 \begin{proof}
@@ -873,7 +874,8 @@
 
 \begin{lemma}[Extension Try]
   \label{thm:ext-try}
-    $ \den{(\Extension \Try x \to B) ~ V} = \Template B\subst{x}{V}.$
+  
+  $ \den{(\Extension \Try x \to B) ~ V} = \Template B\subst{x}{V}.$
 \end{lemma}
 \begin{proof}
   \begin{align*}
@@ -890,7 +892,7 @@
 
 \begin{lemma}[Try Match]
   \label{thm:try-match}
-  \\
+
   $\den{\Match P \gets V ~ O} = \den{O\subst{\many{x}}{\many{W}}}
   \qquad (\text{if } P\subst{\many{x}}{\many{W}} = V).$
 \end{lemma}
@@ -919,7 +921,7 @@
 
 \begin{lemma}[Try Match Apart]
   \label{thm:try-match-apart}
-  \\
+
   $\den{\Match P \gets V ~ O} = \den{\varepsilon}
   \qquad (\text{if } P \apart V).$
 \end{lemma}
@@ -952,6 +954,7 @@
     \\
     &
     (\text{if } P\subst{\many{x}}{\many{W}} = V)
+    .
   \end{align*}
 \end{lemma}
 \begin{proof}
@@ -960,7 +963,7 @@
   \item If $P = y$, then $P\subst{\many{x}}{\many{W}} = y\subst{y}{V}$ with $\many{x} = y$ and $\many{W}=V$ and:
   \begin{align*}
     &\quad
-    \den{(\Template{} (\lambda P. O); B) ~ V' ~ V}
+    \den{(\Template{} (\lambda y. O); B) ~ V' ~ V}
     \\
     =&\quad (\lambda s. E\den{\lambda y. O} ~T\den{B} ~s) ~\den{V'} ~\den{V}
     \\
@@ -1055,9 +1058,9 @@
 
 \begin{lemma}[Template Do Match]
   \label{thm:template-do-match}
-  \\
+
   $\den{(\Template{} (\lambda P. \Do M); B) ~ V' ~ V} = \den{M\subst{\many{x}}{\many{W}}}
-  \qquad (\text{if } P\subst{\many{x}}{\many{W}} = V$)
+  \quad (\text{if } P\subst{\many{x}}{\many{W}} = V)$.
 \end{lemma}
 \begin{proof}
   In terms of the source-level axioms above, we have
@@ -1156,11 +1159,11 @@
   % \end{itemize}
 \end{proof}
 
-\begin{lemma}[Template Do Apart]
-  \label{thm:template-do-apart}
-  \\
+\begin{lemma}[Template Apart]
+  \label{thm:template-apart}
+
   $\den{(\Template{} (\lambda P. O); B) ~ V' ~ V} = \den{(\Template B) ~ V' ~ V}
-  \qquad (\text{if } P \apart V)$
+  \qquad (\text{if } P \apart V)$.
 \end{lemma}
 \begin{proof}
   Since a variable can never be apart from a value, $P$ must be a non-variable pattern.
@@ -1188,6 +1191,7 @@
 
 \begin{lemma}[Template Self]
   \label{thm:template-self}
+  
   $\den{(\Template{} (y ~ O); B) ~ V = (\Template O\subst{y}{V}; B) ~ V}$
 \end{lemma}
 \begin{proof}
@@ -1216,111 +1220,313 @@
   \end{align*}
   \qed
 \end{proof}
-  
+
 \begin{lemma}[Context Match]
   \label{thm:context-match}
-  \\
-  $\den{C[(\Template{} (Q[y] = M); B) ~ V]} = \den{M\subst{y}{V}\subst{\many{x}}{\many{W}}}
-  \quad (\text{if } Q\subst{\many{x}}{\many{W}} = C)$
-\end{lemma}
-\begin{proof}
-  First, note that every copattern has the form $Q = \hole ~ P_1 \dots P_n$, where each pattern $P_i$ binds a distinct set of variables $\many{x_i}$, and so the assumed matching equality $Q\subst{\many{x}}{\many{W}} = C$ implies
-  \begin{itemize}
-  \item $C = ~ V_1 \dots V_n$, where there are equal numbers of $V_i$ and $P_i$, and
-  \item for each $1 \leq i \leq n$, there are variables $\many{x_i}$ and values $\many{W_i}$ such that $P_i\subst{\many{x_i}}{\many{W_i}}$.
-  \end{itemize}
-
-  The equation then holds by induction on the copattern $Q = \hole ~ P_i \dots P_n$ and matching pairs $P_i\subst{\many{x_i}}{\many{W_i}} = V_i$as follows:
   \begin{align*}
-    &\quad
-    \den{C[(\Template{} (Q[y] = M); B) ~ V]}
-    \\
-    =&\quad
-    \den{(\Template{} (y ~ P_1 \dots P_n = M); B) ~ V ~ V_1 \dots V_n}
-    \\
-    =&\quad
-    \den{(\Template{} (y ~ \lambda P_1. \dots \lambda P_n = M); B) ~ V ~ V_1 \dots V_n}
-    \\
-    =&\quad
-    \den{(\Template{} (\lambda P_1. \dots \lambda P_n = M\subst{y}{V}); B) ~ V ~ V_1 \dots V_n}
-    &(\cref{thm:template-self})
-    \\
-    =&\quad
-    \denbig{
-      \left(
-        \begin{aligned}
-          &\Template \\
-          &\quad \Do M\subst{y}{V}\subst{\many{x}}{\many{W}}; \\
-          &\quad \Continue s' \to (\Template B) ~ s' ~ V_1 \dots V_n
-        \end{aligned}
-      \right)
-      ~ V
-    }
-    &(\cref{thm:template-match})
-    \\
-    =&\quad
+    \den{C[(\Template{} (Q[y] ~ O); B) ~ V]}
+    &=
     \denbig{
       \begin{aligned}
-        &(\Extension \Do M\subst{y}{V}\subst{\many{x}}{\many{W}})\\
-        &\quad (\Template \Continue s' \to (\Template B) ~ s' ~ V_1 \dots V_n) \\
-        &\quad V
+        &\Template \\
+        &\quad O\subst{y}{V}\subst{\many{x}}{\many{W}}; \\
+        &\quad \Continue s' \to C[(\Template B) ~ s']
       \end{aligned}
     }
+    \\
+    &(\text{if } Q\subst{\many{x}}{\many{W}} = C \neq \hole)
+    .
+  \end{align*}
+\end{lemma}
+\begin{proof}
+  By induction on the syntax of $Q$.
+  \begin{itemize}
+  \item $Q = \hole$ is impossible due to the assumption $Q\subst{\many{x}}{\many{W}} = C \neq \hole$.
+  \item If $Q = \hole ~ P$ then $C = \hole ~ V'$ such that $P\subst{\many{x}}{\many{W}} = V$, and the equality holds by \cref{thm:template-self,thm:template-match} and congruence of the equational theory (\cref{thm:conservative-extension}):
+    \begin{align*}
+      &\quad
+      \den{C[(\Template{} (Q[y] ~ O); B) ~ V]}
+      \\
+      =&\quad
+      \den{(\Template{} (y ~ P ~ O); B) ~ V ~ V'}
+      \\
+      =&\quad
+      \den{(\Template{} (y ~ \lambda P. O); B) ~ V ~ V'}
+      \\
+      =&\quad
+      \den{(\Template{} (\lambda P. O\subst{y}{V}); B) ~ V ~ V'}
+      &(\cref{thm:template-self})
+      \\
+      =&\quad
+      \denbig{
+        \left(
+          \begin{aligned}
+            &\Template \\
+            &\quad O\subst{y}{V}\subst{\many{x}}{\many{W}}; \\
+            &\quad \Continue s' \to (\Template B) ~ s' ~ V'
+          \end{aligned}
+        \right)
+        ~ V
+      }
+      &(\cref{thm:template-match})
+    \end{align*}
+  \item If $Q = Q' ~ P$ then $C = C' ~ V'$ where $\subst{\many{x}}{\many{W}} = \subst{\many{x_1},\many{x_2}}{\many{W_1},\many{W_2}}$ such that $Q'\subst{\many{x_1}}{\many{W_2}} = C$ and $P\subst{\many{x_2}}{\many{W_2}} = V'$.
+    Assume the inductive hypothesis
+    \begin{align*}
+      \den{C'[(\Template{} (Q'[y] ~ O); B) ~ V]}
+      &=
+      \denbig{
+        \begin{aligned}
+          &\Template \\
+          &\quad O\subst{y}{V}\subst{\many{x}}{\many{W}}; \\
+          &\quad \Continue s' \to C'[(\Template B) ~ s']
+        \end{aligned}
+      }
+    \end{align*}
+    The equality then holds by this inductive hypothesis, \cref{thm:template-match,thm:templ-continue}, and congruence of the equational theory (\cref{thm:conservative-extension}):
+    \begin{align*}
+      &\quad
+      \den{C[(\Template{} (Q[y] ~ O); B) ~ V]}
+      \\
+      =&\quad
+      \den{C'[(\Template{} ((Q'[y] ~ P) ~ O); B) ~ V] ~ V'}
+      \\
+      =&\quad
+      \den{C'[(\Template{} (Q'[y] ~ (\lambda P. O)); B) ~ V] ~ V'}
+      \\
+      =&\quad
+      \denbig{
+        \left(
+          \begin{aligned}
+            &\Template \\
+            &\quad \lambda P. O\subst{y}{V}\subst{\many{x_1}}{\many{W_1}}; \\
+            &\quad \Continue s' \to C'[(\Template B) ~ s']
+          \end{aligned}
+        \right)
+        ~ V ~ V'
+      }
+      &(IH)
+      \\
+      =&\quad
+      \denbig{
+        \left(
+          \begin{aligned}
+            &\Template \\
+            &\quad O\subst{y}{V}\subst{\many{x_1}}{\many{W_1}}\subst{\many{x_2}}{\many{W_2}}; \\
+            &\quad \Continue s'' \to \\
+            &\qquad
+            \left(
+              \begin{aligned}
+                &\Template \\
+                &\quad \Continue s' \to \\
+                &\qquad C'[(\Template B) ~ s']
+              \end{aligned}
+            \right)
+            ~ s'' ~ V'
+          \end{aligned}
+        \right)
+        ~ V
+      }
+      &(\cref{thm:template-match})
+      \\
+      =&\quad
+      \denbig{
+        \left(
+          \begin{aligned}
+            &\Template \\
+            &\quad O\subst{y}{V}\subst{\many{x_1}}{\many{W_1}}\subst{\many{x_2}}{\many{W_2}}; \\
+            &\quad \Continue s'' \to 
+            \left(
+              C'[(\Template B) ~ s'']
+            \right)
+            ~ V'
+          \end{aligned}
+        \right)
+        ~ V
+      }
+      &(\cref{thm:templ-continue})
+      \\
+      =&\quad
+      \denbig{
+        \left(
+          \begin{aligned}
+            &\Template \\
+            &\quad O\subst{y}{V}\subst{\many{x}}{\many{W}}; \\
+            &\quad \Continue s' \to 
+            C[(\Template B) ~ s']
+          \end{aligned}
+        \right)
+        ~ V
+      }
+    \end{align*}
+  \end{itemize}
+\end{proof}
+  
+\begin{lemma}[Context Exact Match]
+  \label{thm:context-exact-match}
+  \begin{align*}
+    \den{C[(\Template{} (Q[y] = M); B) ~ V]}
+    &=
+    \den{M\subst{y}{V}\subst{\many{x}}{\many{W}}}
+    \\
+    &(\text{if } Q\subst{\many{x}}{\many{W}} = C)
+    .
+  \end{align*}
+\end{lemma}
+\begin{proof}
+  In terms of the source-level axioms above, we have:
+  \begin{align*}
+    &\quad
+    C[(\Template{} (Q[y] = M); B) ~ V]
+    \\
+    =&\quad
+    C[(\Template{} (Q[y] \Do M); B) ~ V]
+    \\
+    =&\quad
+    \left(
+      \begin{aligned}
+        &\Template \\
+        &\quad \Do M\subst{y}{V}\subst{\many{x}}{\many{W}}; \\
+        &\quad \Continue s' \to C[(\Template B) ~ s']
+      \end{aligned}
+    \right)
+    ~ V
+    &(\cref{thm:context-match})
+    \\
+    =&\quad
+    \begin{aligned}[t]
+      &(\Extension \Do M\subst{y}{V}\subst{\many{x}}{\many{W}}) \\
+      &\quad (\Template \Continue s' \to C[(\Template B) ~ s']) \\
+      &\quad ~ V
+    \end{aligned}
     &(\cref{thm:templ-ext})
     \\
     =&\quad
-    \denbig{
-      \begin{aligned}
-        &(\Extension \Try \_ \to \Continue \_ \to M\subst{y}{V}\subst{\many{x}}{\many{W}})\\
-        &\quad (\Template \Continue s' \to (\Template B) ~ s' ~ V_1 \dots V_n) \\
-        &\quad V
-      \end{aligned}
-    }
+    \begin{aligned}[t]
+      &(\Extension \Try \_ \to \Else M\subst{y}{V}\subst{\many{x}}{\many{W}}) \\
+      &\quad (\Template \Continue s' \to C[(\Template B) ~ s']) \\
+      &\quad ~ V
+    \end{aligned}
     \\
     =&\quad
-    \den{
-      (\Template \Continue \_ \to M\subst{y}{V}\subst{\many{x}}{\many{W}}) ~ V
-    }
+    (\Template \Else M\subst{y}{V}\subst{\many{x}}{\many{W}}) ~ V
     &(\cref{thm:ext-try})
     \\
     =&\quad
-    \den{
-      M\subst{y}{V}\subst{\many{x}}{\many{W}}
-    }
-    &(\cref{thm:templ-continue})
+    (\Template \Continue \_ \to  M\subst{y}{V}\subst{\many{x}}{\many{W}}) ~ V
+    \\
+    =&\quad
+    M\subst{y}{V}\subst{\many{x}}{\many{W}}
   \end{align*}
+  and so the translation of the two sides are equal by congruence and transitivity of the equational theory (\cref{thm:conservative-extension}).
+  \qed
+  
+  % First, note that every copattern has the form $Q = \hole ~ P_1 \dots P_n$, where each pattern $P_i$ binds a distinct set of variables $\many{x_i}$, and so the assumed matching equality $Q\subst{\many{x}}{\many{W}} = C$ implies
+  % \begin{itemize}
+  % \item $C = ~ V_1 \dots V_n$, where there are equal numbers of $V_i$ and $P_i$, and
+  % \item for each $1 \leq i \leq n$, there are variables $\many{x_i}$ and values $\many{W_i}$ such that $P_i\subst{\many{x_i}}{\many{W_i}}$.
+  % \end{itemize}
+
+  % The equation then holds by induction on the copattern $Q = \hole ~ P_i \dots P_n$ and matching pairs $P_i\subst{\many{x_i}}{\many{W_i}} = V_i$as follows:
+  % \begin{align*}
+  %   &\quad
+  %   \den{C[(\Template{} (Q[y] = M); B) ~ V]}
+  %   \\
+  %   =&\quad
+  %   \den{(\Template{} (y ~ P_1 \dots P_n = M); B) ~ V ~ V_1 \dots V_n}
+  %   \\
+  %   =&\quad
+  %   \den{(\Template{} (y ~ \lambda P_1. \dots \lambda P_n. \Do M); B) ~ V ~ V_1 \dots V_n}
+  %   \\
+  %   =&\quad
+  %   \den{(\Template{} (\lambda P_1. \dots \lambda P_n. \Do M\subst{y}{V}); B) ~ V ~ V_1 \dots V_n}
+  %   &(\cref{thm:template-self})
+  %   \\
+  %   =&\quad
+  %   \denbig{
+  %     \left(
+  %       \begin{aligned}
+  %         &\Template \\
+  %         &\quad \Do M\subst{y}{V}\subst{\many{x}}{\many{W}}; \\
+  %         &\quad \Continue s' \to (\Template B) ~ s' ~ V_1 \dots V_n
+  %       \end{aligned}
+  %     \right)
+  %     ~ V
+  %   }
+  %   &(\cref{thm:template-match})
+  %   \\
+  %   =&\quad
+  %   \denbig{
+  %     \begin{aligned}
+  %       &(\Extension \Do M\subst{y}{V}\subst{\many{x}}{\many{W}})\\
+  %       &\quad (\Template \Continue s' \to (\Template B) ~ s' ~ V_1 \dots V_n) \\
+  %       &\quad V
+  %     \end{aligned}
+  %   }
+  %   &(\cref{thm:templ-ext})
+  %   \\
+  %   =&\quad
+  %   \denbig{
+  %     \begin{aligned}
+  %       &(\Extension \Try \_ \to \Continue \_ \to M\subst{y}{V}\subst{\many{x}}{\many{W}})\\
+  %       &\quad (\Template \Continue s' \to (\Template B) ~ s' ~ V_1 \dots V_n) \\
+  %       &\quad V
+  %     \end{aligned}
+  %   }
+  %   \\
+  %   =&\quad
+  %   \den{
+  %     (\Template \Continue \_ \to M\subst{y}{V}\subst{\many{x}}{\many{W}}) ~ V
+  %   }
+  %   &(\cref{thm:ext-try})
+  %   \\
+  %   =&\quad
+  %   \den{
+  %     M\subst{y}{V}\subst{\many{x}}{\many{W}}
+  %   }
+  %   &(\cref{thm:templ-continue})
+  % \end{align*}
 \end{proof}
 
 \begin{lemma}[Context Apart]
   \label{thm:context-apart}
-  \\
+
   $\den{C[(\Template{} (Q[y] ~ O); B) ~ V]} = \den{C[(\Template B) ~ V]}
-  \quad (\text{if } Q \apart C)$
+  \qquad (\text{if } Q \apart C)$
 \end{lemma}
 \begin{proof}
-  Note that derivation of apartness can be rewritten such that the base case, proving $\hole ~ P_1 \dots P_n \apart \hole ~ V_1 \dots V_n$ from $P_n \apart V_n$, is such that $P_n \apart V_n$ is the \emph{first} non-matching application, and each previous application (for $1 \leq i < n$) matches as some $P_i\subst{\many{x_i}}{\many{W_i}} = V_i$.
-  If there is an earlier non-matching application, then that can form a new smaller base case closer to $\hole$, and all following applications are added via the other two rules for copattern apartness.
-  The proof then proceeds by induction on the derivation of apartness $Q \apart C$ with the above invariant.
+  % Note that derivation of apartness can be rewritten such that the base case, proving $\hole ~ P_1 \dots P_n \apart \hole ~ V_1 \dots V_n$ from $P_n \apart V_n$, is such that $P_n \apart V_n$ is the \emph{first} non-matching application, and each previous application (for $1 \leq i < n$) matches as some $P_i\subst{\many{x_i}}{\many{W_i}} = V_i$.
+  % If there is an earlier non-matching application, then that can form a new smaller base case closer to $\hole$, and all following applications are added via the other two rules for copattern apartness.
+  % The proof then proceeds by induction on the derivation of apartness $Q \apart C$ with the above invariant.
+  By induction on the derivation of apartness $Q \apart C$:
   \begin{itemize}
-  \item Suppose $Q = \hole ~ P_1 \dots P_n$ and $C = \hole ~ V_1 \dots V_n$, and $Q \apart C$ because $P_n \apart V_n$, and for each $1 \leq i < n$, there exists $\many{W_i}$ such that $P_i\subst{\many{x_i}}{\many{W_i}} = V_i$.
-  \item Suppose $Q = Q' ~ P$ and $Q' ~ P \apart C$ because $Q' \apart C$, and assume the inductive hypothesis
+  \item Suppose $Q \apart C$ because $Q = Q' ~ P$ and $C = C' ~ V$ such that $P \apart V$ and $Q'\subst{\many{x}}{\many{W}} = C'$.
+    The two sides are equal \dots by \cref{thm:template-match,thm:template-apart}.
+  \item Suppose $Q \apart C$ because $Q = Q' ~ P$ and $Q' \apart C$, and assume the inductive hypothesis
     \begin{math}
       \den{C[(\Template{} (Q'[y] ~ O); B) ~ V]} = \den{C[(\Template B) ~ V]}
+      .
     \end{math}
-  \item Suppose $C = C' ~ W$ and $Q \apart C' ~ W$ because $Q \apart C'$, and assume the inductive hypothesis
+    The two sides are equal \dots by the inductive hypothesis.
+  \item Suppose $Q \apart C$ because $C = C' ~ W$ and  $Q \apart C'$, and assume the inductive hypothesis
     \begin{math}
       \den{C'[(\Template{} (Q[y] ~ O); B) ~ V]} = \den{C'[(\Template B) ~ V]}
+      .
     \end{math}
+    The two sides are equal \dots by the inductive hypothesis and congruence (\cref{thm:conservative-extension}).
   \end{itemize}
   \qed
 \end{proof}
 
 \begin{lemma}[Context $\lamstar$ Match]
   \label{thm:context-lamstar-match}
-  \\
-  $\den{C[\lamstar (Q[y] = M); B]} = \den{M\subst{y}{(\lamstar (Q[y] = M); B)}\subst{\many{x}}{\many{W}}}$
-  \\
-  $(\text{if } Q\subst{\many{x}}{\many{W}} = C)$
+  \begin{align*}
+    \den{C[\lamstar (Q[y] = M); B]}
+    &=
+    \den{M\subst{y}{(\lamstar (Q[y] = M); B)}\subst{\many{x}}{\many{W}}}
+    \\
+    &(\text{if } Q\subst{\many{x}}{\many{W}} = C)
+  \end{align*}
 \end{lemma}
 \begin{proof}
   In terms of the source-level axioms above, we have:
@@ -1334,7 +1540,7 @@
     \\
     =&\quad
     C[M\subst{y}{(\lamstar (Q[y]=M); B)}\subst{\many{x}}{\many{W}}]
-    &(Q\subst{\many{x}}{\many{W}} = C, \cref{thm:context-match})
+    &(Q\subst{\many{x}}{\many{W}} = C, \cref{thm:context-exact-match})
   \end{align*}
   and so the translation of the two sides are equal by congruence and transitivity of the equational theory (\cref{thm:conservative-extension}).
   \qed
@@ -1342,9 +1548,9 @@
 
 \begin{lemma}[Context $\lamstar$ Apart]
   \label{thm:context-lamstar-apart}
-  \\
+
   $\den{C[\lamstar (Q[y] ~ O); \Else M]} = \den{C[M]}
-  \qquad (\text{if } Q \apart C)$
+  \qquad (\text{if } Q \apart C)$.
 \end{lemma}
 \begin{proof}
   In terms of the source-level axioms above, we have:

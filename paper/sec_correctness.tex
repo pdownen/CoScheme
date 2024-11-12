@@ -361,8 +361,8 @@ Pattern and copattern matching:
 Apartness between copatterns and contexts ($Q \apart C$):
 \begin{gather*}
   \infer
-  {\hole ~ P_1 \dots P_n \apart \hole ~ V_1 \dots V_n}
-  {P_n \apart V_n}
+  {Q ~ P \apart C ~ V}
+  {Q\subst{\many{x}}{\many{W}} = C & P \apart V}
   \qqqquad
   \infer
   {Q ~ P \apart C}

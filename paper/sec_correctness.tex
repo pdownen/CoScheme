@@ -137,12 +137,12 @@ Apartness between patterns and values ($P \apart V$):
 \end{figure}
 
 We have defined a translation to a core $\lambda$-calculus, but we still need to specify tools that enable us to confirm that the results of our translation carry their expected meaning.
-With that in mind, we can describe equational theories that teach us how to evaluate programs in both the target and the source language and then prove that our translation is semantically preserving.  
+With that in mind, we can describe equational theories that teach us how to evaluate programs in both the target and the source language and then prove that our translation preserves those properties.  
 
-Since we are in a call-by-value context, we must define our values for both languages. In our target language, values are variables ($x$), lambdas ($\lambda x. ~M$), and patterns ($\Null ~|~ \Null ~V ~W ~|~ \q{x} $).
+Since we are in a call-by-value context, we must define our values for both languages. In our target language, values are variables ($x$), lambdas ($\lambda x. ~M$), and patterns ($\Null ~|~ \Cons ~V ~W ~|~ \q{x} $).
 We have ordinary evaluation contexts that show us where we can apply our axioms and regular call-by-value $\beta$ reductions.
 In addition, we have $\mathit{match}$ and $\mathit{apart}$ that teach us how to deal with pattern matching.
-Both have two branches, one specifying what to do if the pattern is satisfied and the other what to do if the pattern is not fulfilled.
+The $\mathit{match}$ selects the matching branch if the first pattern is satisfied, and the $\mathit{apart}$ skips the first pattern if the pattern is not fulfilled.
 For the $\mathit{match}$ case, we assume a decomposition of our value $V$ in terms of the pattern.
 The $\mathit{rec}$ describes how to unfold a step in a recursive object.
 

@@ -1500,20 +1500,51 @@
   % The proof then proceeds by induction on the derivation of apartness $Q \apart C$ with the above invariant.
   By induction on the derivation of apartness $Q \apart C$:
   \begin{itemize}
-  \item Suppose $Q \apart C$ because $Q = Q' ~ P$ and $C = C' ~ V$ such that $P \apart V$ and $Q'\subst{\many{x}}{\many{W}} = C'$.
-    The two sides are equal \dots by \cref{thm:template-match,thm:template-apart}.
+  \item Suppose $Q \apart C$ because $Q = Q' ~ P$ and $C = C' ~ W$ such that $P \apart W$ and $Q'\subst{\many{x}}{\many{W}} = C'$.
+    % The two sides are equal \dots by \cref{thm:template-match,thm:template-apart}.
+    \begin{align*}
+      & \quad \den{C'[(\Template{} ((Q'[y] ~P) ~ O); B) ~ V] ~W} \\
+      =& \quad \den{C'[(\Template{} (Q'[y] ~(\lambda P. ~O)); B) ~ V] ~W} \\
+      =& \quad \den{C'} ~\denbig{
+        \left(
+          \begin{aligned}
+            &\Template{} \\
+            &\quad (\lambda P. ~O)\subst{\many{x}}{\many{W}}; \\
+            &\quad \Continue s' \to (\Template B) ~ s' ~ W
+          \end{aligned}
+        \right)
+        ~ V
+      } & (\cref{thm:compositional-translation,thm:template-match})\\
+      =& \quad \den{C'} \den{\Continue s' \to (\Template B) ~ s' ~ W} ~\den{V} & (\cref{thm:template-apart}) \\
+      =& \quad \den{C'} (\lambda s'. \den{(\Template B)} ~ s' ~\den{W}) ~\den{V} \\
+      =& \quad \den{C'} \den{(\Template B) ~V ~W} & (\beta)\\
+      =& \quad \den{C'[(\Template B) ~ V ~ W]} & (\cref{thm:compositional-translation}) \\
+      =& \quad \den{C[(\Template B) ~ V]}
+    \end{align*}
+
   \item Suppose $Q \apart C$ because $Q = Q' ~ P$ and $Q' \apart C$, and assume the inductive hypothesis
     \begin{math}
       \den{C[(\Template{} (Q'[y] ~ O); B) ~ V]} = \den{C[(\Template B) ~ V]}
       .
     \end{math}
-    The two sides are equal \dots by the inductive hypothesis.
+    % The two sides are equal \dots by the inductive hypothesis.
+    \begin{align*}
+      & \quad \den{C[(\Template{} ((Q'[y] ~P) ~ O); B) ~ V]} \\
+      =& \quad \den{C[(\Template{} (Q'[y] ~ (\lambda P. ~O)); B) ~ V]} \\
+      =& \quad \den{C[(\Template{} (Q'[y] ~ (\lambda P. ~O)); B) ~ V]} & (IH)
+    \end{align*}
   \item Suppose $Q \apart C$ because $C = C' ~ W$ and  $Q \apart C'$, and assume the inductive hypothesis
     \begin{math}
       \den{C'[(\Template{} (Q[y] ~ O); B) ~ V]} = \den{C'[(\Template B) ~ V]}
       .
     \end{math}
-    The two sides are equal \dots by the inductive hypothesis and congruence (\cref{thm:conservative-extension}).
+    % The two sides are equal \dots by the inductive hypothesis and congruence (\cref{thm:conservative-extension}).
+    \begin{align*}
+      & \quad \den{C[(\Template{} (Q[y] ~ O); B) ~ V]} \\
+      =& \quad \den{C'[(\Template{} (Q[y] ~ (\lambda P. ~O)); B) ~ V]} ~\den{W}\\
+      =& \quad \den{C'[(\Template B) ~ V]} ~\den{W} & (IH)\\
+      =& \quad \den{C[(\Template B) ~ V]}
+    \end{align*}
   \end{itemize}
   \qed
 \end{proof}

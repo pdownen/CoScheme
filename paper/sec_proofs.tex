@@ -351,13 +351,16 @@
           \\
           &\subst{s}{(\lambda x.\mathit{self}~x)}
           \\
-          &\subst
-          {\mathit{self}}
-          {
-            (\Rec \mathit{self}
-            =
-            \lambda x.N_1\subst{b}{(\lambda s.N_2)}\subst{s}{(\lambda x.\mathit{self}~x)})
-          }
+          &\rlap
+          {$
+            \subst
+            {\mathit{self}}
+            {
+              (\Rec \mathit{self}
+              =
+              \lambda x.N_1\subst{b}{(\lambda s.N_2)}\subst{s}{(\lambda x.\mathit{self}~x)})
+            }
+          $}
         \end{aligned}
         &(rec)
       \end{align*}
@@ -365,6 +368,30 @@
     % \end{proof}
     \end{itemize}
   \end{enumerate}
+\end{proof}
+
+\begin{lemma}[Compositionality]
+  \label{thm:compositional-translation}
+
+  There exists a translation of contexts $\den{C}$ such that $\den{C[M]} = \den{C}{[\den{M}]}$, and similarly for contexts which surround templates $B$ and extensions $O$.
+  The same holds for $T\den{C}$ and $E\den{C}$ for contexts returning templates and extensions, respectively.
+\end{lemma}
+\begin{proof}
+  By induction on the possible contexts $C$ and the definition of the translation.
+  %
+  \qed
+\end{proof}
+
+\begin{lemma}[Hygiene]
+  \label{thm:hygienic-translation}
+
+  If $x$ is captured by $C$ if and only if it is captured by $\den{C}$ in $\den{C}{[x]}$.
+  The same holds for $T\den{C}$ and $E\den{C}$ for contexts returning templates and extensions, respectively.
+\end{lemma}
+\begin{proof}
+  By induction on the possible contexts $C$ and the implicit side-conditions on the definition of translation where new binding forms introduced on the right-hand side must not capture free variables of sub-terms.
+  %
+  \qed
 \end{proof}
 
 \begin{lemma}[Substitution]
@@ -377,20 +404,45 @@
   \end{enumerate}
 \end{lemma}
 \begin{proof}
-  By mutual induction on the syntax of terms $M$, templates $B$, and extensions $O$.
+  The proof strategy follows from proposition 2 of \cite{DownenAriola2014CSCC}.
+
+  Suppose we have a free occurence of $x$ in a term $M$ which is decomposed as $C[x]$, where $C$ does not capture $x$.
+  Because the translation is compositional (\cref{thm:compositional-translation}), we can decompose every occurence of a variable from its surrounding context as $\den{C[x]} = \den{C}{[x]}$.
+  Then, because the translation is hygeniec (\cref{thm:hygienic-translation}), we know $\den{C}$ does not capture $x$.
+  Thus,
+  \begin{align*}
+    \den{C[x]}\subst{x}{\den{V}}
+    &=
+    \den{C}{[x]}\subst{x}{\den{V}}
+    &(\cref{thm:compositional-translation})
+    \\
+    &=
+    \den{C}{[\den{V}]}\subst{x}{\den{V}}
+    \\
+    &=
+    \den{C[V]}\subst{x}{\den{V}}
+    &(\cref{thm:compositional-translation})
+  \end{align*}
+  This replacement can then be iterated for each free occurence of $x$ in the term, until $x$ no longer appears free in the final term $M'$, in which the substitution is $\den{M'}\subst{x}{\den{V}} = \den{M'}$.
+
+  The same procedure applies for free occurences of variables in templates and extensions.
+  %
+  \qed
 \end{proof}
 
-\begin{lemma}[Compositionality]
-  \label{thm:compositional-translation}
+\begin{lemma}[Equivalence Relation]
+  \label{thm:equivalence-relation}
 
-  There exists a translation of contexts $\den{C}$ such that
-  $\den{C[M]} = \den{C}{[\den{M}]}$.
+  The translation preserves the structure of an equivalence relation with respect to the equational theory of the target.
+  Equalities between translated terms have the following properties:
+  \begin{enumerate}[(a)]
+  \item \emph{Reflexivity:} $\den{M} = \den{M}$.
+  \item \emph{Symmetry:} if $\den{M} = \den{N}$ then $\den{N} = \den{M}$,
+  \item \emph{Transitivity:} if $\den{M_1} = \den{M_2}$ and $\den{M_2} = \den{M_3}$ then $\den{M_1} = \den{M_3}$.
+  \item \emph{Congruence:} if $\den{M} = \den{M}$ then for all contexts $C$, $\den{C[M]} = \den{C[N]}$.
+  \end{enumerate}
+  and similarly for equalities between translated templates $T\den{B}$ and extensions $E\den{O}$.
 \end{lemma}
-\begin{proof}
-  By induction on the context $C$.
-\end{proof}
-
-\thmconservativeextension*
 \begin{proof}
   The proof strategy follows from proposition 1 of \cite{DownenAriola2014CSCC}.
   
@@ -415,12 +467,14 @@
     \den{C[N]}
     &(\cref{thm:compositional-translation})
   \end{align*}
+\end{proof}
 
-  Finally, each individual axiom ($\beta$, $rec$, \etc) from the target language
-  immediately holds by the inductive hypothesis---because the definition of
-  translation for these cases does not change syntax---along with
-  \cref{thm:value-translation,thm:substitution-translation} for cases which
-  substitute.  For example, with the $\beta$ axiom, we have
+\thmconservativeextension*
+\begin{proof}
+  The soundness of the inference rules defining the structure of the source equivalence relation follow from \cref{thm:equivalence-relation}.
+  
+  It then remains to show that each individual axiom ($\beta$, $rec$, \etc) from the target language is still equal after translation.  Each one holds by the inductive hypothesis---because the definition of translation for these cases does not change syntax---along with \cref{thm:value-translation,thm:substitution-translation} for cases which substitute.
+  For example, with the $\beta$ axiom, we have
   \begin{align*}
     \den{(\lambda x. M) ~ V}
     &=
@@ -454,6 +508,7 @@
 \end{lemma}
 \begin{proof}
   By induction on the syntax of $P$.
+  \qed
 \end{proof}
 
 \begin{lemma}[Apartness Translation]
@@ -463,11 +518,13 @@
 \end{lemma}
 \begin{proof}
   By induction on the derivation of apartness $P \apart V$.
+  \qed
 \end{proof}
 
 \thmsoundness*
 \begin{proof}
   Each axiom is derived up to the target equational theory in the following lemmas.
+  \qed
 \end{proof}
 
 \begin{lemma}[Extension Composition Identity Left]
@@ -1107,7 +1164,7 @@
     M\subst{\many{x}}{\many{W}}    
     &(\cref{thm:templ-continue})
   \end{align*}
-  and so the translation of the two sides are equal by congruence and transitivity of the equational theory (\cref{thm:conservative-extension}).
+  and so the translation of the two sides are equal by congruence and transitivity of the equational theory (\cref{thm:equivalence-relation}).
   \qed
   % By cases on whether $P$ is a variable or not:
   % \begin{itemize}
@@ -1242,7 +1299,7 @@
   By induction on the syntax of $Q$.
   \begin{itemize}
   \item $Q = \hole$ is impossible due to the assumption $Q\subst{\many{x}}{\many{W}} = C \neq \hole$.
-  \item If $Q = \hole ~ P$ then $C = \hole ~ V'$ such that $P\subst{\many{x}}{\many{W}} = V$, and the equality holds by \cref{thm:template-self,thm:template-match} and congruence of the equational theory (\cref{thm:conservative-extension}):
+  \item If $Q = \hole ~ P$ then $C = \hole ~ V'$ such that $P\subst{\many{x}}{\many{W}} = V$, and the equality holds by \cref{thm:template-self,thm:template-match} and congruence of the equational theory (\cref{thm:equivalence-relation}):
     \begin{align*}
       &\quad
       \den{C[(\Template{} (Q[y] ~ O); B) ~ V]}
@@ -1283,7 +1340,7 @@
         \end{aligned}
       }
     \end{align*}
-    The equality then holds by this inductive hypothesis, \cref{thm:template-match,thm:templ-continue}, and congruence of the equational theory (\cref{thm:conservative-extension}):
+    The equality then holds by this inductive hypothesis, \cref{thm:template-match,thm:templ-continue}, and congruence of the equational theory (\cref{thm:equivalence-relation}):
     \begin{align*}
       &\quad
       \den{C[(\Template{} (Q[y] ~ O); B) ~ V]}
@@ -1418,7 +1475,7 @@
     =&\quad
     M\subst{y}{V}\subst{\many{x}}{\many{W}}
   \end{align*}
-  and so the translation of the two sides are equal by congruence and transitivity of the equational theory (\cref{thm:conservative-extension}).
+  and so the translation of the two sides are equal by congruence and transitivity of the equational theory (\cref{thm:equivalence-relation}).
   \qed
   
   % First, note that every copattern has the form $Q = \hole ~ P_1 \dots P_n$, where each pattern $P_i$ binds a distinct set of variables $\many{x_i}$, and so the assumed matching equality $Q\subst{\many{x}}{\many{W}} = C$ implies
@@ -1539,7 +1596,7 @@
       \den{C'[(\Template{} (Q[y] ~ O); B) ~ V]} = \den{C'[(\Template B) ~ V]}
       .
     \end{math}
-    % The two sides are equal \dots by the inductive hypothesis and congruence (\cref{thm:conservative-extension}).
+    % The two sides are equal \dots by the inductive hypothesis and congruence (\cref{thm:equivalence-relation}).
     \begin{align*}
       & \quad \den{C[(\Template{} (Q[y] ~ O); B) ~ V]} \\
       =& \quad \den{C'[(\Template{} (Q[y] ~ (\lambda P. ~O)); B) ~ V]} ~\den{W}\\
@@ -1574,7 +1631,7 @@
     C[M\subst{y}{(\lamstar (Q[y]=M); B)}\subst{\many{x}}{\many{W}}]
     &(Q\subst{\many{x}}{\many{W}} = C, \cref{thm:context-exact-match})
   \end{align*}
-  and so the translation of the two sides are equal by congruence and transitivity of the equational theory (\cref{thm:conservative-extension}).
+  and so the translation of the two sides are equal by congruence and transitivity of the equational theory (\cref{thm:equivalence-relation}).
   \qed
 \end{proof}
 
@@ -1605,7 +1662,7 @@
     C[M]
     &(\cref{thm:templ-continue})
   \end{align*}
-  and so the translation of the two sides are equal by congruence and transitivity of the equational theory (\cref{thm:conservative-extension}).
+  and so the translation of the two sides are equal by congruence and transitivity of the equational theory (\cref{thm:equivalence-relation}).
   \qed
 \end{proof}
 

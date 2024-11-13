@@ -1,9 +1,5 @@
 \allowdisplaybreaks
 
-\adriano{Review the copattern case (probably use induction)}
-
-\adriano{Figure out the correct argument to assure things about $\den{M}$'s}
-
 \subsection{Conservative extension of the target}
 
 \begin{restatable}{lemma}{thmvaluetranslation}
@@ -370,6 +366,26 @@
   \end{enumerate}
 \end{proof}
 
+\begin{lemma}[Pattern Translation]
+  \label{thm:pattern-translation}
+
+  $\den{P} = P$.
+\end{lemma}
+\begin{proof}
+  By induction on the syntax of $P$.
+  \qed
+\end{proof}
+
+\begin{lemma}[Apartness Translation]
+  \label{thm:apartness-translation}
+
+  If $P \apart V$ then $P \apart \den{V}$.
+\end{lemma}
+\begin{proof}
+  By induction on the derivation of apartness $P \apart V$.
+  \qed
+\end{proof}
+
 \begin{lemma}[Compositionality]
   \label{thm:compositional-translation}
 
@@ -473,7 +489,7 @@
 \begin{proof}
   The soundness of the inference rules defining the structure of the source equivalence relation follow from \cref{thm:equivalence-relation}.
   
-  It then remains to show that each individual axiom ($\beta$, $rec$, \etc) from the target language is still equal after translation.  Each one holds by the inductive hypothesis---because the definition of translation for these cases does not change syntax---along with \cref{thm:value-translation,thm:substitution-translation} for cases which substitute.
+  It then remains to show that each individual axiom ($\beta$, $rec$, \etc) from the target language is still equal after translation.  Each one holds by the inductive hypothesis---because the definition of translation for these cases does not change syntax---along with \cref{thm:value-translation,thm:substitution-translation} for cases which substitute values.
   For example, with the $\beta$ axiom, we have
   \begin{align*}
     \den{(\lambda x. M) ~ V}
@@ -497,39 +513,182 @@
     &(\cref{thm:substitution-translation})
   \end{align*}
   since values are only translated to values, $\den{V} = W$ up to the target equational theory (\cref{thm:value-translation}), which means that $\beta$-reduction still applies after translation.
+  For the $\mathit{match}$ and $\mathit{apart}$ axioms, we need to know that patterns and apartness is not affected by translation, given by \cref{thm:pattern-translation,thm:apartness-translation}.
 \end{proof}
 
 \subsection{Soundness of the source}
 
-\begin{lemma}[Pattern Translation]
-  \label{thm:pattern-translation}
+\begin{figure}[t]
+\centering
+\small
+\begin{align*}
+  \varepsilon; O &= O
+  &
+  (O_1; O_2); O_3 &= O_1; (O_2; O_3)
+  &
+  \Do M; O &= \Do M
+  \\
+  \varepsilon; B &= B
+  &
+  (O_1; O_2); B &= O_1; (O_2; B)
+  &
+  \Do M; B &= \Else M
+\end{align*}
+\begin{align*}
+  \lamstar (F; B)
+  &=
+  (\Template F; B) ~ (\lamstar (F; B))
+  \\
+  \lambda x. (\lamstar (F; B)) ~ x
+  &=
+  \lamstar (F; B)
+  \\
+  (\Template O; B) ~ V
+  &=
+  (\Extension O) ~ (\Template B) ~ V
+  \\
+  (\Template \varepsilon) ~ V
+  &=
+  \mathit{fail}~V
+  \\
+  (\Template \Continue x \to M) ~ V
+  &=
+  M\subst{x}{V}
+  \\
+  (\Extension \Try x \to B) ~ V
+  &=
+  \Template B\subst{x}{V}
+  \\
+  (\Template{} (x ~ O); B) ~ V
+  &=
+  (\Template{} O\subst{x}{V}; B) ~ V
+  \\
+  (\Template{} (\lambda x. O); B) ~ V ~ W
+  &=
+  \left(
+    \begin{aligned}
+      &\Template \\
+      &\quad O\subst{x}{W}; \\
+      &\quad \Continue s' \to \\
+      &\qquad (\Template B)~s'~W
+    \end{aligned}
+  \right)
+  ~ V
+\end{align*}
+\begin{align*}
+  \Match{} P \gets V ~ O
+  &=
+  \varepsilon
+  &(\text{if } P &\apart V)
+  \\
+  \Match P \gets V ~ O
+  &=
+  O\subst{\many{x}}{\many{W}}
+  &(\text{if } P\subst{\many{x}}{\many{W}} &= V)
+  \\
+  \lambda P. O
+  &=
+  \lambda x. (\Match P \gets x) ~ O
+  \\
+  (Q[x] ~ P) ~ O
+  &=
+  Q[x] ~ (\lambda P. O)
+\end{align*}
+\caption{Core axioms of the equational theory.}
+\label{fig:core-axioms}
+\end{figure}
 
-  $\den{P} = P$.
-\end{lemma}
-\begin{proof}
-  By induction on the syntax of $P$.
-  \qed
-\end{proof}
-
-\begin{lemma}[Apartness Translation]
-  \label{thm:apartness-translation}
-
-  If $P \apart V$ then $P \apart \den{V}$.
-\end{lemma}
-\begin{proof}
-  By induction on the derivation of apartness $P \apart V$.
-  \qed
-\end{proof}
+\begin{figure}[t]
+\centering
+\small
+\begin{align*}
+  (\Template{} (\lambda P. O); B) ~ V' ~ V
+  &=
+  \left(
+    \begin{aligned}
+      &\Template \\
+      &\quad O\subst{x}{W}; \\
+      &\quad \Continue s' \to \\
+      &\qquad (\Template B)~s'~V
+    \end{aligned}
+  \right)
+  ~ V'
+  &(\text{if } P\subst{\many{x}}{\many{W}} &= V)
+  \\
+  (\Template{} (\lambda P. \Do M); B) ~ V' ~ V
+  &=
+  M\subst{\many{x}}{\many{W}}
+  &(\text{if } P\subst{\many{x}}{\many{W}} &= V)
+  \\
+  (\Template{} (\lambda P. O); B) ~ V' ~ V
+  &=
+  (\Template B) ~ V' ~ V
+  &(\text{if } P &\apart V)
+  \\[1ex]
+  C[(\Template{} (Q[y] ~ O); B) ~ V]
+  &=
+  \left(
+    \begin{aligned}
+      &\Template \\
+      &\quad O\subst{x}{W}; \\
+      &\quad \Continue s' \to \\
+      &\qquad C[(\Template B)~s']
+    \end{aligned}
+  \right)
+  ~ V
+  &(\text{if } Q\subst{\many{x}}{\many{W}} &= C)
+  \\
+  C[(\Template{} (Q[y] = M); B) ~ V]
+  &=
+  M\subst{y}{V}\subst{\many{x}}{\many{W}}
+  &(\text{if } Q\subst{\many{x}}{\many{W}} &= C)
+  \\
+  C[(\Template{} (Q[y] ~ O); B) ~ V]
+  &=
+  C[(\Template B) ~ V]
+  &(\text{if } Q &\apart C)
+  \\[1ex]
+  C[\lamstar (Q[y] = M); B]
+  &=
+  \begin{aligned}[t]
+    M
+    &\subst{y}{(\lamstar (Q[y] = M); B)}
+    \\
+    &\subst{\many{x}}{\many{W}}
+  \end{aligned}
+  &(\text{if } Q\subst{\many{x}}{\many{W}} &= C)
+  \\
+  C[\lamstar (Q[y] ~ O); \Else M]
+  &=
+  C[M]
+  &(\text{if } Q &\apart C)
+\end{align*}
+\caption{Other equalities derived from the core axioms.}
+\label{fig:derived-equalities}
+\end{figure}
 
 \thmsoundness*
 \begin{proof}
-  Each axiom is derived up to the target equational theory in the following lemmas.
+  The reflexive, symmetric, transitive, and congruent structure of the equational theory is sound by \cref{thm:equivalence-relation}, and the axioms of the target language are sound by \cref{thm:conservative-extension}.
+
+  It remains to show that each equality in \cref{fig:source-equality} are sound as well.
+  The proof of soundness is finished by the following lemmas, which are organized in two parts:
+  \begin{itemize}
+  \item The equalities in \cref{fig:core-axioms} are \emph{core axioms}, whose soundness is shown by translating both sides into the target $\lambda$-calculus and deriving an equality in the target equational theory.
+  \item The remaining equalities in \cref{fig:derived-equalities} are \emph{derived} only in terms of those core axioms directly in the source language, so their soundness follows from \cref{thm:equivalence-relation} in addition to the specific lemmas proving soundness of the core axioms.
+  \end{itemize}
+  Note that every equation listed in \cref{fig:source-equality} can be found in either \cref{fig:core-axioms} or \cref{fig:derived-equalities}, however, there are some additional core axioms in \cref{fig:core-axioms} that do not appear in \cref{fig:source-equality}, but are useful for deriving other equations.
   \qed
 \end{proof}
 
+\subsubsection{Core axioms}
+
 \begin{lemma}[Extension Composition Identity Left]
   \label{thm:ext-compose-id-left}
-    $ E\den{\varepsilon; O} = E\den{O}.$
+  In the target,
+  \begin{align*}
+     E\den{\varepsilon; O} = E\den{O}
+  \end{align*}
 \end{lemma}
     \begin{proof}
         \begin{align*}
@@ -569,7 +728,10 @@
 
 \begin{lemma}[Template Composition Identity Left]
   \label{thm:tmpl-compose-id-left}
-  $ T\den{\varepsilon; B} = T\den{B}.$
+  In the target,
+  \begin{align*}
+    T\den{\varepsilon; B} = T\den{B}
+  \end{align*}
 \end{lemma}
     \begin{proof}
         \begin{align*}
@@ -584,8 +746,10 @@
 
 \begin{lemma}[Extension Composition Associativity]
   \label{thm:ext-compose-assoc}
-
-  $ E\den{(O_1;O_2);O_3} = E\den{O_1;(O_2;O_3)}.$
+  In the target,
+  \begin{align*}
+    E\den{(O_1;O_2);O_3} = E\den{O_1;(O_2;O_3)}
+  \end{align*}
 \end{lemma}
 \begin{proof}
   The left-hand side simplifies as follows:
@@ -616,8 +780,10 @@
 
 \begin{lemma}[Template Composition Associativity]
   \label{thm:templ-compose-assoc}
-
-  $ T\den{(O_1;O_2);B} = T\den{O_1;(O_2;B)}.$
+  In the target,
+  \begin{align*}
+    T\den{(O_1;O_2);B} = T\den{O_1;(O_2;B)}
+  \end{align*}
 \end{lemma}
 \begin{proof}
   The left-hand side simplifies as follows:
@@ -644,7 +810,10 @@
 
 \begin{lemma}[Extension Commit]
   \label{thm:ext-commit}
-  $ E\den{\Do M; O} = E\den{\Do M}.$
+  In the target,
+  \begin{align*}
+    E\den{\Do M; O} = E\den{\Do M}
+  \end{align*}
 \end{lemma}
 \begin{proof}
   \begin{align*}
@@ -693,7 +862,10 @@
 
 \begin{lemma}[Template Commit]
   \label{thm:template-commit}
-  $ T\den{\Do M; B} = T\den{\Else M}.$
+  In the target,
+  \begin{align*}
+    T\den{\Do M; B} = T\den{\Else M}
+  \end{align*}
 \end{lemma}
 \begin{proof}
   \begin{align*}
@@ -731,7 +903,10 @@
 
 \begin{lemma}[$\eta\lamstar$]
   \label{thm:eta-lamstar}
-  $E\den{\lambda x.~ (\lamstar (F; B)) ~ x} = E\den{\lamstar (F; B)}$
+  In the target,
+  \begin{align*}
+   E\den{\lambda x.~ (\lamstar (F; B)) ~ x} = E\den{\lamstar (F; B)} 
+  \end{align*}
 \end{lemma}
 \begin{proof}
   From \cref{thm:value-translation}, we have
@@ -834,7 +1009,10 @@
 
 \begin{lemma}[Unfold $\lamstar$]
   \label{thm:unfold-lamstar}
-    $ E\den{ \lamstar (F; B)} = \den{(\Template F; B) ~ (\lamstar (F; B))}.$
+  In the target,
+  \begin{align*}
+    E\den{ \lamstar (F; B)} = \den{(\Template F; B) ~ (\lamstar (F; B))}
+  \end{align*}
 \end{lemma}
 \begin{proof}
   Note,
@@ -882,8 +1060,10 @@
 
 \begin{lemma}[Template Extension]
   \label{thm:templ-ext}
-
-  $ \den{(\Template O; B) ~ V} = \den{(\Extension O) ~ (\Template B) ~ V}.$
+  In the target,
+  \begin{align*}
+    \den{(\Template O; B) ~ V} = \den{(\Extension O) ~ (\Template B) ~ V}
+  \end{align*}
 \end{lemma}
 \begin{proof}
   \begin{align*}
@@ -899,24 +1079,29 @@
 
 \begin{lemma}[Template Failure]
   \label{thm:templ-fail}
-  $ \den{(\Template \varepsilon) ~ V} = \den{\mathit{fail}~V}.$
+  In the target,
+  \begin{align*}
+    \den{(\Template \varepsilon) ~ V} = \den{\mathit{fail}~V}
+  \end{align*}
 \end{lemma}
-    \begin{proof}
-        \begin{align*}
-            &\quad \den{(\Template \varepsilon) ~ V} \\
-            =& \quad \den{(\Template \varepsilon)} ~ \den{V}\\
-            =& \quad T\den{\varepsilon} ~ \den{V} \\
-            =& \quad (\lambda s. \mathit{fail} ~ s) ~ \den{V} \\
-            =& \quad \mathit{fail} ~ \den{V} &(\beta, \cref{thm:value-translation}) \\
-            =& \quad \den{\mathit{fail} ~ V}
-        \end{align*}
-        \qed
-    \end{proof}
+\begin{proof}
+  \begin{align*}
+    &\quad \den{(\Template \varepsilon) ~ V} \\
+    =& \quad \den{(\Template \varepsilon)} ~ \den{V}\\
+    =& \quad T\den{\varepsilon} ~ \den{V} \\
+    =& \quad (\lambda s. \mathit{fail} ~ s) ~ \den{V} \\
+    =& \quad \mathit{fail} ~ \den{V} &(\beta, \cref{thm:value-translation}) \\
+    =& \quad \den{\mathit{fail} ~ V}
+  \end{align*}
+  \qed
+\end{proof}
 
 \begin{lemma}[Template Continue]
   \label{thm:templ-continue}
-  
-  $ \den{(\Template \Continue x \to M) ~ V} = \den{M\subst{x}{V}}.$
+  In the target,
+  \begin{align*}
+    \den{(\Template \Continue x \to M) ~ V} = \den{M\subst{x}{V}}
+  \end{align*}
 \end{lemma}
 \begin{proof}
   \begin{align*}
@@ -931,14 +1116,16 @@
 
 \begin{lemma}[Extension Try]
   \label{thm:ext-try}
-  
-  $ \den{(\Extension \Try x \to B) ~ V} = \Template B\subst{x}{V}.$
+  In the target,
+  \begin{align*}
+    \den{(\Extension \Try x \to B) ~ V} = \Template B\subst{x}{V}
+  \end{align*}
 \end{lemma}
 \begin{proof}
   \begin{align*}
     &\quad \den{(\Extension \Try x \to B) ~ V}  \\
-    =& \quad \den{(\Extension \Try x \to B)} ~ \den{V}\\
-    =& \quad E\den{(\Try x \to B)} ~ \den{V}\\
+    =& \quad \den{\Extension \Try x \to B} ~ \den{V}\\
+    =& \quad E\den{\Try x \to B} ~ \den{V}\\
     =& \quad (\lambda x. ~T\den{B}) ~ \den{V}\\
     =& \quad T\den{B}\subst{x}{\den{V}} &(\beta, \cref{thm:value-translation}) \\
     =& \quad T\den{B\subst{x}{V}} &(\cref{thm:substitution-translation}) \\
@@ -947,11 +1134,103 @@
   \qed
 \end{proof}
 
+\begin{lemma}[Template Self]
+  \label{thm:template-self}
+  In the target,
+  \begin{align*}
+    \den{(\Template{} (x ~ O); B) ~ V = (\Template O\subst{x}{V}; B) ~ V} 
+  \end{align*}
+\end{lemma}
+\begin{proof}
+  \begin{align*}
+    &\quad
+    \den{(\Template{} (x ~ O); B) ~ V}
+    \\
+    =&\quad
+    E\den{x ~ O} ~ T\den{B} ~ \den{V}
+    &(\beta, \cref{thm:value-translation})
+    \\
+    =&\quad
+    (\lambda b. \lambda x. E\den{O} ~ b ~ x) ~ T\den{B} ~ \den{V}
+    \\
+    =&\quad
+    E\den{O}\subst{x}{\den{V}} ~ T\den{B} ~ \den{V}
+    &(\beta, \cref{thm:value-translation})
+    \\
+    =&\quad
+    E\den{O\subst{x}{V}} ~ T\den{B} ~ \den{V}
+    &(\cref{thm:substitution-translation})
+    \\
+    =&\quad
+    \den{(\Template O\subst{x}{V}; B) ~ V}
+    &(\beta, \cref{thm:value-translation})
+  \end{align*}
+  \qed
+\end{proof}
+
+\begin{lemma}[Template Lambda]
+  \label{thm:template-lambda}
+  In the target,
+  \begin{align*}
+    \den{\Template{} (\lambda x. O; B) ~ V ~ W}
+    &=
+    \denbig{
+      \left(
+        \begin{aligned}
+          &\Template{} \\
+          &\quad O\subst{x}{W}; \\
+          &\quad \Continue s' \to (\Template B) ~ s' ~ W
+        \end{aligned}
+      \right)
+      ~ V
+    }
+  \end{align*}
+\end{lemma}
+\begin{proof}
+  \begin{align*}
+    &\quad
+    \den{(\Template{} (\lambda x. O); B) ~ V ~ W}
+    \\
+    =&\quad (\lambda s. E\den{\lambda x. O} ~T\den{B} ~s) ~\den{V} ~\den{W}
+    \\
+    =&\quad
+    E\den{\lambda x. O} ~T\den{B} ~\den{V} ~\den{W}
+    & (\beta, \cref{thm:value-translation})
+    \\
+    =&\quad
+    (\lambda b. \lambda s. \lambda x. E\den{O} ~(\lambda s'. b ~s' ~x) ~s) ~T\den{B} ~\den{V} ~\den{W}
+    \\
+    =&\quad
+    E\den{O}\subst{x}{\den{W}} ~(\lambda s'. T\den{B} ~s' ~\den{W}) ~\den{V}
+    & (\beta, \cref{thm:value-translation})
+    \\
+    =&\quad
+    E\den{O\subst{x}{W}} ~ (\lambda s'. T\den{B} ~ s' ~ \den{W}) ~ \den{V}
+    &(\cref{thm:substitution-translation})
+    \\
+    =&\quad
+    \denbig{
+      \left(
+        \begin{aligned}
+          &\Template{} \\
+          &\quad O\subst{x}{W}; \\
+          &\quad \Continue s' \to (\Template B) ~ s' ~ W
+        \end{aligned}
+      \right)
+      ~ V
+    }
+    & (\beta, \cref{thm:value-translation})
+  \end{align*}
+  \qed
+\end{proof}
+
 \begin{lemma}[Try Match]
   \label{thm:try-match}
-
-  $\den{\Match P \gets V ~ O} = \den{O\subst{\many{x}}{\many{W}}}
-  \qquad (\text{if } P\subst{\many{x}}{\many{W}} = V).$
+  In the target,
+  \begin{align*}
+   \den{\Match P \gets V ~ O} &= \den{O\subst{\many{x}}{\many{W}}}
+   &(\text{if } P\subst{\many{x}}{\many{W}} = V) 
+  \end{align*}
 \end{lemma}
 \begin{proof}
   By \cref{thm:substitution-translation,thm:pattern-translation},
@@ -966,161 +1245,308 @@
   \end{math}
   in the following:
   \begin{align*}
-    &\quad \den{\Match P \gets V ~ O}  \\
-    =&\quad \lambda b. \lambda s. \Match \den{V} \With \set{P \to E\den{O}~b~s; \_ \to b~s} \\
-    =&\quad  \lambda b. \lambda s.~E\den{O}\subst{\many{x}}{\many{\den{W}}}~b~s  & (match, \cref{thm:substitution-translation,thm:pattern-translation}) \\
-    =& \quad \lambda b. \lambda s.~E\den{O\subst{\many{x}}{\many{W}}}~b~s & (\cref{thm:substitution-translation})
+    &\quad
+    E\den{\Match P \gets V ~ O}
     \\
-    =& \quad E\den{O\subst{\many{x}}{\many{W}}} & (\alpha, \beta, \cref{thm:value-translation})
+    =&\quad
+    \lambda b. \lambda s. \Match \den{V} \With \set{P \to E\den{O}~b~s; \_ \to b~s}
+    \\
+    =&\quad
+    \lambda b. \lambda s.~E\den{O}\subst{\many{x}}{\many{\den{W}}}~b~s
+    & (match, \cref{thm:substitution-translation,thm:pattern-translation}) \\
+    =& \quad
+    \lambda b. \lambda s.~E\den{O\subst{\many{x}}{\many{W}}}~b~s
+    & (\cref{thm:substitution-translation})
+    \\
+    =& \quad
+    E\den{O\subst{\many{x}}{\many{W}}}
+    & (\alpha, \beta, \cref{thm:value-translation})
   \end{align*}
   \qed
 \end{proof}
 
 \begin{lemma}[Try Match Apart]
   \label{thm:try-match-apart}
-
-  $\den{\Match P \gets V ~ O} = \den{\varepsilon}
-  \qquad (\text{if } P \apart V).$
+  In the target,
+  \begin{align*}
+   \den{\Match P \gets V ~ O} &= \den{\varepsilon}
+   &(\text{if } P \apart V) 
+  \end{align*}
 \end{lemma}
 \begin{proof}
   By \cref{thm:apartness-translation}, $P \apart \den{V}$ in the following:
   \begin{align*}
-    &\quad \den{\Match P \gets V ~ O}  \\
-    =&\quad \lambda b. \lambda s. \Match \den{V} \With \set{P \to E\den{O}~b~s; \_ \to b~s} \\
-    =&\quad  \lambda b. \lambda s.~b~s  & (apart, \cref{thm:apartness-translation}) \\
-    =& \quad E\den{\varepsilon}
+    &\quad
+    E\den{\Match P \gets V ~ O}
+    \\
+    =&\quad
+    \lambda b. \lambda s. \Match \den{V} \With \set{P \to E\den{O}~b~s; \_ \to b~s}
+    \\
+    =&\quad
+    \lambda b. \lambda s.~b~s
+    & (apart, \cref{thm:apartness-translation})
+    \\
+    =& \quad
+    E\den{\varepsilon}
   \end{align*}
   \qed
 \end{proof}
 
-\begin{lemma}[Template Match]
-  \label{thm:template-match}
+\begin{lemma}[Pattern Lambda]
+  \label{thm:pattern-lambda}
+  In the target,
   \begin{align*}
-    \den{\Template{} (\lambda P. O; B) ~ V' ~ V}
-    &=
-    \denbig{
-      \left(
-        \begin{aligned}
-          &\Template{} \\
-          &\quad O\subst{\many{x}}{\many{W}}; \\
-          &\quad \Continue s' \to (\Template B) ~ s' ~ V
-        \end{aligned}
-      \right)
-      ~ V'
-    }
-    \\
-    &
-    (\text{if } P\subst{\many{x}}{\many{W}} = V)
-    .
+    E\den{\lambda P. O} &= E\den{\lambda x. (\Match P \gets x) ~ O}
   \end{align*}
 \end{lemma}
 \begin{proof}
-  By cases on whether $P$ is a variable or not:
+  By cases on whether $P$ is a variable or another pattern:
   \begin{itemize}
-  \item If $P = y$, then $P\subst{\many{x}}{\many{W}} = y\subst{y}{V}$ with $\many{x} = y$ and $\many{W}=V$ and:
-  \begin{align*}
-    &\quad
-    \den{(\Template{} (\lambda y. O); B) ~ V' ~ V}
-    \\
-    =&\quad (\lambda s. E\den{\lambda y. O} ~T\den{B} ~s) ~\den{V'} ~\den{V}
-    \\
-    =&\quad
-    E\den{\lambda y. \Do M} ~T\den{B} ~\den{V'} ~\den{V}
-    & (\beta, \cref{thm:value-translation})
-    \\
-    =&\quad
-    (\lambda b. \lambda s. \lambda y. E\den{O} ~(\lambda s'. b ~s' ~y) ~s) ~T\den{B} ~\den{V'} ~\den{V}
-    \\
-    =&\quad
-    E\den{O}\subst{y}{\den{V}} ~(\lambda s'. T\den{B} ~s' ~\den{V}) ~\den{V'}
-    & (\beta, \cref{thm:value-translation})
-    \\
-    =&\quad
-    E\den{O\subst{y}{V}} ~ (\lambda s'. T\den{B} ~ s' ~ \den{V}) ~ \den{V'}
-    &(\cref{thm:substitution-translation})
-    \\
-    =&\quad
-    \denbig{
-      \left(
-        \begin{aligned}
-          \Template{}
-          & O\subst{y}{V}; \\
-          &\Continue s' \to (\Template B) ~ s' ~ V
-        \end{aligned}
-      \right)
-      ~ V'
-    }
-    & (\beta, \cref{thm:value-translation})
-  \end{align*}
-  \item Otherwise, by \cref{thm:substitution-translation,thm:pattern-translation},
-  \begin{math}
-    \den{V}
-    =
-    \den{P\subst{\many{x}}{\many{W}}}
-    =
-    \den{P}\subst{\many{x}}{\many{\den{W}}}
-    =
-    P\subst{\many{x}}{\many{\den{W}}}
-  \end{math}
-  in the following:
-  \begin{align*}
-    &\quad
-    \den{(\Template{} (\lambda P. O); B) ~ V' ~ V}
-    \\
-    =&\quad
-    (\lambda s. E\den{\lambda P. O} ~T\den{B} ~s) ~\den{V'} ~\den{V}
-    \\
-    =&\quad
-    E\den{\lambda P. O} ~T\den{B} ~\den{V'} ~\den{V}
-    & (\beta,\cref{thm:value-translation})
-    \\
-    =&\quad
-    E\den{\lambda y. \Match P \gets y ~ O} ~T\den{B} ~\den{V'} ~\den{V}
-    \\
-    =&\quad
-    E\den{\Match P \gets y ~ O}\subst{y}{\den{V}} ~(\lambda s'. T\den{B} ~s' ~\den{V}) ~\den{V'}
-    & (\beta, \cref{thm:value-translation})
-    \\
-    =&\quad
-    \begin{aligned}[t]
-      &\Match \den{V} \With{} \{ \\
-      &\quad P \to E\den{O}~(\lambda s'. T\den{B} ~s' ~\den{V})~\den{V'}; \\
-      &\quad\_ \to (\lambda s'. T\den{B} ~s' ~\den{V}) ~ \den{V'}
-      ~\}
-    \end{aligned}
-    &(\beta, \cref{thm:value-translation})
-    \\
-    =&\quad E\den{O}\subst{\many{x}}{\many{\den{W}}} ~(\lambda s'. T\den{B} ~s' ~\den{V}) ~\den{V'} & (match)
-    \\
-    =&\quad
-    (E\den{O\subst{\many{x}}{\many{W}}} ~ (\lambda s'. T\den{B} ~ s' ~ \den{V})) ~ \den{V'}
-    &(\cref{thm:substitution-translation})
-    \\
-    =&\quad
-    \denbig{
-      \left(
-        \begin{aligned}
-          &\Template{} \\
-          &\quad O\subst{\many{x}}{\many{W}}; \\
-          &\quad \Continue s' \to (\Template B) ~ s' ~ V
-        \end{aligned}
-      \right)
-      ~ V'
-    }
-    &(\beta, \cref{thm:value-translation})
-  \end{align*}
+  \item If $P = y$, then
+    \begin{align*}
+      &\quad
+      E\den{\lambda x. (\Match y \gets x) ~ O}
+      \\
+      =&\quad
+      \lambda b. \lambda s. \lambda x.~
+      E\den{\Match y \gets x ~ O} ~ (\lambda s'. b ~ s' ~ x) ~ s
+      \\
+      =&\quad
+      \lambda b. \lambda s. \lambda x.
+      \begin{aligned}[t]
+        &\Match x \With{} \{~ \\
+        &\quad y \to E\den{O} ~ (\lambda s'. b ~ s' ~ x) ~ s; \\
+        &\quad \_ \to (\lambda s'. b ~ s' ~ x) ~ s
+        ~\}
+      \end{aligned}
+      &(\beta)
+      \\
+      =&\quad
+      \lambda b. \lambda s. \lambda x.
+      E\den{O}\subst{y}{x} ~ (\lambda s'. b ~ s' ~ x) ~ s
+      &(\mathit{match})
+      \\
+      =&\quad
+      \lambda b. \lambda s. \lambda y.
+      E\den{O} ~ (\lambda s'. b ~ s' ~ y) ~ s
+      &(\alpha)
+      \\
+      =&\quad
+      E\den{\lambda y. O}
+    \end{align*}
+  \item Otherwise, when $P \notin \mathit{Variable}$,
+    \begin{math}
+      E\den{\lambda P. O}
+      =
+      E\den{\lambda x. (\Match P \gets x) ~ O}
+    \end{math}
+    directly by definition of translation.
   \qed
   \end{itemize}
 \end{proof}
 
-\begin{lemma}[Template Do Match]
-  \label{thm:template-do-match}
-
-  $\den{(\Template{} (\lambda P. \Do M); B) ~ V' ~ V} = \den{M\subst{\many{x}}{\many{W}}}
-  \quad (\text{if } P\subst{\many{x}}{\many{W}} = V)$.
+\begin{lemma}[Copattern Abstraction]
+  \label{thm:copattern-abstraction}
+  In the target,
+  \begin{align*}
+    E\den{(Q[x] ~ P) ~ O} &= E\den{Q[x] ~ (\lambda P. O)}
+  \end{align*}
 \end{lemma}
 \begin{proof}
-  In terms of the source-level axioms above, we have
+  \begin{math}
+    E\den{(Q[x] ~ P) ~ O} = E\den{Q[x] ~ (\lambda P. O)}
+  \end{math}
+  directly by definition of translation.
+  \qed
+\end{proof}
+
+\subsubsection{Derived equations}
+
+\begin{lemma}[Template Match]
+  \label{thm:template-match}
+  In the source,
+  \begin{align*}
+    \Template{} (\lambda P. O; B) ~ V' ~ V
+    &=
+      \left(
+        \begin{aligned}
+          &\Template{} \\
+          &\quad O\subst{\many{x}}{\many{W}}; \\
+          &\quad \Continue s' \to (\Template B) ~ s' ~ V
+        \end{aligned}
+      \right)
+      ~ V'
+    \\
+    &
+    (\text{if } P\subst{\many{x}}{\many{W}} = V)
+  \end{align*}
+\end{lemma}
+\begin{proof}
+  \begin{align*}
+    &\quad
+    \Template{} (\lambda P. O; B) ~ V' ~ V
+    \\
+    =&\quad
+    \Template{} (\lambda x. (\Match P \gets x) ~ O; B) ~ V' ~ V
+    &(\cref{thm:pattern-lambda})
+    \\
+    =&\quad
+    \left(
+      \begin{aligned}
+        &\Template \\
+        &\quad (\Match P \gets V) ~ O; \\
+        &\quad \Continue s' \to (\Template B) ~ s' ~ V
+      \end{aligned}
+    \right)
+    ~ V'
+    &(\cref{thm:template-lambda})
+    \\
+    =&\quad
+    \left(
+      \begin{aligned}
+        &\Template \\
+        &\quad O\subst{\many{x}}{\many{W}}; \\
+        &\quad \Continue s' \to (\Template B) ~ s' ~ V
+      \end{aligned}
+    \right)
+    ~ V'
+    &(\cref{thm:try-match})
+  \end{align*}
+  \qed
+\end{proof}
+
+% \begin{lemma}[Template Match]
+%   \label{thm:template-match}
+%   \begin{align*}
+%     \den{\Template{} (\lambda P. O; B) ~ V' ~ V}
+%     &=
+%     \denbig{
+%       \left(
+%         \begin{aligned}
+%           &\Template{} \\
+%           &\quad O\subst{\many{x}}{\many{W}}; \\
+%           &\quad \Continue s' \to (\Template B) ~ s' ~ V
+%         \end{aligned}
+%       \right)
+%       ~ V'
+%     }
+%     \\
+%     &
+%     (\text{if } P\subst{\many{x}}{\many{W}} = V)
+%     .
+%   \end{align*}
+% \end{lemma}
+% \begin{proof}
+%   By cases on whether $P$ is a variable or not:
+%   \begin{itemize}
+%   \item If $P = y$, then $P\subst{\many{x}}{\many{W}} = y\subst{y}{V}$ with $\many{x} = y$ and $\many{W}=V$ and:
+%   \begin{align*}
+%     &\quad
+%     \den{(\Template{} (\lambda y. O); B) ~ V' ~ V}
+%     \\
+%     =&\quad (\lambda s. E\den{\lambda y. O} ~T\den{B} ~s) ~\den{V'} ~\den{V}
+%     \\
+%     =&\quad
+%     E\den{\lambda y. \Do M} ~T\den{B} ~\den{V'} ~\den{V}
+%     & (\beta, \cref{thm:value-translation})
+%     \\
+%     =&\quad
+%     (\lambda b. \lambda s. \lambda y. E\den{O} ~(\lambda s'. b ~s' ~y) ~s) ~T\den{B} ~\den{V'} ~\den{V}
+%     \\
+%     =&\quad
+%     E\den{O}\subst{y}{\den{V}} ~(\lambda s'. T\den{B} ~s' ~\den{V}) ~\den{V'}
+%     & (\beta, \cref{thm:value-translation})
+%     \\
+%     =&\quad
+%     E\den{O\subst{y}{V}} ~ (\lambda s'. T\den{B} ~ s' ~ \den{V}) ~ \den{V'}
+%     &(\cref{thm:substitution-translation})
+%     \\
+%     =&\quad
+%     \denbig{
+%       \left(
+%         \begin{aligned}
+%           \Template{}
+%           & O\subst{y}{V}; \\
+%           &\Continue s' \to (\Template B) ~ s' ~ V
+%         \end{aligned}
+%       \right)
+%       ~ V'
+%     }
+%     & (\beta, \cref{thm:value-translation})
+%   \end{align*}
+%   \item Otherwise, by \cref{thm:substitution-translation,thm:pattern-translation},
+%   \begin{math}
+%     \den{V}
+%     =
+%     \den{P\subst{\many{x}}{\many{W}}}
+%     =
+%     \den{P}\subst{\many{x}}{\many{\den{W}}}
+%     =
+%     P\subst{\many{x}}{\many{\den{W}}}
+%   \end{math}
+%   in the following:
+%   \begin{align*}
+%     &\quad
+%     \den{(\Template{} (\lambda P. O); B) ~ V' ~ V}
+%     \\
+%     =&\quad
+%     (\lambda s. E\den{\lambda P. O} ~T\den{B} ~s) ~\den{V'} ~\den{V}
+%     \\
+%     =&\quad
+%     E\den{\lambda P. O} ~T\den{B} ~\den{V'} ~\den{V}
+%     & (\beta,\cref{thm:value-translation})
+%     \\
+%     =&\quad
+%     E\den{\lambda y. \Match P \gets y ~ O} ~T\den{B} ~\den{V'} ~\den{V}
+%     \\
+%     =&\quad
+%     E\den{\Match P \gets y ~ O}\subst{y}{\den{V}} ~(\lambda s'. T\den{B} ~s' ~\den{V}) ~\den{V'}
+%     & (\beta, \cref{thm:value-translation})
+%     \\
+%     =&\quad
+%     \begin{aligned}[t]
+%       &\Match \den{V} \With{} \{ \\
+%       &\quad P \to E\den{O}~(\lambda s'. T\den{B} ~s' ~\den{V})~\den{V'}; \\
+%       &\quad\_ \to (\lambda s'. T\den{B} ~s' ~\den{V}) ~ \den{V'}
+%       ~\}
+%     \end{aligned}
+%     &(\beta, \cref{thm:value-translation})
+%     \\
+%     =&\quad E\den{O}\subst{\many{x}}{\many{\den{W}}} ~(\lambda s'. T\den{B} ~s' ~\den{V}) ~\den{V'} & (match)
+%     \\
+%     =&\quad
+%     (E\den{O\subst{\many{x}}{\many{W}}} ~ (\lambda s'. T\den{B} ~ s' ~ \den{V})) ~ \den{V'}
+%     &(\cref{thm:substitution-translation})
+%     \\
+%     =&\quad
+%     \denbig{
+%       \left(
+%         \begin{aligned}
+%           &\Template{} \\
+%           &\quad O\subst{\many{x}}{\many{W}}; \\
+%           &\quad \Continue s' \to (\Template B) ~ s' ~ V
+%         \end{aligned}
+%       \right)
+%       ~ V'
+%     }
+%     &(\beta, \cref{thm:value-translation})
+%   \end{align*}
+%   \qed
+%   \end{itemize}
+% \end{proof}
+
+\begin{lemma}[Template Do Match]
+  \label{thm:template-do-match}
+  In the source,
+  \begin{align*}
+    (\Template{} (\lambda P. \Do M); B) ~ V' ~ V
+    &=
+    M\subst{\many{x}}{\many{W}}
+    &(\text{if } P\subst{\many{x}}{\many{W}} = V)  
+  \end{align*}
+\end{lemma}
+\begin{proof}
+  % In terms of the source-level axioms above, we have
   \begin{align*}
     &\quad
     (\Template{} (\lambda P. \Do M); B) ~ V' ~ V
@@ -1136,25 +1562,25 @@
     ~ V'
     &(\cref{thm:template-match})
     \\
-    =&\quad
-    \begin{aligned}[t]
-      &(\Extension \Do M\subst{\many{x}}{\many{W}}) \\
-      &\quad (\Template \Continue s' \to (\Template B) ~ s' ~ V) \\
-      &\quad V'
-    \end{aligned}
-    &(\cref{thm:templ-ext})
-    \\
-    =&\quad
-    \begin{aligned}[t]
-      &(\Extension \Try \_ \to \Else M\subst{\many{x}}{\many{W}}) \\
-      &\quad (\Template \Continue s' \to (\Template B) ~ s' ~ V) \\
-      &\quad V'
-    \end{aligned}
-    \\
+    % =&\quad
+    % \begin{aligned}[t]
+    %   &(\Extension \Do M\subst{\many{x}}{\many{W}}) \\
+    %   &\quad (\Template \Continue s' \to (\Template B) ~ s' ~ V) \\
+    %   &\quad V'
+    % \end{aligned}
+    % &(\cref{thm:templ-ext})
+    % \\
+    % =&\quad
+    % \begin{aligned}[t]
+    %   &(\Extension \Try \_ \to \Else M\subst{\many{x}}{\many{W}}) \\
+    %   &\quad (\Template \Continue s' \to (\Template B) ~ s' ~ V) \\
+    %   &\quad V'
+    % \end{aligned}
+    % \\
     =&\quad
     (\Template \Else M\subst{\many{x}}{\many{W}})
     ~ V'
-    &(\cref{thm:ext-try})
+    &(\cref{thm:template-commit})
     \\
     =&\quad
     (\Template \Continue \_ \to  M\subst{\many{x}}{\many{W}})
@@ -1164,7 +1590,7 @@
     M\subst{\many{x}}{\many{W}}    
     &(\cref{thm:templ-continue})
   \end{align*}
-  and so the translation of the two sides are equal by congruence and transitivity of the equational theory (\cref{thm:equivalence-relation}).
+  % and so the translation of the two sides are equal by congruence and transitivity of the equational theory (\cref{thm:equivalence-relation}).
   \qed
   % By cases on whether $P$ is a variable or not:
   % \begin{itemize}
@@ -1218,220 +1644,373 @@
 
 \begin{lemma}[Template Apart]
   \label{thm:template-apart}
-
-  $\den{(\Template{} (\lambda P. O); B) ~ V' ~ V} = \den{(\Template B) ~ V' ~ V}
-  \qquad (\text{if } P \apart V)$.
-\end{lemma}
-\begin{proof}
-  Since a variable can never be apart from a value, $P$ must be a non-variable pattern.
-  By \cref{thm:apartness-translation}, $P \apart \den{V}$, and the translations are then equal as follows:
-  \begin{align*}
-    & \quad \den{(\Template{} (\lambda P. O); B) ~ V' ~ V} \\
-    =& \quad E\den{\lambda P. O} ~T\den{B} ~\den{V'} ~\den{V} & (\beta,\cref{thm:value-translation}) \\
-    =&\quad E\den{\lambda y. \Match P \gets y ~\Do M} ~T\den{B} ~\den{V'} ~\den{V} \\
-    =&\quad E\den{\Match P \gets y ~\Do M}\subst{y}{\den{V}} ~(\lambda s'. T\den{B} ~s' ~\den{V}) ~\den{V'} & (\beta, \cref{thm:value-translation}) \\
-    =& \quad
-    \begin{aligned}[t]
-      &\Match \den{V} \With{} \{ \\
-      &\quad P \to \den{O}~(\lambda s'. T\den{B} ~s' ~\den{V})~\den{V'}; \\
-      &\quad \_ \to (\lambda s'. T\den{B} ~s' ~\den{V})~\den{V'}
-      ~\}
-    \end{aligned}
-    & (\beta, \cref{thm:value-translation}) \\
-    =& \quad (\lambda s'. T\den{B} ~s' ~\den{V}) ~\den{V'} & (apart)\\
-    =& \quad T\den{B} ~ \den{V'} ~ \den{V} & (\beta) \\
-    =& \quad \den{(\Template B)} ~ \den{V'} ~ \den{V} \\
-    =& \quad \den{(\Template B) ~ V' V}
-  \end{align*}
-  \qed
-\end{proof}
-
-\begin{lemma}[Template Self]
-  \label{thm:template-self}
-  
-  $\den{(\Template{} (y ~ O); B) ~ V = (\Template O\subst{y}{V}; B) ~ V}$
+  In the source,
+  \begin{align}
+    (\Template{} (\lambda P. O); B) ~ V' ~ V
+    &=
+    (\Template B) ~ V' ~ V
+    &(\text{if } P \apart V)
+  \end{align}
 \end{lemma}
 \begin{proof}
   \begin{align*}
     &\quad
-    \den{C[(\Template{} (y ~ O); B) ~ V]}
+    (\Template{} (\lambda P. O); B) ~ V' ~ V
     \\
     =&\quad
-    E\den{y ~ O} ~ T\den{B} ~ \den{V}
-    &(\beta, \cref{thm:value-translation})
+    (\Template{} (\lambda x. (\Match P \gets x) ~ O); B) ~ V' ~ V
+    &(\cref{thm:pattern-lambda})
     \\
     =&\quad
-    (\lambda b. \lambda y. E\den{O} ~ b ~ y) ~ T\den{B} ~ \den{V}
+    \left(
+      \begin{aligned}
+        &\Template \\
+        &\quad (\Match P \gets V) ~ O; \\
+        &\quad \Continue s' \to (\Template B) ~ s' ~ V
+      \end{aligned}
+    \right)
+    ~ V'
+    &(\cref{thm:template-lambda})
     \\
     =&\quad
-    E\den{O}\subst{y}{\den{V}} ~ T\den{B} ~ \den{V}
-    &(\beta, \cref{thm:value-translation})
+    \left(
+      \begin{aligned}
+        &\Template \\
+        &\quad \varepsilon; \\
+        &\quad \Continue s' \to (\Template B) ~ s' ~ V
+      \end{aligned}
+    \right)
+    ~ V'
+    &(\cref{thm:try-match-apart})
     \\
     =&\quad
-    E\den{O\subst{y}{V}} ~ T\den{B} ~ \den{V}
-    &(\cref{thm:substitution-translation})
+    \left(
+      \Template
+      \Continue s' \to (\Template B) ~ s' ~ V
+    \right)
+    ~ V'
+    &(\cref{thm:tmpl-compose-id-left})
     \\
     =&\quad
-    \den{(\Template O\subst{y}{V}; B) ~ V}
-    &(\beta, \cref{thm:value-translation})
+    (\Template B) ~ V' ~ V
+    &(\cref{thm:templ-continue})
   \end{align*}
   \qed
 \end{proof}
 
+% \begin{lemma}[Template Apart]
+%   \label{thm:template-apart}
+
+%   $\den{(\Template{} (\lambda P. O); B) ~ V' ~ V} = \den{(\Template B) ~ V' ~ V}
+%   \qquad (\text{if } P \apart V)$.
+% \end{lemma}
+% \begin{proof}
+%   Since a variable can never be apart from a value, $P$ must be a non-variable pattern.
+%   By \cref{thm:apartness-translation}, $P \apart \den{V}$, and the translations are then equal as follows:
+%   \begin{align*}
+%     & \quad \den{(\Template{} (\lambda P. O); B) ~ V' ~ V} \\
+%     =& \quad E\den{\lambda P. O} ~T\den{B} ~\den{V'} ~\den{V} & (\beta,\cref{thm:value-translation}) \\
+%     =&\quad E\den{\lambda y. \Match P \gets y ~\Do M} ~T\den{B} ~\den{V'} ~\den{V} \\
+%     =&\quad E\den{\Match P \gets y ~\Do M}\subst{y}{\den{V}} ~(\lambda s'. T\den{B} ~s' ~\den{V}) ~\den{V'} & (\beta, \cref{thm:value-translation}) \\
+%     =& \quad
+%     \begin{aligned}[t]
+%       &\Match \den{V} \With{} \{ \\
+%       &\quad P \to \den{O}~(\lambda s'. T\den{B} ~s' ~\den{V})~\den{V'}; \\
+%       &\quad \_ \to (\lambda s'. T\den{B} ~s' ~\den{V})~\den{V'}
+%       ~\}
+%     \end{aligned}
+%     & (\beta, \cref{thm:value-translation}) \\
+%     =& \quad (\lambda s'. T\den{B} ~s' ~\den{V}) ~\den{V'} & (apart)\\
+%     =& \quad T\den{B} ~ \den{V'} ~ \den{V} & (\beta) \\
+%     =& \quad \den{(\Template B)} ~ \den{V'} ~ \den{V} \\
+%     =& \quad \den{(\Template B) ~ V' V}
+%   \end{align*}
+%   \qed
+% \end{proof}
+
 \begin{lemma}[Context Match]
   \label{thm:context-match}
+  In the source,
   \begin{align*}
-    \den{C[(\Template{} (Q[y] ~ O); B) ~ V]}
+    C[(\Template{} (Q[y] ~ O); B) ~ V]
     &=
-    \denbig{
-      \begin{aligned}
-        &\Template \\
-        &\quad O\subst{y}{V}\subst{\many{x}}{\many{W}}; \\
-        &\quad \Continue s' \to C[(\Template B) ~ s']
-      \end{aligned}
-    }
+    \begin{aligned}
+      &\Template \\
+      &\quad O\subst{y}{V}\subst{\many{x}}{\many{W}}; \\
+      &\quad \Continue s' \to C[(\Template B) ~ s']
+    \end{aligned}
     \\
     &(\text{if } Q\subst{\many{x}}{\many{W}} = C \neq \hole)
-    .
   \end{align*}
 \end{lemma}
 \begin{proof}
   By induction on the syntax of $Q$.
   \begin{itemize}
   \item $Q = \hole$ is impossible due to the assumption $Q\subst{\many{x}}{\many{W}} = C \neq \hole$.
-  \item If $Q = \hole ~ P$ then $C = \hole ~ V'$ such that $P\subst{\many{x}}{\many{W}} = V$, and the equality holds by \cref{thm:template-self,thm:template-match} and congruence of the equational theory (\cref{thm:equivalence-relation}):
+  \item If $Q = \hole ~ P$ then $C = \hole ~ V'$ such that $P\subst{\many{x}}{\many{W}} = V$, and so
     \begin{align*}
       &\quad
-      \den{C[(\Template{} (Q[y] ~ O); B) ~ V]}
+      C[(\Template{} (Q[y] ~ O); B) ~ V]
       \\
       =&\quad
-      \den{(\Template{} ((y ~ P) ~ O); B) ~ V ~ V'}
+      (\Template{} ((y ~ P) ~ O); B) ~ V ~ V'
       \\
       =&\quad
-      \den{(\Template{} (y ~ (\lambda P. O)); B) ~ V ~ V'}
+      (\Template{} (y ~ (\lambda P. O)); B) ~ V ~ V'
+      &(\cref{thm:copattern-abstraction})
       \\
       =&\quad
-      \den{(\Template{} (\lambda P. O\subst{y}{V}); B) ~ V ~ V'}
+      (\Template{} (\lambda P. O\subst{y}{V}); B) ~ V ~ V'
       &(\cref{thm:template-self})
       \\
       =&\quad
-      \denbig{
-        \left(
-          \begin{aligned}
-            &\Template \\
-            &\quad O\subst{y}{V}\subst{\many{x}}{\many{W}}; \\
-            &\quad \Continue s' \to (\Template B) ~ s' ~ V'
-          \end{aligned}
-        \right)
-        ~ V
-      }
+      \left(
+        \begin{aligned}
+          &\Template \\
+          &\quad O\subst{y}{V}\subst{\many{x}}{\many{W}}; \\
+          &\quad \Continue s' \to (\Template B) ~ s' ~ V'
+        \end{aligned}
+      \right)
+      ~ V
       &(\cref{thm:template-match})
     \end{align*}
   \item If $Q = Q' ~ P$ then $C = C' ~ V'$ where $\subst{\many{x}}{\many{W}} = \subst{\many{x_1},\many{x_2}}{\many{W_1},\many{W_2}}$ such that $Q'\subst{\many{x_1}}{\many{W_2}} = C$ and $P\subst{\many{x_2}}{\many{W_2}} = V'$.
     Assume the inductive hypothesis
     \begin{align*}
-      \den{C'[(\Template{} (Q'[y] ~ O); B) ~ V]}
+      C'[(\Template{} (Q'[y] ~ O); B) ~ V]
       &=
-      \denbig{
-        \begin{aligned}
-          &\Template \\
-          &\quad O\subst{y}{V}\subst{\many{x}}{\many{W}}; \\
-          &\quad \Continue s' \to C'[(\Template B) ~ s']
-        \end{aligned}
-      }
+      \begin{aligned}
+        &\Template \\
+        &\quad O\subst{y}{V}\subst{\many{x}}{\many{W}}; \\
+        &\quad \Continue s' \to C'[(\Template B) ~ s']
+      \end{aligned}
     \end{align*}
-    The equality then holds by this inductive hypothesis, \cref{thm:template-match,thm:templ-continue}, and congruence of the equational theory (\cref{thm:equivalence-relation}):
+    The equality holds by this inductive hypothesis and the following lemmas,
     \begin{align*}
       &\quad
-      \den{C[(\Template{} (Q[y] ~ O); B) ~ V]}
+      C[(\Template{} (Q[y] ~ O); B) ~ V]
       \\
       =&\quad
-      \den{C'[(\Template{} ((Q'[y] ~ P) ~ O); B) ~ V] ~ V'}
+      C'[(\Template{} ((Q'[y] ~ P) ~ O); B) ~ V] ~ V'
       \\
       =&\quad
-      \den{C'[(\Template{} (Q'[y] ~ (\lambda P. O)); B) ~ V] ~ V'}
+      C'[(\Template{} (Q'[y] ~ (\lambda P. O)); B) ~ V] ~ V'
+      &(\cref{thm:copattern-abstraction})
       \\
       =&\quad
-      \denbig{
-        \left(
-          \begin{aligned}
-            &\Template \\
-            &\quad \lambda P. O\subst{y}{V}\subst{\many{x_1}}{\many{W_1}}; \\
-            &\quad \Continue s' \to C'[(\Template B) ~ s']
-          \end{aligned}
-        \right)
-        ~ V ~ V'
-      }
+      \left(
+        \begin{aligned}
+          &\Template \\
+          &\quad \lambda P. O\subst{y}{V}\subst{\many{x_1}}{\many{W_1}}; \\
+          &\quad \Continue s' \to C'[(\Template B) ~ s']
+        \end{aligned}
+      \right)
+      ~ V ~ V'
       &(IH)
       \\
       =&\quad
-      \denbig{
-        \left(
-          \begin{aligned}
-            &\Template \\
-            &\quad O\subst{y}{V}\subst{\many{x_1}}{\many{W_1}}\subst{\many{x_2}}{\many{W_2}}; \\
-            &\quad \Continue s'' \to \\
-            &\qquad
-            \left(
-              \begin{aligned}
-                &\Template \\
-                &\quad \Continue s' \to \\
-                &\qquad C'[(\Template B) ~ s']
-              \end{aligned}
-            \right)
-            ~ s'' ~ V'
-          \end{aligned}
-        \right)
-        ~ V
-      }
+      \left(
+        \begin{aligned}
+          &\Template \\
+          &\quad O\subst{y}{V}\subst{\many{x_1}}{\many{W_1}}\subst{\many{x_2}}{\many{W_2}}; \\
+          &\quad \Continue s'' \to \\
+          &\qquad
+          \left(
+            \begin{aligned}
+              &\Template \\
+              &\quad \Continue s' \to \\
+              &\qquad C'[(\Template B) ~ s']
+            \end{aligned}
+          \right)
+          ~ s'' ~ V'
+        \end{aligned}
+      \right)
+      ~ V
       &(\cref{thm:template-match})
       \\
       =&\quad
-      \denbig{
-        \left(
-          \begin{aligned}
-            &\Template \\
-            &\quad O\subst{y}{V}\subst{\many{x_1}}{\many{W_1}}\subst{\many{x_2}}{\many{W_2}}; \\
-            &\quad \Continue s'' \to 
-            \left(
-              C'[(\Template B) ~ s'']
-            \right)
-            ~ V'
-          \end{aligned}
-        \right)
-        ~ V
-      }
+      \left(
+        \begin{aligned}
+          &\Template \\
+          &\quad O\subst{y}{V}\subst{\many{x_1}}{\many{W_1}}\subst{\many{x_2}}{\many{W_2}}; \\
+          &\quad \Continue s'' \to 
+          \left(
+            C'[(\Template B) ~ s'']
+          \right)
+          ~ V'
+        \end{aligned}
+      \right)
+      ~ V
       &(\cref{thm:templ-continue})
       \\
       =&\quad
-      \denbig{
-        \left(
-          \begin{aligned}
-            &\Template \\
-            &\quad O\subst{y}{V}\subst{\many{x}}{\many{W}}; \\
-            &\quad \Continue s' \to 
-            C[(\Template B) ~ s']
-          \end{aligned}
-        \right)
-        ~ V
-      }
+      \left(
+        \begin{aligned}
+          &\Template \\
+          &\quad O\subst{y}{V}\subst{\many{x}}{\many{W}}; \\
+          &\quad \Continue s' \to 
+          C[(\Template B) ~ s']
+        \end{aligned}
+      \right)
+      ~ V
+      &(\alpha)
     \end{align*}
   \end{itemize}
 \end{proof}
-  
+
+% \begin{lemma}[Context Match]
+%   \label{thm:context-match}
+%   \begin{align*}
+%     \den{C[(\Template{} (Q[y] ~ O); B) ~ V]}
+%     &=
+%     \denbig{
+%       \begin{aligned}
+%         &\Template \\
+%         &\quad O\subst{y}{V}\subst{\many{x}}{\many{W}}; \\
+%         &\quad \Continue s' \to C[(\Template B) ~ s']
+%       \end{aligned}
+%     }
+%     \\
+%     &(\text{if } Q\subst{\many{x}}{\many{W}} = C \neq \hole)
+%     .
+%   \end{align*}
+% \end{lemma}
+% \begin{proof}
+%   By induction on the syntax of $Q$.
+%   \begin{itemize}
+%   \item $Q = \hole$ is impossible due to the assumption $Q\subst{\many{x}}{\many{W}} = C \neq \hole$.
+%   \item If $Q = \hole ~ P$ then $C = \hole ~ V'$ such that $P\subst{\many{x}}{\many{W}} = V$, and the equality holds by \cref{thm:template-self,thm:template-match} and congruence of the equational theory (\cref{thm:equivalence-relation}):
+%     \begin{align*}
+%       &\quad
+%       \den{C[(\Template{} (Q[y] ~ O); B) ~ V]}
+%       \\
+%       =&\quad
+%       \den{(\Template{} ((y ~ P) ~ O); B) ~ V ~ V'}
+%       \\
+%       =&\quad
+%       \den{(\Template{} (y ~ (\lambda P. O)); B) ~ V ~ V'}
+%       \\
+%       =&\quad
+%       \den{(\Template{} (\lambda P. O\subst{y}{V}); B) ~ V ~ V'}
+%       &(\cref{thm:template-self})
+%       \\
+%       =&\quad
+%       \denbig{
+%         \left(
+%           \begin{aligned}
+%             &\Template \\
+%             &\quad O\subst{y}{V}\subst{\many{x}}{\many{W}}; \\
+%             &\quad \Continue s' \to (\Template B) ~ s' ~ V'
+%           \end{aligned}
+%         \right)
+%         ~ V
+%       }
+%       &(\cref{thm:template-match})
+%     \end{align*}
+%   \item If $Q = Q' ~ P$ then $C = C' ~ V'$ where $\subst{\many{x}}{\many{W}} = \subst{\many{x_1},\many{x_2}}{\many{W_1},\many{W_2}}$ such that $Q'\subst{\many{x_1}}{\many{W_2}} = C$ and $P\subst{\many{x_2}}{\many{W_2}} = V'$.
+%     Assume the inductive hypothesis
+%     \begin{align*}
+%       \den{C'[(\Template{} (Q'[y] ~ O); B) ~ V]}
+%       &=
+%       \denbig{
+%         \begin{aligned}
+%           &\Template \\
+%           &\quad O\subst{y}{V}\subst{\many{x}}{\many{W}}; \\
+%           &\quad \Continue s' \to C'[(\Template B) ~ s']
+%         \end{aligned}
+%       }
+%     \end{align*}
+%     The equality then holds by this inductive hypothesis, \cref{thm:template-match,thm:templ-continue}, and congruence of the equational theory (\cref{thm:equivalence-relation}):
+%     \begin{align*}
+%       &\quad
+%       \den{C[(\Template{} (Q[y] ~ O); B) ~ V]}
+%       \\
+%       =&\quad
+%       \den{C'[(\Template{} ((Q'[y] ~ P) ~ O); B) ~ V] ~ V'}
+%       \\
+%       =&\quad
+%       \den{C'[(\Template{} (Q'[y] ~ (\lambda P. O)); B) ~ V] ~ V'}
+%       \\
+%       =&\quad
+%       \denbig{
+%         \left(
+%           \begin{aligned}
+%             &\Template \\
+%             &\quad \lambda P. O\subst{y}{V}\subst{\many{x_1}}{\many{W_1}}; \\
+%             &\quad \Continue s' \to C'[(\Template B) ~ s']
+%           \end{aligned}
+%         \right)
+%         ~ V ~ V'
+%       }
+%       &(IH)
+%       \\
+%       =&\quad
+%       \denbig{
+%         \left(
+%           \begin{aligned}
+%             &\Template \\
+%             &\quad O\subst{y}{V}\subst{\many{x_1}}{\many{W_1}}\subst{\many{x_2}}{\many{W_2}}; \\
+%             &\quad \Continue s'' \to \\
+%             &\qquad
+%             \left(
+%               \begin{aligned}
+%                 &\Template \\
+%                 &\quad \Continue s' \to \\
+%                 &\qquad C'[(\Template B) ~ s']
+%               \end{aligned}
+%             \right)
+%             ~ s'' ~ V'
+%           \end{aligned}
+%         \right)
+%         ~ V
+%       }
+%       &(\cref{thm:template-match})
+%       \\
+%       =&\quad
+%       \denbig{
+%         \left(
+%           \begin{aligned}
+%             &\Template \\
+%             &\quad O\subst{y}{V}\subst{\many{x_1}}{\many{W_1}}\subst{\many{x_2}}{\many{W_2}}; \\
+%             &\quad \Continue s'' \to 
+%             \left(
+%               C'[(\Template B) ~ s'']
+%             \right)
+%             ~ V'
+%           \end{aligned}
+%         \right)
+%         ~ V
+%       }
+%       &(\cref{thm:templ-continue})
+%       \\
+%       =&\quad
+%       \denbig{
+%         \left(
+%           \begin{aligned}
+%             &\Template \\
+%             &\quad O\subst{y}{V}\subst{\many{x}}{\many{W}}; \\
+%             &\quad \Continue s' \to 
+%             C[(\Template B) ~ s']
+%           \end{aligned}
+%         \right)
+%         ~ V
+%       }
+%     \end{align*}
+%   \end{itemize}
+% \end{proof}
+
 \begin{lemma}[Context Exact Match]
   \label{thm:context-exact-match}
+  In the source,
   \begin{align*}
-    \den{C[(\Template{} (Q[y] = M); B) ~ V]}
+    C[(\Template{} (Q[y] = M); B) ~ V]
     &=
-    \den{M\subst{y}{V}\subst{\many{x}}{\many{W}}}
-    \\
+    M\subst{y}{V}\subst{\many{x}}{\many{W}}
     &(\text{if } Q\subst{\many{x}}{\many{W}} = C)
-    .
   \end{align*}
 \end{lemma}
 \begin{proof}
-  In terms of the source-level axioms above, we have:
+  % In terms of the source-level axioms above, we have:
   \begin{align*}
     &\quad
     C[(\Template{} (Q[y] = M); B) ~ V]
@@ -1450,24 +2029,24 @@
     ~ V
     &(\cref{thm:context-match})
     \\
-    =&\quad
-    \begin{aligned}[t]
-      &(\Extension \Do M\subst{y}{V}\subst{\many{x}}{\many{W}}) \\
-      &\quad (\Template \Continue s' \to C[(\Template B) ~ s']) \\
-      &\quad ~ V
-    \end{aligned}
-    &(\cref{thm:templ-ext})
-    \\
-    =&\quad
-    \begin{aligned}[t]
-      &(\Extension \Try \_ \to \Else M\subst{y}{V}\subst{\many{x}}{\many{W}}) \\
-      &\quad (\Template \Continue s' \to C[(\Template B) ~ s']) \\
-      &\quad ~ V
-    \end{aligned}
-    \\
+    % =&\quad
+    % \begin{aligned}[t]
+    %   &(\Extension \Do M\subst{y}{V}\subst{\many{x}}{\many{W}}) \\
+    %   &\quad (\Template \Continue s' \to C[(\Template B) ~ s']) \\
+    %   &\quad ~ V
+    % \end{aligned}
+    % &(\cref{thm:templ-ext})
+    % \\
+    % =&\quad
+    % \begin{aligned}[t]
+    %   &(\Extension \Try \_ \to \Else M\subst{y}{V}\subst{\many{x}}{\many{W}}) \\
+    %   &\quad (\Template \Continue s' \to C[(\Template B) ~ s']) \\
+    %   &\quad ~ V
+    % \end{aligned}
+    % \\
     =&\quad
     (\Template \Else M\subst{y}{V}\subst{\many{x}}{\many{W}}) ~ V
-    &(\cref{thm:ext-try})
+    &(\cref{thm:template-commit})
     \\
     =&\quad
     (\Template \Continue \_ \to  M\subst{y}{V}\subst{\many{x}}{\many{W}}) ~ V
@@ -1475,7 +2054,7 @@
     =&\quad
     M\subst{y}{V}\subst{\many{x}}{\many{W}}
   \end{align*}
-  and so the translation of the two sides are equal by congruence and transitivity of the equational theory (\cref{thm:equivalence-relation}).
+  % and so the translation of the two sides are equal by congruence and transitivity of the equational theory (\cref{thm:equivalence-relation}).
   \qed
   
   % First, note that every copattern has the form $Q = \hole ~ P_1 \dots P_n$, where each pattern $P_i$ binds a distinct set of variables $\many{x_i}$, and so the assumed matching equality $Q\subst{\many{x}}{\many{W}} = C$ implies
@@ -1547,78 +2126,170 @@
 
 \begin{lemma}[Context Apart]
   \label{thm:context-apart}
-
-  $\den{C[(\Template{} (Q[y] ~ O); B) ~ V]} = \den{C[(\Template B) ~ V]}
-  \qquad (\text{if } Q \apart C)$
+  In the source,
+  \begin{align*}
+    \den{C[(\Template{} (Q[y] ~ O); B) ~ V]}
+    &=
+    \den{C[(\Template B) ~ V]}
+    &(\text{if } Q \apart C) 
+  \end{align*}
 \end{lemma}
 \begin{proof}
-  % Note that derivation of apartness can be rewritten such that the base case, proving $\hole ~ P_1 \dots P_n \apart \hole ~ V_1 \dots V_n$ from $P_n \apart V_n$, is such that $P_n \apart V_n$ is the \emph{first} non-matching application, and each previous application (for $1 \leq i < n$) matches as some $P_i\subst{\many{x_i}}{\many{W_i}} = V_i$.
-  % If there is an earlier non-matching application, then that can form a new smaller base case closer to $\hole$, and all following applications are added via the other two rules for copattern apartness.
-  % The proof then proceeds by induction on the derivation of apartness $Q \apart C$ with the above invariant.
   By induction on the derivation of apartness $Q \apart C$:
   \begin{itemize}
-  \item Suppose $Q \apart C$ because $Q = Q' ~ P$ and $C = C' ~ W$ such that $P \apart W$ and $Q'\subst{\many{x}}{\many{W}} = C'$.
-    % The two sides are equal \dots by \cref{thm:template-match,thm:template-apart}.
+  \item Suppose $Q \apart C$ because $Q = Q' ~ P$ and $C = C' ~ W'$ such that $P \apart W$ and $Q'\subst{\many{x}}{\many{W}} = C'$.
     \begin{align*}
-      & \quad \den{C[(\Template{} ((Q'[y] ~P) ~ O); B) ~ V]} \\
-      =& \quad \den{C'[(\Template{} ((Q'[y] ~P) ~ O); B) ~ V] ~W} \\
-      =& \quad \den{C'[(\Template{} (Q'[y] ~(\lambda P. ~O)); B) ~ V] ~W} \\
-      =& \quad \den{C'} ~\denbig{
-        \left(
-          \begin{aligned}
-            &\Template{} \\
-            &\quad (\lambda P. ~O)\subst{\many{x}}{\many{W}}; \\
-            &\quad \Continue s' \to (\Template B) ~ s' ~ W
-          \end{aligned}
-        \right)
-        ~ V
-      } & (\cref{thm:compositional-translation,thm:template-match})\\
-      =& \quad \den{C'} \den{\Template \Continue s' \to (\Template B) ~ s' ~ W} ~\den{V} & (\cref{thm:template-apart}) \\
-      =& \quad \den{C'} (\lambda s'. \den{(\Template B)} ~ s' ~\den{W}) ~\den{V} \\
-      =& \quad \den{C'} \den{(\Template B) ~V ~W} & (\beta)\\
-      =& \quad \den{C'[(\Template B) ~ V ~ W]} & (\cref{thm:compositional-translation}) \\
-      =& \quad \den{C[(\Template B) ~ V]}
+      & \quad
+      C[(\Template{} (Q'[y] ~P) ~ O; B) ~ V]
+      \\
+      =& \quad
+      C'[(\Template{} (Q'[y] ~P) ~ O; B) ~ V] ~W'
+      \\
+      =& \quad
+      C'[(\Template{} Q'[y] ~(\lambda P. O); B) ~ V] ~W'
+      &(\cref{thm:copattern-abstraction})
+      \\
+      =& \quad
+      \left(
+        \begin{aligned}
+          &\Template{} \\
+          &\quad \lambda P. O\subst{\many{x}}{\many{W}}; \\
+          &\quad \Continue s' \to C'[(\Template B) ~ s']
+        \end{aligned}
+      \right)
+      ~ V ~ W'
+      & (\cref{thm:context-match})
+      \\
+      =& \quad
+      (\Template \Continue s' \to C'[(\Template B) ~ s']) ~ V ~ W'
+      & (\cref{thm:template-apart})
+      \\
+      =& \quad
+      C'[(\Template B) ~ V] ~ W'
+      & (\cref{thm:templ-continue})
+      \\
+      =& \quad
+      C[(\Template B) ~ V]
     \end{align*}
 
   \item Suppose $Q \apart C$ because $Q = Q' ~ P$ and $Q' \apart C$, and assume the inductive hypothesis
     \begin{math}
-      \den{C[(\Template{} (Q'[y] ~ O); B) ~ V]} = \den{C[(\Template B) ~ V]}
+      C[(\Template{} (Q'[y] ~ O); B) ~ V] = C[(\Template B) ~ V]
       .
     \end{math}
-    % The two sides are equal \dots by the inductive hypothesis.
     \begin{align*}
-      & \quad \den{C[(\Template{} ((Q'[y] ~P) ~ O); B) ~ V]} \\
-      =& \quad \den{C[(\Template{} (Q'[y] ~ (\lambda P. ~O)); B) ~ V]} \\
-      =& \quad \den{C[(\Template{} B) ~ V]} & (IH)
+      & \quad
+      C[(\Template{} (Q[y] ~ O); B) ~ V]
+      \\
+      =& \quad
+      C[(\Template{} ((Q'[y] ~P) ~ O); B) ~ V]
+      \\
+      =& \quad
+      C[(\Template{} (Q'[y] ~ (\lambda P. ~O)); B) ~ V]
+      & (\cref{thm:copattern-abstraction})
+      \\
+      =& \quad
+      C[(\Template{} B) ~ V]
+      & (IH)
     \end{align*}
   \item Suppose $Q \apart C$ because $C = C' ~ W$ and  $Q \apart C'$, and assume the inductive hypothesis
     \begin{math}
-      \den{C'[(\Template{} (Q[y] ~ O); B) ~ V]} = \den{C'[(\Template B) ~ V]}
+      C'[(\Template{} (Q[y] ~ O); B) ~ V] = C'[(\Template B) ~ V]
       .
     \end{math}
-    % The two sides are equal \dots by the inductive hypothesis and congruence (\cref{thm:equivalence-relation}).
     \begin{align*}
-      & \quad \den{C[(\Template{} (Q[y] ~ O); B) ~ V]} \\
-      =& \quad \den{C'[(\Template{} (Q[y] ~ (\lambda P. ~O)); B) ~ V]} ~\den{W}\\
-      =& \quad \den{C'[(\Template B) ~ V]} ~\den{W} & (IH)\\
-      =& \quad \den{C[(\Template B) ~ V]}
+      & \quad
+      C[(\Template{} (Q[y] ~ O); B) ~ V]
+      \\
+      =& \quad
+      C'[(\Template{} (Q[y] ~ O); B) ~ V] ~ W
+      \\
+      =& \quad
+      C'[(\Template B) ~ V] ~W
+      & (IH)
+      \\
+      =& \quad
+      C[(\Template B) ~ V]
     \end{align*}
   \end{itemize}
   \qed
 \end{proof}
 
+% \begin{lemma}[Context Apart]
+%   \label{thm:context-apart}
+  
+%   $\den{C[(\Template{} (Q[y] ~ O); B) ~ V]} = \den{C[(\Template B) ~ V]}
+%   \qquad (\text{if } Q \apart C)$
+% \end{lemma}
+% \begin{proof}
+%   % Note that derivation of apartness can be rewritten such that the base case, proving $\hole ~ P_1 \dots P_n \apart \hole ~ V_1 \dots V_n$ from $P_n \apart V_n$, is such that $P_n \apart V_n$ is the \emph{first} non-matching application, and each previous application (for $1 \leq i < n$) matches as some $P_i\subst{\many{x_i}}{\many{W_i}} = V_i$.
+%   % If there is an earlier non-matching application, then that can form a new smaller base case closer to $\hole$, and all following applications are added via the other two rules for copattern apartness.
+%   % The proof then proceeds by induction on the derivation of apartness $Q \apart C$ with the above invariant.
+%   By induction on the derivation of apartness $Q \apart C$:
+%   \begin{itemize}
+%   \item Suppose $Q \apart C$ because $Q = Q' ~ P$ and $C = C' ~ W$ such that $P \apart W$ and $Q'\subst{\many{x}}{\many{W}} = C'$.
+%     % The two sides are equal \dots by \cref{thm:template-match,thm:template-apart}.
+%     \begin{align*}
+%       & \quad \den{C[(\Template{} ((Q'[y] ~P) ~ O); B) ~ V]} \\
+%       =& \quad \den{C'[(\Template{} ((Q'[y] ~P) ~ O); B) ~ V] ~W} \\
+%       =& \quad \den{C'[(\Template{} (Q'[y] ~(\lambda P. ~O)); B) ~ V] ~W} \\
+%       =& \quad \den{C'} ~\denbig{
+%         \left(
+%           \begin{aligned}
+%             &\Template{} \\
+%             &\quad (\lambda P. ~O)\subst{\many{x}}{\many{W}}; \\
+%             &\quad \Continue s' \to (\Template B) ~ s' ~ W
+%           \end{aligned}
+%         \right)
+%         ~ V
+%       } & (\cref{thm:compositional-translation,thm:template-match})\\
+%       =& \quad \den{C'} \den{\Template \Continue s' \to (\Template B) ~ s' ~ W} ~\den{V} & (\cref{thm:template-apart}) \\
+%       =& \quad \den{C'} (\lambda s'. \den{(\Template B)} ~ s' ~\den{W}) ~\den{V} \\
+%       =& \quad \den{C'} \den{(\Template B) ~V ~W} & (\beta)\\
+%       =& \quad \den{C'[(\Template B) ~ V ~ W]} & (\cref{thm:compositional-translation}) \\
+%       =& \quad \den{C[(\Template B) ~ V]}
+%     \end{align*}
+
+%   \item Suppose $Q \apart C$ because $Q = Q' ~ P$ and $Q' \apart C$, and assume the inductive hypothesis
+%     \begin{math}
+%       \den{C[(\Template{} (Q'[y] ~ O); B) ~ V]} = \den{C[(\Template B) ~ V]}
+%       .
+%     \end{math}
+%     % The two sides are equal \dots by the inductive hypothesis.
+%     \begin{align*}
+%       & \quad \den{C[(\Template{} ((Q'[y] ~P) ~ O); B) ~ V]} \\
+%       =& \quad \den{C[(\Template{} (Q'[y] ~ (\lambda P. ~O)); B) ~ V]} \\
+%       =& \quad \den{C[(\Template{} B) ~ V]} & (IH)
+%     \end{align*}
+%   \item Suppose $Q \apart C$ because $C = C' ~ W$ and  $Q \apart C'$, and assume the inductive hypothesis
+%     \begin{math}
+%       \den{C'[(\Template{} (Q[y] ~ O); B) ~ V]} = \den{C'[(\Template B) ~ V]}
+%       .
+%     \end{math}
+%     % The two sides are equal \dots by the inductive hypothesis and congruence (\cref{thm:equivalence-relation}).
+%     \begin{align*}
+%       & \quad \den{C[(\Template{} (Q[y] ~ O); B) ~ V]} \\
+%       =& \quad \den{C'[(\Template{} (Q[y] ~ (\lambda P. ~O)); B) ~ V]} ~\den{W}\\
+%       =& \quad \den{C'[(\Template B) ~ V]} ~\den{W} & (IH)\\
+%       =& \quad \den{C[(\Template B) ~ V]}
+%     \end{align*}
+%   \end{itemize}
+%   \qed
+% \end{proof}
+
 \begin{lemma}[Context $\lamstar$ Match]
   \label{thm:context-lamstar-match}
+  In the source,
   \begin{align*}
-    \den{C[\lamstar (Q[y] = M); B]}
+    C[\lamstar (Q[y] = M); B]
     &=
-    \den{M\subst{y}{(\lamstar (Q[y] = M); B)}\subst{\many{x}}{\many{W}}}
+    M\subst{y}{(\lamstar (Q[y] = M); B)}\subst{\many{x}}{\many{W}}
     \\
     &(\text{if } Q\subst{\many{x}}{\many{W}} = C)
   \end{align*}
 \end{lemma}
 \begin{proof}
-  In terms of the source-level axioms above, we have:
+  % In terms of the source-level axioms above, we have:
   \begin{align*}
     &\quad
     C[\lamstar (Q[y] = M); B]
@@ -1628,21 +2299,25 @@
     &(\cref{thm:unfold-lamstar})
     \\
     =&\quad
-    C[M\subst{y}{(\lamstar (Q[y]=M); B)}\subst{\many{x}}{\many{W}}]
-    &(Q\subst{\many{x}}{\many{W}} = C, \cref{thm:context-exact-match})
+    M\subst{y}{(\lamstar (Q[y]=M); B)}\subst{\many{x}}{\many{W}}
+    &(\cref{thm:context-exact-match})
   \end{align*}
-  and so the translation of the two sides are equal by congruence and transitivity of the equational theory (\cref{thm:equivalence-relation}).
+  % and so the translation of the two sides are equal by congruence and transitivity of the equational theory (\cref{thm:equivalence-relation}).
   \qed
 \end{proof}
 
 \begin{lemma}[Context $\lamstar$ Apart]
   \label{thm:context-lamstar-apart}
-
-  $\den{C[\lamstar (Q[y] ~ O); \Else M]} = \den{C[M]}
-  \qquad (\text{if } Q \apart C)$.
+  In the source,
+  \begin{align*}
+    C[\lamstar (Q[y] ~ O); \Else M]
+    &=
+    C[M]
+    & (\text{if } Q \apart C)    
+  \end{align*}
 \end{lemma}
 \begin{proof}
-  In terms of the source-level axioms above, we have:
+  % In terms of the source-level axioms above, we have:
   \begin{align*}
     &\quad
     C[\lamstar (Q[y] ~ O); \Else M]
@@ -1653,7 +2328,7 @@
     \\
     =&\quad
     C[(\Template \Else M) ~ (\lamstar (Q[y] ~ O); \Else M)]
-    &(Q \apart C, \cref{thm:context-apart})
+    &(\cref{thm:context-apart})
     \\
     =&\quad
     C[(\Template \Continue \_ \to M) ~ (\lamstar (Q[y] ~ O); \Else M)]
@@ -1662,7 +2337,7 @@
     C[M]
     &(\cref{thm:templ-continue})
   \end{align*}
-  and so the translation of the two sides are equal by congruence and transitivity of the equational theory (\cref{thm:equivalence-relation}).
+  % and so the translation of the two sides are equal by congruence and transitivity of the equational theory (\cref{thm:equivalence-relation}).
   \qed
 \end{proof}
 

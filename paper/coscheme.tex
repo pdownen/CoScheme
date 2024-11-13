@@ -79,14 +79,11 @@
 \maketitle              % typeset the header of the contribution
 %
 \begin{abstract}
-  Functional Programmers are acquainted with using pattern matching to decompose inductive data.
-  However, the use of its counterpart, copattern matching, is not widespread. 
-  Copatterns improve our finesse with codata since they can synthesize infinite data through a finite set of observations.
-  Still, their application is often associated with statically typed environments.
-  With that in mind, we bring copatterns to a new frontier: dynamically typed languages.
-  This work presents implementations of copatterns for the Scheme and Racket programming languages.
-  Our implementations are based on macros, and to assert that they are well-behaved, we describe an equational theory involving an extended $\lambda$-calculus that is translated to a core calculus using a CPS-style conversion.
-  Our approach focuses on composable copatterns, and we defined two flavors of composition of (co)patterns, vertical and horizontal, which enable a new solution to the expression problem since we can encode some useful patterns from functional and object-oriented paradigms.
+  Since their introduction, copatterns have promised to extend functional languages --- with their familiar pattern matching facilities --- to synthesize and work with infinite objects through a finite set of observations.
+  Thus far, their adoption in practice has been limited, and primarily associated with specific tools like proof assistants.
+  With that in mind, we aim to make copattern-matching usable for ordinary functional programmers by implementing them as macros in the Scheme and Racket programming languages.
+  Our approach focuses on composable copatterns, which can be combined in multiple directions and offer a new solution to the expression problem through novel forms of extensibility.
+  To check correctness of the implementation, and to reason equationally about copattern-matching code, we describe an equational theory for copatterns with a sound, selective translation into $\lambda$-calculus.
 \keywords{Codata \and Copatterns \and Scheme \and Macros \and Composition \and Expression Problem.}
 \end{abstract}
 %

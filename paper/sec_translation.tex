@@ -178,10 +178,10 @@ For simplicity, this translation begins from a small source language with copatt
 
 \begin{figure}[t]
 \centering
-
+\small
 \begin{alignat*}{2}
-  \mathit{Variable} &\ni{}& x, y, z
-  \\
+  % \mathit{Variable} &\ni{}& x, y, z
+  % \\
   \mathit{Term} &\ni{}& M, N
   &::= \dots
   \mid \lamstar B
@@ -219,20 +219,18 @@ Syntactic sugar:
   \Else M
   &=
   \Continue \_ \to M
-  \\
+  &
+  (= M)
+  =
   \Do M
   &=
   \Try \_ \to \Else M
   \\
-  (= M)
-  &=
-  \Do M
-  \\
   \If M ~ O
   &=
   \Match \True \gets M ~ O
-  \\
-  \Let x = M ~ O
+  &
+  (\Let x = M ~ O)
   &=
   \Match x \gets M ~ O
 \end{align*}
@@ -271,12 +269,12 @@ Even though this is dynamically-typed, we can view the type of templates as obje
   Template &= Object \to Object'
   \\
   Extension &= Template \to Template'
-  \\
-  &= Template \to Object \to Object'
+  = Template \to Object \to Object'
 \end{align*}
 
 \begin{figure}[t]
 \centering
+\small
 Translating new terms:  
 \begin{align*}
   \den{\lamstar B}
@@ -357,17 +355,21 @@ Translating other extensions:
   \\
   E\den{\Match P \gets M ~ O}
   &=
-  \lambda b. \lambda s.
-  \begin{aligned}[t]
-    &\Match \den{M} \With \\
-    &\quad
-    \begin{aligned}[t]
-      \{~
-      P &\to E\den{O}~b~s; \\
-      \_ &\to b~s
-      ~\}
-    \end{aligned}
-  \end{aligned}
+  \rlap{$
+    \lambda b. \lambda s.
+    \Match \den{M} \With \set{P \to E\den{O}~b~s; \_ \to b~s}
+  $}
+  % \lambda b. \lambda s.
+  % \begin{aligned}[t]
+  %   &\Match \den{M} \With \\
+  %   &\quad
+  %   \begin{aligned}[t]
+  %     \{~
+  %     P &\to E\den{O}~b~s; \\
+  %     \_ &\to b~s
+  %     ~\}
+  %   \end{aligned}
+  % \end{aligned}
   \\
   E\den{\Nest O}
   &=

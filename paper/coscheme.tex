@@ -79,9 +79,14 @@
 \maketitle              % typeset the header of the contribution
 %
 \begin{abstract}
-The abstract should briefly summarize the contents of the paper in
-150--250 words.
-
+  Functional Programmers are acquainted with using pattern matching to decompose inductive data.
+  However, the use of its counterpart, copattern matching, is not widespread. 
+  Copatterns improve our finesse with codata since they can synthesize infinite data through a finite set of observations.
+  Still, their application is often associated with statically typed environments.
+  With that in mind, we bring copatterns to a new frontier: dynamically typed languages.
+  This work presents implementations of copatterns for the Scheme and Racket programming languages.
+  Our implementations are based on macros, and to assert that they are well-behaved, we describe an equational theory involving an extended $\lambda$-calculus that is translated to a core calculus using a CPS-style conversion.
+  Our approach focuses on composable copatterns, and we defined two flavors of composition of (co)patterns, vertical and horizontal, which enable a new solution to the expression problem since we can encode some useful patterns from functional and object-oriented paradigms.
 \keywords{Codata \and Copatterns \and Scheme \and Macros \and Composition \and Expression Problem.}
 \end{abstract}
 %

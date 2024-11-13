@@ -6,7 +6,7 @@
         extension apply-extension template apply-template
         chain nest comatch try always-do try-if try-match
         try-lambda try-case-lambda try-match-lambda try-apply-remember try-apply-forget
-        empty-extension empty-template choose commit merge
+        empty-extension empty-template choose commit compose
         introspect plug closed-cases selfless with-self self-modify)
 
 (import (rnrs))
@@ -95,7 +95,7 @@
 
 ;; merge : (Extension ...) -> Extension
 ;; merge any number of extensions into a single one that chooses between the matching alternative based on the context of its call-site.
-(define (merge . exts)
+(define (compose . exts)
   (cond
     [(for-all procedure? exts)
      (lambda(self)
@@ -432,7 +432,7 @@
 ;; the main way to define a new (anonymous) extension procedure. Each individual clause is composed together, and the first step of every clause is always a copattern-matching form.
 (define-syntax-rule
   (extension [copat step ...] ...)
-  (merge [chain (comatch copat) step ...] ...))
+  (compose [chain (comatch copat) step ...] ...))
 
 ;; TemplateBase = Else Expr | Continue id Expr | Empty
 ;; TemplateSyntax = ExtensionSyntax, TemplateBase
@@ -470,13 +470,13 @@
 (define composition
   (extension
    [(self 'compose)      do self]
-   [(self 'compose . os) do (plug (meta (apply merge
+   [(self 'compose . os) do (plug (meta (apply compose
                                                (self 'unplug)
                                                (map (lambda(o) (o 'unplug)) os))))]))
 
 ;; meta : Extension -> Extension
 ;; Combines the 'unplug, 'adapt, and 'compose methods above with the methods of the given extension itself
-(define (meta ext) (merge ext (unplug ext) composition adapt))
+(define (meta ext) (compose ext (unplug ext) composition adapt))
 
 (define default-object-modifier meta)
 

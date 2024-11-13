@@ -15,7 +15,7 @@
 
 ;; The argument of a template fills in the "self" pointer (late binding), and the returned codata object says what to do in specific cases. More generally, you might imagine that a template takes a partially-formed "self" object and defines behavior for additional cases, in this case you would have
 
-;; Tempalte = Codata -> Codata'
+;; Template = Codata -> Codata'
 
 ;; where the type "Codata" describes the old self and Codata' describes the new self.
 
@@ -53,7 +53,7 @@
 (define (plug extend) (introspect (extend empty-base)))
 
 
-;; The main macro, that defines how to compile the code of an extension into a concrete object (a Tempalte transformer)
+;; The main macro, that defines how to compile the code of an extension into a concrete object (a Template transformer)
 (define-syntax extension
   (syntax-rules (try-next-from-here => try-next-with-new-self ==> import <= context)
     [(extension [import ext]) ext]

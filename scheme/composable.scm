@@ -23,7 +23,7 @@
 
 ;; The argument of a template fills in the "self" pointer (late binding), and the returned codata object says what to do in specific cases. More generally, you might imagine that a template takes a partially-formed "self" object and defines behavior for additional cases, in this case you would have
 
-;; Tempalte = Codata -> Codata'
+;; Template = Codata -> Codata'
 
 ;; where the type "Codata" describes the old self and Codata' describes the new self.
 
@@ -47,23 +47,25 @@
 ;; I don't exist
 (define empty-object (lambda args (raise (cons 'empty-object args))))
 
-;; extend-template : Extension -> Template -> Template
+;; extend-template : (Extension, Template) -> Template
 ;; add more methods to a Template, and override any duplicates, but avoid fixing its "self" to allow for future extensions
 (define (extend-template ext next) (ext next))
 
-;; surround-object : Template -> Codata -> Codata
+;; surround-object : (Template, Codata) -> Codata
 ;; introduce new behvaior around a Codata object, only using that object when the Template recurses in on itself.
 (define (surround-object tmpl obj) (tmpl obj))
 
-;; handle-with : Template -> Extension -> Template
+;; handle-with : (Template, Extension) -> Template
 ;; handle all the cases where the extension falls through by continuing on with the given handler.
 (define (handle-with handler ext) (ext handler))
 
-;; resume-as : Codata -> Template -> Codata
+;; resume-as : (Codata, Template) -> Codata
 ;; run a template 
 (define (resume-as self tmpl) (tmpl self))
 
-;; Extension composition is just ordinary function composition
+;; compose : (Extension ...) -> Extension
+;; compose any number of extensions into a single one that chooses between the matching alternative based on the context of its call-site.
+;; compose is just ordinary function composition, which is already provided by Scheme.
 
 ;; introspect : Template -> Codata
 ;; know thyself
@@ -104,12 +106,18 @@
          (apply-all exts self)))]
     [else (raise (cons 'merge exts))]))
 
+;; self-modify : (Codata, Extension) -> Extension
+;; replace an extension's internal idea of itself with a new self
 (define (self-modify new-self ext)
   (try next old-self (apply-extension ext next new-self)))
 
+;; with-self : (Codata, Extension) -> Extension
+;; temporarily change an extension's internal idea of itself, reverting back to the old self if the extension fails
 (define (with-self new-self ext)
   (try next old-self (apply-extension ext (non-rec (next old-self)) new-self)))
 
+;; nest : Extension -> Extension
+;; update an extensions current view of itself from *here* (the partial application of all the arguments seen so far) for its remainder
 (define (nest ext)
   (try next there
    (letrec ([here (apply-extension
@@ -134,6 +142,7 @@
        (syntax-rules ()
          [(name . pattern) template]))]))
 
+;; try is the basic form for defining a new extension from scratch, introducing a procedure to invoke the next option to try while running a template, and optionally introducing the name for the object itself while running an expression
 (define-syntax try
   (syntax-rules ()
     [(try ext)
@@ -143,10 +152,17 @@
     [(try next self expr)
      (lambda(next) (lambda(self) expr))]))
 
+
+;; always-is, always-do forms an extension which always runs the given non-recursive expression(s) without trying anything else
 (define-syntax-rule
-  (always-do expr)
+  (always-is expr)
   (try _ _ expr))
 
+(define-syntax-rule
+  (always-do expr ...)
+  (always-is (begin expr ...)))
+
+;; continue is the basic form for defining a new template from scratch, introducing a name for recursively calling the object itself while running an expression
 (define-syntax continue
   (syntax-rules ()
     [(continue tmpl)
@@ -154,10 +170,14 @@
     [(continue self expr)
      (lambda(self) expr)]))
 
+;; non-rec forms a non-recursive template which never refers back to itself
 (define-syntax-rule
   (non-rec expr)
   (continue _ expr))
 
+;; apply-template : (Template, Codata) -> Codata
+;; apply-extension : (Extension, Template, Codata) -> Codata
+;; shorthands for application
 (define-syntax-rule
   (apply-template tmpl self)
   (tmpl self))
@@ -344,6 +364,8 @@
       [(try-lambda params ext)
        #'(try-match-lambda params ext)])))
 
+;; try-apply-remember : (Extension, Argument ...) -> Extension
+;; tries to apply an extension to some arguments; on failure, those arguments are still remembered and can be seen as additional parameters to the next option to try
 (define-syntax try-apply-remember
   (syntax-rules ()
     [(try-apply-remember ext arg ...)
@@ -353,6 +375,8 @@
      (try next self
           (apply (apply-extension ext next self) arg ... rest))]))
 
+;; try-apply-forget : (Extension, Argument ...) -> Extension
+;; tries to apply an extension to some arguments; on failure, those arguments are forgotten and the next option to try sees exactly the same sequence of calls as this extension
 (define-syntax try-apply-forget
   (syntax-rules ()
     [(try-apply-forget ext arg ...)
@@ -386,25 +410,35 @@
        (identifier? #'name)
        #'(try next name (apply-extension ext next name))])))
 
-
+;; ExtensionBody = Extension | = Expr | do Expr ... | try id Template | try id id Expr
+;; chain : ((Extension -> Extension) ..., ExtensionBody) -> Extension
+;; chain several operations to the right, optionally ending with a final punctuating form (=, do, or try). chain helps to avoid excessively right-leaning nested parentheses when chaining together several copattern-matching operations (such as comatch, try-if, try-match, etc).
 (define-syntax chain
   (syntax-rules (= do try)
     [(chain (op ...) step ... ext)
      (op ... (chain step ... ext))]
     [(chain do expr)
-     (always-do expr)]
+     (always-is expr)]
     [(chain = expr)
-     (always-do expr)]
+     (always-is expr)]
     [(chain try ext)
      ext]
     [(chain ext)
      ext]))
 
+;; ExtensionSyntax = (Copattern, (Extension -> Extension), ..., ExtensionBody) ...
 
+;; extension : ExtensionSyntax -> Extension
+;; the main way to define a new (anonymous) extension procedure. Each individual clause is composed together, and the first step of every clause is always a copattern-matching form.
 (define-syntax-rule
   (extension [copat step ...] ...)
   (merge [chain (comatch copat) step ...] ...))
 
+;; TemplateBase = Else Expr | Continue id Expr | Empty
+;; TemplateSyntax = ExtensionSyntax, TemplateBase
+
+;; template : TemplateSyntax -> Template
+;; the main way to define a new (anonymous) template procedure. The syntax is the same as extension, with the additional of a final base case which is either an "else" that gives a default answer, a "continue" that may recursively call the entire object itself while calculating the default answer, or an (implicit) unhandled empty case which raises an exception if encountered.
 (define-syntax template
   (syntax-rules (continue else)
     [(template clause ... [continue . default])
@@ -454,14 +488,23 @@
 ;; Main Macros ;;
 ;;;;;;;;;;;;;;;;;
 
+;; lambda* : TemplateSyntax -> Codata
+;; the main way to define an (anonymous) usable codata object out of the same syntax used by the template macro. The template's self placeholder is recursively bound to the codata object itself.
 (define-syntax-rule
   (lambda* clause ...)
   (introspect (template clause ...)))
 
+;; override-lambda*: (Codata, ExtensionSyntax) -> Codata
+;; override an existing codata object with additional clauses, using the given old object as the (non-recursive) base case
 (define-syntax-rule
   (override-lambda* old clause ...)
   (lambda* clause ... [else old]))
 
+;; define* is the main top-level macro for defining new (named) codata objects. It follows the same syntax as template, and additonally has two options for naming the object:
+;;
+;;   1. The form (define* name clause ...) outright assigns the identifier "name" to the object (λ* clause ...) as given, which can be seen externally by calling code. Note that the name for the  "self" parameters inside each clause may different from the external "name".
+;;
+;;   2. The form (define* clause ...) infers a name for the object (λ* clause ...) from the name of the "self" parameter in the initial copattern of the first clause, which becomes its externally visibale name, too. Note that following clauses may use a different name for the "self" parameter which is not externally visible.
 (define-syntax define*
   (lambda(stx)
     (syntax-case stx (apply)
@@ -485,6 +528,9 @@
 (define-syntax <:
   (syntax-rules ()))
 
+;; object : TemplateSyntax -> Codata
+;; object : ((<: (Extension -> Extension) ...), TemplateSyntax) -> Codata
+;; the main way to define an (anonymous) codata object which inherits additional behavior from some external source; if not given explicitly with an initial (<: mod), default-object-modifier is implicitly used. In the most general case, the modifiers can by any sequence of extension-modifiying functions to be composed together, which allows each modifier in turn to copy and re-use the extensible form of the object before it is finally plugged (with a base case and recursive reference to itself). In a common special case, this modifier can merely compose (vertically or horizontally) the given extension with other inherited behavior, giving preference to either the new code or inherited code in cases of overlap.
 (define-syntax object
   (syntax-rules (extends <:)
     [(object (<: mod) clause ...)
@@ -496,6 +542,7 @@
     [(object clause ...)
      (plug (default-object-modifier (extension clause ...)))]))
 
+;; define-object is like define*, but creating a (named) object with inherited behavior rather than just using the written code as-is. As with define*, define-object will infer the externally-visible name for this object from the initial copattern of the first clause if no explicit name is given. As with object, define-object will inherit behavior from default-object-modifier if no modifiers are given.
 (define-syntax define-object
   (lambda(stx)
     (syntax-case stx (extends <: apply)

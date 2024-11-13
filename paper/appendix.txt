@@ -1,0 +1,12 @@
+Since their introduction, copatterns have promised to extend functional
+languages --- with their familiar pattern matching facilities --- to synthesize
+and work with infinite objects through a finite set of observations.  Thus far,
+their adoption in practice has been limited and primarily associated with
+specific tools like proof assistants. With that in mind, we aim to make
+copattern matching usable for ordinary functional programmers by implementing
+them as macros in the Scheme and Racket programming languages.  Our approach
+focuses on composable copatterns, which can be combined in multiple directions
+and offer a new solution to the expression problem through novel forms of
+extensibility.  To check the correctness of the implementation and to reason
+equationally about copattern-matching code, we describe an equational theory for
+copatterns with a sound, selective translation into lambda-calculus.

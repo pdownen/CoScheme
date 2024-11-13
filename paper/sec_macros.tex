@@ -1,4 +1,3 @@
-
 The real implementation of copattern-matching in the Scheme macro system is quite similar to the high-level translation given in \cref{fig:translation}
 However, there are some important differences which have to do with integrating the new feature with the rest of the language, as well as practical implementation details.
 For example, note the definition of $\den{\lamstar B}$ in particular.
@@ -6,12 +5,13 @@ While the $\eta$-equality simplifying $\lambda x. \mathit{self} ~ x$ to just $\m
 when a Scheme interpreter tries to evaluate the right-hand side ($T\den{B}~\mathit{self}$) of the recursive binding, it first tries to lookup the value bound to $\mathit{self}$ which has not been defined yet, leading to an error.
 This one level of $\eta$-expansion delays the evaluation step so that $\lambda x. \mathit{self} ~ x$ returns a closure around the location where $\mathit{self}$ will be placed, which is passed to $T\den{B}$ whose result is bound to $\mathit{self}$.
 
-Happily, instead of a single big recursive macro, the first-class nature of templates and extensions make it possible to implement the various parts of copattern-matching as many independent macros that can be used separately and composed together by the programmer.  For example, $\lambda P. O$, $\If M ~ O$, $\Match P \gets M ~ O$, \etc are all implemented as self-contained macros that create new extension values around other extensions.
-These forms need to be macros because they either bind variables around an expression (like $\lambda P$ or $\Match$) or don't evaluate a sub-expression in some cases (like $\If$).
+Happily, instead of a single big recursive macro, the first-class nature of templates and extensions makes it possible to implement the various parts of copattern-matching as many independent macros that can be used separately and composed by the programmer. 
+For example, $\lambda P. O$, $\If M ~ O$, $\Match P \gets M ~ O$, \etc are all implemented as self-contained macros that create new extension values around other extensions.
+These forms need to be macros because they either bind variables around an expression (like $\lambda P$ or $\Match$) or do not evaluate a sub-expression in some cases (like $\If$).
 Other simpler forms, like the empty object, or even $\Nest$ or the composition $O; O'$, are just ordinary procedural values and not defined as macros.
 The macro for copattern matching, $Q[x]~O$, is the only main recursive step, which decomposes a copattern into a sequence of more basic matching $\lambda$s.
 
-Additionally, the source language as implemented is more flexible than presented in \cref{fig:source-syntax}, in the sense that there are not as many syntactic categories.  
+Additionally, the source language, as implemented, is more flexible than presented in \cref{fig:source-syntax}, in the sense that there are not as many syntactic categories.  
 So the $O$ in forms like $\lambda P. O$ or $\If M ~ O$ can be \emph{any} host language expression as long as it evaluates to a procedure following the calling convention of extensions (otherwise a run-time error may be encountered).
 The implementation also supports other standard Scheme expressions, including functions of multiple arguments (corresponding to \scm|(lambda (P ...) O)| or the copattern \scm|(self P ...)|) and variable numbers of arguments (corresponding to \scm|(lambda (P ... . rest) O)| or the copatterns \scm|(self P ... . rest)| or \scm|(apply self P ... rest)|).
 The main points where the syntactic restrictions are used are in the macros implementing $\Extension O$ or $\Template B$.
@@ -21,7 +21,7 @@ For example, the \scm|extension| macro definition is:
   (extension [copat step ...] ...)
   (merge [chain (comatch copat) step ...] ...))
 \end{minted}
-where \scm|merge| is the regular definition of first-class function composition, \scm|comatch| is the macro for the copattern-matching form $Q[self] ~ O$, and \scm|chain| is a macro for right-assocating any chain of operations to avoid overly-nested parentheses, with special support for unparenthesized terminators:
+where \scm|merge| is the regular definition of first-class function composition, \scm|comatch| is the macro for the copattern-matching form $Q[self] ~ O$, and \scm|chain| is a macro for right-associating any chain of operations to avoid overly-nested parentheses, with special support for unparenthesized terminators:
 \begin{minted}{scheme}
 (define-syntax chain
   (syntax-rules (= try)
@@ -41,7 +41,7 @@ Thus, we provide two different implementations to illustrate how copatterns may 
   Thus, the $\Match$  from the target language in \cref{fig:target-syntax} is interpreted as Racket's \rkt|match|, and the translation of $E\den{\lambda P. O}$ is implemented directly as \rkt|match-lambda*| instead of separating the $\lambda$ from the pattern as in \cref{fig:translation}.
   This choice ensures the pattern language implemented is exactly the same as the pattern language already used in Racket programs.
 \item
-  A general implementation intended to work for any R${}^6$RS-compliant Scheme,%
+  A general implementation intended for any R${}^6$RS-compliant Scheme,%
   \footnote{We have explicitly tested this implementation against Chez Scheme.}
   %
   which internally implements its own pattern-matching macro, \scm|try-match|, by expanding into other primitives like \scm|if| and comparison predicates.

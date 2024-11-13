@@ -1,14 +1,14 @@
-This paper's main contribution is a Scheme and a Racket implementation of copatterns.
-The implementation focuses on providing a compositional abstraction, in which you have more than one notion of composition --- vertical and horizontal ---.
-Our work allows us to perform equational reasoning, and this new composition approach enables us to encode useful design patterns from object-oriented and functional paradigms, thus permitting a new approach to the expression problem.
-In addition to the implementation, we have described two core $\lambda$-caculus. The source language captures the characteristics of our implementation, and it can be translated to the target language, which contains fewer features.
-This translation is a conservative extension since it does not add anything substantial to the expressiveness power of the target language and shows that we can represent copatterns with regular pattern matching and recursive objects.
+We have shown here how to implement a more extensible, compositional version of copatterns as a macro in standard Scheme as well as Racket.
+Our major focus involves new ways to compose (co)pattern matching code in multiple directions --- vertically and horizontally --- which can be used to solve the expression problem can encode certain functional and object-oriented design patterns.
+Despite the more general forms of program composition, we still support straightforward equational reasoning to understand code behavior, even when that code is assembled from multiple parts of the program.
+This equational reasoning is formalized in terms of an extended $\lambda$-calculus which is soundly translated into a common core calculus familiar to functional programmers.
 
-\adriano{I am not sure about what we are planning to include in the future work section: some ideas
-Coverage analysis;
-Types
-Formalization
-}
-In the future, we want to extend this work by adding support to coverage analysis, with intention to provide insights about the user's current observations.
-We also plan to design a type system for copatterns and bring copatterns to typed scenarios, such as statically typed language, like OCaml, or to gradually typed language, like Typed Racket.
-Additionally, we scheme to develop a formalization of our core theory in a theorem prover, such as Coq.
+Our work here does not include static types, inherited from Scheme's nature as a dynamically typed language.
+As future work, we intend to develop a type system for the copattern language described here; specific challenges include correctly specifying type types of (de)composed code as well as coverage analysis that ensures every case is handled after composition is finished.
+The second direction of future work is to incorporate effects into copattern definitions and their equational reasoning, for example, subsuming (delimited) control operators into the copattern language as a way of expressing compositional effect handlers.
+
+
+%%% Local Variables:
+%%% mode: LaTeX
+%%% TeX-master: "coscheme"
+%%% End:

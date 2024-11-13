@@ -1503,7 +1503,8 @@
   \item Suppose $Q \apart C$ because $Q = Q' ~ P$ and $C = C' ~ W$ such that $P \apart W$ and $Q'\subst{\many{x}}{\many{W}} = C'$.
     % The two sides are equal \dots by \cref{thm:template-match,thm:template-apart}.
     \begin{align*}
-      & \quad \den{C'[(\Template{} ((Q'[y] ~P) ~ O); B) ~ V] ~W} \\
+      & \quad \den{C[(\Template{} ((Q'[y] ~P) ~ O); B) ~ V]} \\
+      =& \quad \den{C'[(\Template{} ((Q'[y] ~P) ~ O); B) ~ V] ~W} \\
       =& \quad \den{C'[(\Template{} (Q'[y] ~(\lambda P. ~O)); B) ~ V] ~W} \\
       =& \quad \den{C'} ~\denbig{
         \left(
@@ -1515,7 +1516,7 @@
         \right)
         ~ V
       } & (\cref{thm:compositional-translation,thm:template-match})\\
-      =& \quad \den{C'} \den{\Continue s' \to (\Template B) ~ s' ~ W} ~\den{V} & (\cref{thm:template-apart}) \\
+      =& \quad \den{C'} \den{\Template \Continue s' \to (\Template B) ~ s' ~ W} ~\den{V} & (\cref{thm:template-apart}) \\
       =& \quad \den{C'} (\lambda s'. \den{(\Template B)} ~ s' ~\den{W}) ~\den{V} \\
       =& \quad \den{C'} \den{(\Template B) ~V ~W} & (\beta)\\
       =& \quad \den{C'[(\Template B) ~ V ~ W]} & (\cref{thm:compositional-translation}) \\
@@ -1531,7 +1532,7 @@
     \begin{align*}
       & \quad \den{C[(\Template{} ((Q'[y] ~P) ~ O); B) ~ V]} \\
       =& \quad \den{C[(\Template{} (Q'[y] ~ (\lambda P. ~O)); B) ~ V]} \\
-      =& \quad \den{C[(\Template{} (Q'[y] ~ (\lambda P. ~O)); B) ~ V]} & (IH)
+      =& \quad \den{C[(\Template{} B) ~ V]} & (IH)
     \end{align*}
   \item Suppose $Q \apart C$ because $C = C' ~ W$ and  $Q \apart C'$, and assume the inductive hypothesis
     \begin{math}

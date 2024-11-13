@@ -72,7 +72,7 @@
   \\
   (\mathit{rec})
   &&
-  \Rec x = V
+  (\Rec x = V)
   &=
   V\subst{x}{(\Rec x = V)}
 \end{align*}
@@ -136,37 +136,25 @@ Apartness between patterns and values ($P \apart V$):
 \label{fig:target-equality}
 \end{figure}
 
-We have defined a translation to a core $\lambda$-calculus, but we still need to specify tools that enable us to confirm that the results of our translation carry their expected meaning.
-With that in mind, we can describe equational theories that teach us how to evaluate programs in both the target and the source language and then prove that our translation preserves those properties.  
+We already used the translation to a core $\lambda$-calculus as a specification for implementing compositional copatterns, but the translation is also useful for another purpose: checking the expected meaning of copattern-matching code.
+With that in mind, we now look for some laws that let us equationally reason about some programs to make sure they behave as expected.
 
-Since we are in a call-by-value context, we must define our values for both languages. In our target language, values are variables ($x$), lambdas ($\lambda x. ~M$), and patterns ($\Null ~|~ \Cons ~V ~W ~|~ \q{x} $).
-We have ordinary evaluation contexts that show us where we can apply our axioms and regular call-by-value $\beta$ reductions.
-In addition, we have $\mathit{match}$ and $\mathit{apart}$ that teach us how to deal with pattern matching.
-The $\mathit{match}$ selects the matching branch if the first pattern is satisfied, and the $\mathit{apart}$ skips the first pattern if the pattern is not fulfilled.
-For the $\mathit{match}$ case, we assume a decomposition of our value $V$ in terms of the pattern.
-The $\mathit{rec}$ describes how to unfold a step in a recursive object.
+First, the core target language --- a standard call-by-value $\lambda$-calculus extended with pattern-matching and recursion --- has the equational theory shown in \cref{fig:target-equality}, which is the \emph{reflexive}, \emph{symmetric}, \emph{transitive}, and \emph{compatible} (\ie equalities can be applied in \emph{any} context) closure of the listed rules.
+It has the usual $\beta$ axiom (restricted to substituting value arguments), two axioms for handling pattern-match success ($\mathit{match}$) and failure ($\mathit{apart}$), and an axiom for unrolling recursive values ($\mathit{rec}$).
+Values ($V, W$) include the usual ones for call-by-value $\lambda$-calculus ($x$ and $\lambda x. M$) as well as lists ($\Null$ and $\Cons V ~ W$) and symbolic literals ($\q x$).
+Matching a value $V$ against a pattern $P$ will succeed if the variables ($\many{x}$) in the pattern can be replaced by other values ($\many{W}$) to generate exactly that $V$: $P\subst{\many{x}}{\many{W}} = V$.
+In contrast, matching fails if the two are known to be \emph{apart}, written $P \apart V$ and defined in \cref{fig:target-equality}, which implies that all possible substitutions of $P$ will \emph{never} generate $V$.
+Note that while matching and apartness are mutually exclusive, there are some values that are neither matching or apart from some patterns.
+For example, compare the value $x$ against the pattern $\Null$; $x$ may indeed stand for $\Null$ or another value like $\lambda y. M$.
 
-The remainder inference rules tell us how to verify if a pattern is not satisfied.
-Those rules make the failure pattern cases explicit.
-A variable pattern can not fail, a $\q{x}$ pattern needs exactly a $\q{x}$ value, a $\Null$ pattern needs itself, and a $\Cons$ pattern needs a cons object that fulfills its patterns.
-
-
-With those rules, we can prove that our translation respects equalities in the target language.
-That is, if two terms are equal up to the target equational theory, their translation will also be equal.
-This property (\cref{thm:conservative-extension}) tells us that we have a conservative extension \cite{ExpressivePower}, and the proof mainly follows by the fact that our translation is compositional, where we can separate a term and a context inside a translation.
-
+The first usual property is that the translation specified in \cref{fig:translation} is a \emph{conservative extension}: any two terms that are equal by the target equational theory are still equal after translation.
+Because the translation is hygienic and compositional by definition,  we can follow the proof strategy in \cite{DownenAriola2014CSCC}.
 
 \begin{restatable}[Conservative Extension]{proposition}{thmconservativeextension}
   \label{thm:conservative-extension}
   If $M = N$ in the equational theory of the target
   (\cref{fig:target-equality}), then so too does $\den{M} = \den{N}$.
 \end{restatable}
-
-The source language values extend the target language values with new abstractions: templates, extensions, and $\lamstar$'s.
-In addition to the axioms of the target language, the source language has many equalities that capture the desired semantics of our operations. Those equalities present properties such as a neutral element for composition ($\varepsilon$), that composition is associative, that we need to commit to a branch with $\Do$, and how to work with our new abstractions.
-We also extend our apartness rules to copatterns and contexts.
-If it is the case that a pattern is not satisfied in a copattern, then the full copattern is not satisfied.
-For contexts, if we know that a copattern is not fulfilled in context, then we see that it will not be fulfilled in a derived context.
 
 \begin{figure}[t!]
 \centering
@@ -288,10 +276,10 @@ Instantiating templates and recursive $\lamstar$:
   \lamstar (F; B)
   &=
   (\Template F; B) ~ (\lamstar (F; B))
-  \\
-  \lambda x. (\lamstar (F; B)) ~ x
-  &=
-  \lamstar (F; B)
+  % \\
+  % \lambda x. (\lamstar (F; B)) ~ x
+  % &=
+  % \lamstar (F; B)
   \\
   (\Template O; B) ~ V
   &=
@@ -377,23 +365,29 @@ Apartness between copatterns and contexts ($Q \apart C$):
 \label{fig:source-equality}
 \end{figure}
 
-
-With those equations, we can assert that our translation preserves the desired meaning of each abstraction (\cref{thm:soundness}).
-By verifying that our translation preserves equalities on both the source and target language, we know that our translation is sound up to our equational theory.
-This is also highlighted by our implementation.
-Since we used macros, we are not adding anything substantially new to the language.
+To reason about the new features in the source language --- introduced by $\lamstar$, $\Template$, and $\Extension$ --- we introduce additional axioms given in \cref{fig:source-equality}, so that the source equational theory is the \emph{reflexive}, \emph{symmetric}, \textit{transitive}, and \emph{compatible} closure of these rules in both \cref{fig:target-equality,fig:source-equality}.
+The purpose of these new equalities is to peform some reasoning about programs using copatterns, and in particular, to check that the syntactic use of \scm|=| really means equality.
+For example, a special case is
+\begin{math}
+  Q[\lamstar(Q[y] = M); B] = M\subst{y}{\lamstar(Q[y]=M);B}
+  ,
+\end{math}
+which says a $\lamstar$ appearing in \emph{exactly} the same context as the left-hand side of an equation will unroll (recursively) to the right-hand side.
+Other equations describe algebraic laws of copattern alternatives, and how to fill in templates and extensions when applied.
+This source equational theory is \emph{sound} with respect to translation.
 
 \begin{restatable}[Soundness]{proposition}{thmsoundness}
   \label{thm:soundness}
-  The equational axioms given in \cref{fig:source-equality} are sound with
-  respect to the translation in \cref{fig:translation},
-  \begin{align*}
-    M &= M' &&\implies & \den{M} &= \den{M'} \\
-    B &= B' &&\implies & T\den{B} &= T\den{B'} \\
-    O &= O' &&\implies & E\den{O} &= E\den{O'}
-  \end{align*}
-  up to the equational theory of the target language in
-  \cref{fig:target-equality}.
+  The translation is \emph{sound} w.r.t. the source and target equational theories (\eg $M = N$ in \cref{fig:source-equality} implies $\den{M} = \den{N}$ in \cref{fig:target-equality}).
+  % The equational axioms given in \cref{fig:source-equality} are sound with
+  % respect to the translation in \cref{fig:translation},
+  % \begin{align*}
+  %   M &= M' &&\implies & \den{M} &= \den{M'} \\
+  %   B &= B' &&\implies & T\den{B} &= T\den{B'} \\
+  %   O &= O' &&\implies & E\den{O} &= E\den{O'}
+  % \end{align*}
+  % up to the equational theory of the target language in
+  % \cref{fig:target-equality}.
 \end{restatable}
 
 

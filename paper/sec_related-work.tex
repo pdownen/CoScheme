@@ -6,7 +6,7 @@ Here, we show how to implement copatterns with no typing information, and focus 
 The translation in \cref{fig:translation} is reminiscent of ``double-barrelled CPS'' \cite{DoubleBarrelCPS} used to define control effects like delimited control \cite{AbstractingControl} and exceptions \cite{KimYiDanvy98}.
 In our case, rather than a ``successful return path'' continuation, there is a ``resume recursion'' continuation.
 Expressions that return successfully just return as normal, similar to a selective CPS \cite{SelectiveCPS}, which makes the it possible to implement as a macro expansion.
-In this sense, copatterns preserve the expressive power of the language \cite{ExpressivePower}.
+% In this sense, copatterns preserve the expressive power of the language \cite{ExpressivePower}.
 A ``next case'' continuation --- to handle copattern-matching failure --- is introduced to make each line of a copattern-based definition a separate first-class value.
 From that point, the ``recursive self'' must be a parameter, because no one sliver of a definition suffices to describe the whole.
 

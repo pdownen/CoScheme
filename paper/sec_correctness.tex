@@ -178,7 +178,6 @@ Because the translation is hygienic and compositional by definition,  we can fol
   \mid \lamstar (F; B)
   \mid \Template B
   \mid \Extension O
-  \\
   % \mathit{NonRecTemplate} &\ni{}& B_{nr}
   % &::= O_{nr}; B_{nr}
   % \mid \Else \to M
@@ -252,48 +251,48 @@ Identity, associativity, and annihilation laws of composition:
 %   x ~ (O; O')
 % \end{align*}
 
-Instantiating templates and recursive $\lamstar$:
-\begin{align*}
-  % (\Extension O) ~ V
-  % &=
-  % \Template{} (O; \Continue x \to (V ~ x))
-  % \\
-  % (\Template R[Q[x] ~ O]) ~ V
-  % &=
-  % (\Template R[Q[\_] ~ O\subst{x}{V}]) ~ V
-  % \\
-  % (\Template R[\Continue x \to M]) ~ V
-  % &=
-  % (\Template R[\Else \to M\subst{x}{V}]) ~ V
-  % \\
-  % (\Template B_{nr}) ~ V
-  % &=
-  % (\Template B_{nr}) ~ W
-  % \\
-  \lamstar (F; B)
-  &=
-  (\Template F; B) ~ (\lamstar (F; B))
-  % \\
-  % \lambda x. (\lamstar (F; B)) ~ x
-  % &=
-  % \lamstar (F; B)
-  \\
-  (\Template O; B) ~ V
-  &=
-  (\Extension O) ~ (\Template B) ~ V
-  \\
-  (\Template \varepsilon) ~ V
-  &=
-  \mathit{fail}~V
-  \\
-  (\Template \Continue x \to M) ~ V
-  &=
-  M\subst{x}{V}
-  \\
-  (\Extension \Try x \to B) ~ V
-  &=
-  \Template B\subst{x}{V}
-\end{align*}
+% Instantiating templates and recursive $\lamstar$:
+% \begin{align*}
+%   % (\Extension O) ~ V
+%   % &=
+%   % \Template{} (O; \Continue x \to (V ~ x))
+%   % \\
+%   % (\Template R[Q[x] ~ O]) ~ V
+%   % &=
+%   % (\Template R[Q[\_] ~ O\subst{x}{V}]) ~ V
+%   % \\
+%   % (\Template R[\Continue x \to M]) ~ V
+%   % &=
+%   % (\Template R[\Else \to M\subst{x}{V}]) ~ V
+%   % \\
+%   % (\Template B_{nr}) ~ V
+%   % &=
+%   % (\Template B_{nr}) ~ W
+%   % \\
+%   \lamstar (F; B)
+%   &=
+%   (\Template F; B) ~ (\lamstar (F; B))
+%   % \\
+%   % \lambda x. (\lamstar (F; B)) ~ x
+%   % &=
+%   % \lamstar (F; B)
+%   \\
+%   (\Template O; B) ~ V
+%   &=
+%   (\Extension O) ~ (\Template B) ~ V
+%   \\
+%   (\Template \varepsilon) ~ V
+%   &=
+%   \mathit{fail}~V
+%   \\
+%   (\Template \Continue x \to M) ~ V
+%   &=
+%   M\subst{x}{V}
+%   \\
+%   (\Extension \Try x \to B) ~ V
+%   &=
+%   \Template B\subst{x}{V}
+% \end{align*}
 
 Pattern and copattern matching:
 \begin{align*}

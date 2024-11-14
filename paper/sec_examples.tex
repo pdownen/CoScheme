@@ -31,14 +31,13 @@ This stream can be defined by copattern matching equations:
          [(((stutter n) 'tail) 'head) = n]
          [(((stutter n) 'tail) 'tail) = (stutter (+ n 1))])
 \end{minted}
-So that \scm|(takes (stutter 1) 10) = '(1 1 2 2 3 3 4 4 5 5)|,% 
-\footnote{
-  Try it!
-  The code provided in the supplemental materials implements \scm|define*| and related macros.
-  All examples shown here are executable Scheme and Racket code.
-}
-%
-because the first and second elements --- \scm|((stutter n) 'head)| and \scm|(((stutter n) 'tail) 'head)| respectively --- return the same \scm|n| before incrementing.
+% So that \scm|(takes (stutter 1) 10) = '(1 1 2 2 3 3 4 4 5 5)|,% 
+% \footnote{
+%   Try it!
+%   The code provided in the supplemental materials implements \scm|define*| and related macros.
+%   All examples shown here are executable Scheme and Racket code.
+% }
+% because the first and second elements --- \scm|((stutter n) 'head)| and \scm|(((stutter n) 'tail) 'head)| respectively --- return the same \scm|n| before incrementing.
 
 But why is \scm|stutter| well-defined, and how can we understand its meaning?
 As in many functional languages, the \scm|=| in code really implies equality between the two sides, and this equality still holds when we plug in real values for placeholder variables like \scm|n|.
@@ -52,10 +51,10 @@ Thus, we can apply a few steps of equational reasoning to derive the expected an
 %                                     = ((stutter 2) 'head)        ; +
 %                                     = 2                          ; line 1
 % \end{minted}
-\begin{minted}{scheme}
-   ((((stutter 1) 'tail) 'tail) 'head) = ((stutter (+ 1 1)) 'tail)
-  = ((stutter 2) 'head)                =  2                                      
-  \end{minted}
+% \begin{minted}{scheme}
+%    ((((stutter 1) 'tail) 'tail) 'head) = ((stutter (+ 1 1)) 'tail)
+%   = ((stutter 2) 'head)                =  2                                      
+%   \end{minted}
 So these three examples work, but is every case really covered?
 The \scm|Stream Nat| interface that \scm|stutter|'s output follows allows for any number of \scm|'tail| projections followed by a final application to \scm|'head| that returns a natural number.
 \scm|stutter| works its way through these projections in groups of two, eliminating a pair of \scm|'tail| projections at a time until it gets to the end case, which is either a \scm|'head| (if the total number of \scm|'tail|s is even) or a \scm|'tail| followed by \scm|'head| (if the total number of \scm|'tail|s is odd).
@@ -245,7 +244,7 @@ And running \scm|(constant-fold 'eval expr3)| on the expression
 \end{minted}
 simplifies it down to \scm|'(add (num 2) (mul (var x) (num 10)))|.
 To add other operations, like multiplication, we can easily define similar \scm|eval-mul-safe| and \scm|reform-multiplication|, and \scm|'compose| them with \scm|constant-fold| without having to rewrite any code.
-
+All examples shown here are in the supplemental materials.
 
 %%% Local Variables:
 %%% mode: LaTeX

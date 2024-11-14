@@ -1,4 +1,4 @@
-Since our implementation did not follow a monolithic macro approach, we can easily expand it.
+Since our implementation did not follow a monolithic macro approach --- instead favoring first-class values defined by small macros or ordinary procedures --- the programmer can easily expand copatterns with new features that combine seamlessly with the rest.
 To ilustrate, we can add new operations, such as:
 
 \subsection{Nest: Redefine yourself!}
@@ -38,3 +38,9 @@ Finally, the translation of the $\den{\Nest O}$ operation is defined by recursiv
   \lambda b. \lambda s. \Rec s' = E\den{O} ~ (\lambda \_. b ~ s) ~ (\lambda x. s' ~ x)
   \\
 \end{align*}
+
+
+%%% Local Variables:
+%%% mode: LaTeX
+%%% TeX-master: "coscheme"
+%%% End:

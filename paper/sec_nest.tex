@@ -1,0 +1,40 @@
+Since our implementation did not follow a monolithic macro approach, we can easily expand it.
+To ilustrate, we can add new operations, such as:
+
+\subsection{Nest: Redefine yourself!}
+One remark about the hidden \scm|self| parameter --- which is visible as the root of any copattern --- is \emph{always} the same view of the entire object.
+That means nesting multiple copatterns in sequence might not give the expected result because the \scm|self| parameter in the hole of every copattern context will be bound to the same value.
+Nevertheless, if we want the parameter in the hole of every copattern context to reflect the object at that point in time --- that is, be assigned the value given by the partial applications given by the preceding copatterns --- we can define a new operation, \scm|nest|.
+This can be useful because nesting copatterns in a sequence gives us a shorthand for the common functional idiom of a ``local'' loop that closes over some parameters that never change, such as this definition of mapping a function over a list:
+\begin{minted}{scheme}
+(define* [(map* f xs) = ((map* f) xs)]
+ [(map* f) (nest)
+ (extension
+ [(go null)        = null]
+ [(go (cons x xs)) = (cons (f x) (go xs))])])
+\end{minted}
+The \scm|map*| function supports both curried and uncurried applications, and they are defined to be equal.
+Its real code is given in the curried case, where the function parameter \scm|f| is bound first and never changes.
+Then, in a second step, we have the internal looping function \scm|go|, which matches over its list parameter and recurses with a new list.
+By using \scm|nest|, we have \scm|go = (map* f)|, so that \scm|f| is visible from the closure but does not need to be passed again at every step of the loop.
+
+On the implementation side, the \scm|nest| operation is a regular function from extensions to extensions.
+This operation updates an extension's current view of itself from \scm{here} --- the partial application of all the arguments seen so far --- for its remainder by providing a new recursive biding to \scm{here} and using it as the new self.
+\begin{minted}{scheme}
+(define (nest ext)
+  (try next there
+    (letrec ([here (apply-extension
+                    ext
+                    (non-rec (next there))
+                    (lambda args (apply here args)))])
+      here)))
+\end{minted}
+
+In the theory side, we can extend the extensions of our source language with one more form: $\Nest O$, which allows us to nest multiple copatterns with a partially applied self object. 
+Finally, the translation of the $\den{\Nest O}$ operation is defined by recursively creating a new value for the self parameter by recursively taking a new snapshot of how the object looks now after all the preceding applications and matchings have already occurred.
+\begin{align*}
+  E\den{\Nest O}
+  &=
+  \lambda b. \lambda s. \Rec s' = E\den{O} ~ (\lambda \_. b ~ s) ~ (\lambda x. s' ~ x)
+  \\
+\end{align*}

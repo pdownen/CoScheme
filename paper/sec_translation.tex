@@ -114,21 +114,21 @@ Thus, the internal extensible code \scm|eval-add-ext| \emph{also} takes this sec
                  [args                      ((next self) args)]))
 \end{minted}
 
-One final detail to note: unless otherwise stated, the \scm|self| parameter --- which is visible as the root of any copattern --- is \emph{always} the same view of the entire object.
-That means nesting multiple copatterns in sequence might not give the expected result because the \scm|self| parameter in the hole of every copattern context will be bound to the same value.
-If we instead want the parameter in the hole of every copattern context to reflect the object at that point in time --- that is, be assigned the value given by the partial applications given by the preceding copatterns --- we can use the \scm|nest| operation.
-For example, nesting copatterns in a sequence gives us a shorthand for the common functional idiom of a ``local'' loop that closes over some parameters that never change, such as this definition of mapping a function over a list:
-\begin{minted}{scheme}
-(define* [(map* f xs) = ((map* f) xs)]
-         [(map* f) (nest)
-           (extension
-            [(go null)        = null]
-            [(go (cons x xs)) = (cons (f x) (go xs))])])
-\end{minted}
-The \scm|map*| function supports both curried and uncurried applications, and they are defined to be equal.
-Its real code is given in the curried case, where the function parameter \scm|f| is bound first and never changes.
-Then, in a second step, we have the internal looping function \scm|go|, which matches over its list parameter and recurses with a new list.
-By using \scm|nest|, we have \scm|go = (map* f)|, so that \scm|f| is visible from the closure but does not need to be passed again at every step of the loop.
+% One final detail to note: unless otherwise stated, the \scm|self| parameter --- which is visible as the root of any copattern --- is \emph{always} the same view of the entire object.
+% That means nesting multiple copatterns in sequence might not give the expected result because the \scm|self| parameter in the hole of every copattern context will be bound to the same value.
+% If we instead want the parameter in the hole of every copattern context to reflect the object at that point in time --- that is, be assigned the value given by the partial applications given by the preceding copatterns --- we can use the \scm|nest| operation.
+% For example, nesting copatterns in a sequence gives us a shorthand for the common functional idiom of a ``local'' loop that closes over some parameters that never change, such as this definition of mapping a function over a list:
+% \begin{minted}{scheme}
+% (define* [(map* f xs) = ((map* f) xs)]
+%          [(map* f) (nest)
+%            (extension
+%             [(go null)        = null]
+%             [(go (cons x xs)) = (cons (f x) (go xs))])])
+% \end{minted}
+% The \scm|map*| function supports both curried and uncurried applications, and they are defined to be equal.
+% Its real code is given in the curried case, where the function parameter \scm|f| is bound first and never changes.
+% Then, in a second step, we have the internal looping function \scm|go|, which matches over its list parameter and recurses with a new list.
+% By using \scm|nest|, we have \scm|go = (map* f)|, so that \scm|f| is visible from the closure but does not need to be passed again at every step of the loop.
 
 \subsection{Double-barrel translation}
 
@@ -202,7 +202,7 @@ For simplicity, this translation begins from a small source language with copatt
   \mid \lambda P.~ O
   % \mid \If M ~ O
   \mid \Match P \gets M ~ O
-  \mid \Nest O
+  % \mid \Nest O
   \mid \Try x \to B
   \\
   \mathit{Copattern} &\ni{}& Q
@@ -246,7 +246,7 @@ Copatterns $Q[x]$ themselves are a subset of contexts, $Q$, which surround an ob
 Two lines separated by a semicolon ($O; O'$) is the syntax for vertical composition that tries either $O$ or $O'$, and prefixing with a copattern-matching expression ($Q[x] O$) is the syntax for horizontal composition that tries $Q[x]$ and then $O$.
 The $\varepsilon$ represents an empty extension with respect to vertical composition: it immediately refers to the next option.
 Smaller special cases of matching include pattern lambdas ($\lambda P. O$) that try to match a new argument against $P$, and pattern guards ($\Match P \gets M ~ O$) that try to match a given expression $M$ against $P$; both of which continue as $O$ if they succeed.
-$\Nest O$ allows for nesting multiple copatterns with a partially applied self object from this point.
+% $\Nest O$ allows for nesting multiple copatterns with a partially applied self object from this point.
 
 Finally, we have the terminators for ending a sequence of matching.
 A template can end in the empty $\varepsilon$ (which just fails, because there is no code to handle the case) or a $\Continue x \to M$ which serves as the default ``catch-all'' case.
@@ -373,10 +373,10 @@ Translating other extensions:
   %   \end{aligned}
   % \end{aligned}
   \\
-  E\den{\Nest O}
-  &=
-  \lambda b. \lambda s. \Rec s' = E\den{O} ~ (\lambda \_. b ~ s) ~ (\lambda x. s' ~ x)
-  \\
+  % E\den{\Nest O}
+  % &=
+  % \lambda b. \lambda s. \Rec s' = E\den{O} ~ (\lambda \_. b ~ s) ~ (\lambda x. s' ~ x)
+  % \\
   E\den{\Try x \to B}
   &=
   \lambda x. T\den{B}
@@ -402,7 +402,7 @@ A non-matching lambda $\den{\lambda x. O}$ always succeeds (for now), but note t
 Why?
 Because the lambda has already consumed the next argument from its context, it would be gone if, later on, the following operations fail and move on to the next option.
 So instead of invoking the given $b$ directly as $b~s'$ (for a potentially different future $s'$), they need to invoke $b$ applied to this argument $x$ as $b~s'~x$.
-Finally, the $\den{\Nest O}$ operation is defined by recursively creating a new value for the self parameter by recursively taking a new snapshot of how the object looks now after all the preceding applications and matchings have already occurred.
+% Finally, the $\den{\Nest O}$ operation is defined by recursively creating a new value for the self parameter by recursively taking a new snapshot of how the object looks now after all the preceding applications and matchings have already occurred.
 
 In this translation, we also give the $\eta$-reduced forms on the right-hand side when available.
 This makes it easier to see that the empty extension $\varepsilon$ is just the identity function (given the next thing $b$ to try, $\varepsilon$ does nothing and immediately moves on to $b$), and horizontal composition $O; O'$ is just ordinary function composition.

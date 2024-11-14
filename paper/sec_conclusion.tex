@@ -1,11 +1,11 @@
 We have shown here how to implement a more extensible, compositional version of copatterns as a macro in standard Scheme as well as Racket.
-Our major focus involves new ways to compose (co)pattern matching code in multiple directions --- vertically and horizontally --- which can be used to solve the expression problem can encode certain functional and object-oriented design patterns.
+Our major focus involves new ways to compose (co)pattern matching code in multiple directions --- vertically and horizontally --- which can be used to solve the expression problem since it can encode certain functional and object-oriented design patterns.
 Despite the more general forms of program composition, we still support straightforward equational reasoning to understand code behavior, even when that code is assembled from multiple parts of the program.
-This equational reasoning is formalized in terms of an extended $\lambda$-calculus which is soundly translated into a common core calculus familiar to functional programmers;
+This equational reasoning is formalized in terms of an extended $\lambda$-calculus, which is soundly translated into a common core calculus familiar to functional programmers;
 we leave the equation of a \emph{complete} and minimal equational theory for copatterns as future work.
 
 Our work here does not include static types, inherited from Scheme's nature as a dynamically typed language.
-As future work, we intend to develop a type system for the copattern language described here; specific challenges include correctly specifying type types of (de)composed code as well as coverage analysis that ensures every case is handled after composition is finished.
+As future work, we intend to develop a type system for the copattern language described here; specific challenges include correctly specifying type types of (de)composed code as well as coverage analysis that ensures every case is handled after the composition is finished.
 The second direction of future work is to incorporate effects into copattern definitions and their equational reasoning, for example, subsuming (delimited) control operators into the copattern language as a way of expressing compositional effect handlers.
 
 

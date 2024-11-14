@@ -41,7 +41,7 @@ Our primary contributions are organized as follows:
 \item \Cref{sec-translation} presents a theory for how to translate copatterns into a small core target language --- untyped $\lambda$-calculus with recursion and patterns --- with a local double-barrel transformation reminiscent of selective continuation-passing style transformation.
   Importantly, only the new language constructs are transformed, while existing ones in the target language are unchanged.
 \item \Cref{sec-macro} explains how to implement the high-level translation above in real code, and specifically how the implementation differs between Racket and a standard R${}^6$RS-compliant Scheme.
-\item \Cref{sec-correctness} demonstrates correctness in terms of an equational theory for reasoning about copattern matching code in the source language, which is a conservative extension of the target language, and we prove that it is sound with respect to translation.
+\item \Cref{sec-correctness} demonstrates correctness in terms of an equational theory for reasoning about copattern-matching code in the source language, which is a conservative extension of the target language, and we prove that it is sound with respect to translation.
 \end{itemize} 
 % The remainder of the article has the following structure: First, we introduce our implementation by explaining meaningful examples (Section \ref{sec-examples}).
 % Second, we specify a core language with high-level features representing our implementation. Then we describe a translation into a target $\lambda$-calculus (Section \ref{sec-translation}).

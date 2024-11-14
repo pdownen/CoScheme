@@ -1,11 +1,11 @@
-The real implementation of copattern-matching in the Scheme macro system is quite similar to the high-level translation given in \cref{fig:translation}
+The real implementation of copattern matching in the Scheme macro system is quite similar to the high-level translation given in \cref{fig:translation}
 However, there are some important differences which have to do with integrating the new feature with the rest of the language, as well as practical implementation details.
 For example, note the definition of $\den{\lamstar B}$ in particular.
 While the $\eta$-equality simplifying $\lambda x. \mathit{self} ~ x$ to just $\mathit{self}$ is theoretically sound, it does not work in practice:
 when a Scheme interpreter tries to evaluate the right-hand side ($T\den{B}~\mathit{self}$) of the recursive binding, it first tries to lookup the value bound to $\mathit{self}$ which has not been defined yet, leading to an error.
 This one level of $\eta$-expansion delays the evaluation step so that $\lambda x. \mathit{self} ~ x$ returns a closure around the location where $\mathit{self}$ will be placed, which is passed to $T\den{B}$ whose result is bound to $\mathit{self}$.
 
-Happily, instead of a single big recursive macro, the first-class nature of templates and extensions makes it possible to implement the various parts of copattern-matching as many independent macros that can be used separately and composed by the programmer. 
+Happily, instead of a single big recursive macro, the first-class nature of templates and extensions makes it possible to implement the various parts of copattern matching as many independent macros that can be used separately and composed by the programmer. 
 For example, $\lambda P. O$, $\If M ~ O$, $\Match P \gets M ~ O$, \etc are all implemented as self-contained macros that create new extension values around other extensions.
 These forms need to be macros because they either bind variables around an expression (like $\lambda P$ or $\Match$) or do not evaluate a sub-expression in some cases (like $\If$).
 Other simpler forms, like the empty object, or even $\Nest$ or the composition $O; O'$, are just ordinary procedural values and not defined as macros.
@@ -21,7 +21,7 @@ For example, the \scm|extension| macro definition is:
   (extension [copat step ...] ...)
   (merge [chain (comatch copat) step ...] ...))
 \end{minted}
-where \scm|merge| is the regular definition of first-class function composition, \scm|comatch| is the macro for the copattern-matching form $Q[self] ~ O$, and \scm|chain| is a macro for right-associating any chain of operations to avoid overly-nested parentheses, with special support for unparenthesized terminators:
+where \scm|merge| is the regular definition of first-class function composition, \scm|comatch| is the macro for the copattern matching form $Q[self] ~ O$, and \scm|chain| is a macro for right-associating any chain of operations to avoid overly-nested parentheses, with special support for unparenthesized terminators:
 \begin{minted}{scheme}
 (define-syntax chain
   (syntax-rules (= try)

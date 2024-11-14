@@ -2,7 +2,7 @@
 
 Even though the behavior of small examples may be straightforward to understand, there are several challenges to correctly implementing copatterns in the general case.
 Some of these challenges are specific to Scheme --- a dynamically-typed, call-by-value language --- which forces us to carefully resolve the timing of when and which copatterns are matched.
-Other challenges are specific to our extensions to copatterns --- the ability to compose copattern-matching in two different directions --- which also brings in the notion of the recursive ``self.''
+Other challenges are specific to our extensions to copatterns --- the ability to compose copattern matching in two different directions --- which also brings in the notion of the recursive ``self.''
 
 \subsubsection{Timing and the order of copattern matching}
 \label{sec:timing-challenges}
@@ -132,7 +132,7 @@ By using \scm|nest|, we have \scm|go = (map* f)|, so that \scm|f| is visible fro
 
 \subsection{Double-barrel translation}
 
-To explain the correctness and behavior of composable copattern-matching, we give a high-level translation into a conventional $\lambda$-calculus with recursion and pattern matching (given in \cref{fig:target-syntax}).
+To explain the correctness and behavior of composable copattern matching, we give a high-level translation into a conventional $\lambda$-calculus with recursion and pattern matching (given in \cref{fig:target-syntax}).
 Our pattern language is modeled after a small common core found among various implementations of Scheme, which includes normal variable wildcards $x$ that can match anything, quoted symbols $\q{x}$, and lists of the form $\Null$ or $(\Cons P \, P')$.
 Note that we assume all bound variables $x$ in a pattern are distinct.
 % TODO: Deletion Candidate

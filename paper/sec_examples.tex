@@ -3,7 +3,7 @@ Let us consider some examples of programming by equational reasoning to get fami
 % In these examples, it can help to think about types informally to keep ourselves oriented.
 For example, even in a dynamically-typed language like Scheme, linked lists can be thought of as an inductively-defined type combining two constructed forms: \scm#List a = null | (cons a (List a))#.
 Similarly, infinite streams can be understood as a procedure that exhibits two different behaviors at the same time: \scm#Stream a = 'head -> a & 'tail -> Stream a#.
-In other words, any \scm|Stream a| is a procedure that takes one symbolic argument, and its response depends on the exact value: given \scm|'head| an \scm|a| is returned, and given \scm|'tail| another \scm|Stream a| is returned.
+In other words, any \scm|Stream a| is a procedure that takes one argument, and its response depends on the exact value: given \scm|'head| an \scm|a| is returned, and given \scm|'tail| another \scm|Stream a| is returned.
 
 In order to define new coinductive processes, one of the main entry points is the top-level, multi-line \scm{define*} macro.
 This macro enables us to declare codata objects through a list of equations between a copattern on the left-hand side and an expression on the right-hand side.
@@ -108,7 +108,7 @@ We can then use the facilities of \scm|define*| to write almost identical code i
 Fantastic, it works!
 Both the Scheme and Haskell code have the same structure.
 And on the surface, they both share the same strengths and weaknesses.
-From the lens of the \emph{expression problem}~\cite{ExpressionProblem}, it is easy to add new operations to the existing expression language --- such as listing the numeric literals in an expression
+From the lens of the \emph{expression problem}~\cite{ExpressionProblem}, it is easy to add new operations to existing expressions --- such as listing the numeric literals in an expression
 \begin{minted}{scheme}
 (define* [(list-nums `(num ,n))    = (list n)]
          [(list-nums `(add ,l ,r)) = (append (list-nums l) (list-nums r))])

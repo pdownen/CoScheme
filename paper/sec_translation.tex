@@ -167,12 +167,12 @@ The patterns' specifics are surprisingly not essential to the main copattern tra
 
 For simplicity, this translation begins from a small source language with copatterns (given in \cref{fig:source-syntax}) separated into three main syntactic categories:
 \begin{itemize}
-\item[($M, N$)] \emph{Terms} are the usual terms source language and represent ordinary first-class values as well as applications.
+\item[($M, N$)] \emph{Terms} represent ordinary first-class values as well as applications.
   The new forms of terms are $\lamstar B$, which gives a self-referential copattern-matching object, along with $\Template B$ and $\Extension O$ which include the other two syntactic categories as first-class values.
 \item[($B$)] \emph{Templates} represent self-referential code without a fixed self.
   Instead, the ``self'' placeholder remains unbound for now, and it can be instantiated later as $\Template B ~ V$ (where the ``self'' of the template is bound to $V$) or $\lamstar B$ (where the ``self'' of the template is recursively bound to $\lamstar B$).
 \item[($O$)] \emph{Extensions} represent extensible code that can be composed together both vertically and horizontally.
-  Instead of failing on an unsuccessful match, extensions will continue on to an as-of-yet unspecified ``next'' option.
+  Instead of failing on an unsuccessful match, will try an as-of-yet unspecified ``next'' option.
   To support recursion, the ``self'' placeholder is also unbound for now --- just like with templates --- and can be bound later when the whole object is finished being composed.
   The ``next'' thing to try can be given by the vertical composition with another extension $O; O'$ or a base-case template $O; B$.
   Arbitrary first-class values can passed in as the next option ($V$) and the self object ($W$) as $\Extension O ~ V ~ W$.
@@ -241,9 +241,9 @@ Syntactic sugar:
 \label{fig:source-syntax}
 \end{figure}
 
-The remaining new syntax defines how to specify and combine copattern-matching expressions.
-Copatterns $Q[x]$ themselves are a subset of contexts, $Q$, which surround an object internally named $x$.
-Two lines separated by a semicolon ($O; O'$) is the syntax for vertical composition that tries either $O$ or $O'$, and prefixing with a copattern-matching expression ($Q[x] O$) is the syntax for horizontal composition that tries $Q[x]$ and then $O$.
+The remaining new syntax gives ways to define and combine copattern-matching expressions.
+Copatterns $Q[x]$ themselves are a subset of contexts, $Q$, surrounding an object internally named $x$.
+Two lines separated by a semicolon ($O; O'$) is vertical composition that tries either $O$ or $O'$, and prefixing with a copattern-matching expression ($Q[x] O$) is horizontal composition that tries $Q[x]$ and then $O$.
 The $\varepsilon$ represents an empty extension with respect to vertical composition: it immediately refers to the next option.
 Smaller special cases of matching include pattern lambdas ($\lambda P. O$) that try to match a new argument against $P$, and pattern guards ($\Match P \gets M ~ O$) that try to match a given expression $M$ against $P$; both of which continue as $O$ if they succeed.
 % $\Nest O$ allows for nesting multiple copatterns with a partially applied self object from this point.
@@ -392,11 +392,11 @@ Note the one detail that the recursive $\mathit{self}$ is $\eta$-expanded to in 
 This ensures that $\lambda x. \mathit{self} ~ x$ is treated as a value in a real implementation, and is always safe assuming that $B$ describes a function (non-functional cases of $\lamstar B$ are undefined user error).
 
 For templates and extensions, the terminators $\Continue$ and $\Try$ are translated to plain $\lambda$-abstractions that allow the programmer direct access to their implicit parameters.
-Other cases are specific to each form.
+% Other cases are specific to each form.
 Complex copatterns ($x ~ \many{P_1} P_n ~ O$) are reduced down to a simpler sequence of pattern lambdas ($x ~ \lambda P_1. \dots \lambda P_n. ~ O$), and pattern lambdas ($\lambda P. O$) are reduced down to a simpler non-matching lambda followed by an explicit match guard ($\lambda x. \Match P \gets x ~ O$).
 
 This leaves just the base cases of simple extension forms.
-Each time an extension (of form $\lambda b. \lambda s. \dots$) ``fails'', it calls the given next template with the given self object ($b~s$).
+Each time an extension (of form $\lambda b. \lambda s. \dots$) ``fails,'' it calls the given next template with the given self object ($b~s$).
 A match guard $\den{\Match P \gets M ~ O}$ will try to match the translation of $M$ against the pattern $P$; the success case continues as $E\den{O}$ with the same next template and self.
 A non-matching lambda $\den{\lambda x. O}$ always succeeds (for now), but note that the next template to try on failure has to be changed to include the given argument.
 Why?
@@ -405,7 +405,7 @@ So instead of invoking the given $b$ directly as $b~s'$ (for a potentially diffe
 % Finally, the $\den{\Nest O}$ operation is defined by recursively creating a new value for the self parameter by recursively taking a new snapshot of how the object looks now after all the preceding applications and matchings have already occurred.
 
 In this translation, we also give the $\eta$-reduced forms on the right-hand side when available.
-This makes it easier to see that the empty extension $\varepsilon$ is just the identity function (given the next thing $b$ to try, $\varepsilon$ does nothing and immediately moves on to $b$), and horizontal composition $O; O'$ is just ordinary function composition.
+This shows that the empty extension $\varepsilon$ is just the identity function (given the next thing $b$ to try, $\varepsilon$ does nothing and immediately moves on to $b$), and horizontal composition $O; O'$ is just ordinary function composition.
 
 
 %%% Local Variables:

@@ -5,7 +5,7 @@ Here, we show how to implement copatterns with no typing information and focus i
 
 The translation in \cref{fig:translation} is reminiscent of ``double-barrelled CPS'' \cite{DoubleBarrelCPS} used to define control effects like delimited control \cite{AbstractingControl} and exceptions \cite{KimYiDanvy98}.
 In our case, rather than a ``successful return path'' continuation, there is a ``resume recursion'' continuation.
-Expressions that return successfully just return as normal, similar to a selective CPS \cite{SelectiveCPS}, which makes the it possible to implement as a macro expansion.
+Expressions that return successfully just return as normal, similar to a selective CPS \cite{SelectiveCPS}, which makes it possible to implement as a macro expansion.
 % In this sense, copatterns preserve the expressive power of the language \cite{ExpressivePower}.
 A ``next case'' continuation --- to handle copattern-matching failure --- is introduced to make each line of a copattern-based definition a separate first-class value.
 From that point, the ``recursive self'' must be a parameter because no one sliver of a definition suffices to describe the whole.
@@ -13,7 +13,7 @@ From that point, the ``recursive self'' must be a parameter because no one slive
 Theories of object-oriented languages \cite{abadi96,CookP94} also model the ``self'' keyword as a parameter later instantiated by recursion; either as an explicit recursive binding, or encoded as self-application.
 This is done to handle the implicit composition of code from inheritance, whereas here, we need to handle explicit composition of first-class extensible objects.
 The full connection between copatterns --- as we describe here --- and object-oriented languages remains to be seen.
-In terms of the lisp family of languages, the approach here seems closest to a first-class generalization of \emph{mixins} \cite{BrachaC90Mixins,flatt1998mixin} with a simple dispatch mechanism (matching), in contrast to class-based frameworks focused on complex dispatch \cite{CLOS,Ingalls86,chambers1992}.
+In terms of the Lisp family of languages, the approach here seems closest to a first-class generalization of \emph{mixins} \cite{BrachaC90Mixins,flatt1998mixin} with a simple dispatch mechanism (matching), in contrast to class-based frameworks focused on complex dispatch \cite{CLOS,Ingalls86,chambers1992}.
 
 
 %%% Local Variables:

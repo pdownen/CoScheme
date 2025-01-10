@@ -2,7 +2,7 @@ Let us consider some examples of programming by equational reasoning to get fami
 % Deletion candidate
 % In these examples, it can help to think about types informally to keep ourselves oriented.
 For example, even in a dynamically-typed language like Scheme, linked lists can be thought of as an inductively-defined type combining two constructed forms: \scm#List a = null | (cons a (List a))#.
-Similarly, infinite streams can be understood as a procedure that exhibits two different behaviors at the same time: \scm#Stream a = 'head -> a & 'tail -> Stream a#.
+Likewise, infinite streams can be understood as the type of a procedure that exhibits two different behaviors at the same time: \scm#Stream a = 'head -> a & 'tail -> Stream a#.
 In other words, any \scm|Stream a| is a procedure that takes one argument, and its response depends on the exact value: given \scm|'head| an \scm|a| is returned, and given \scm|'tail| another \scm|Stream a| is returned.
 
 In order to define new coinductive processes, one of the main entry points is the top-level, multi-line \scm{define*} macro.
@@ -11,7 +11,7 @@ At the root of every copattern is a name for the object \emph{itself}, which can
 % The fact that we can create \emph{nested} copatterns allows us to perform equational reasoning.
 % This happens because we can always add one more pattern to the copattern, thus dictating a more specific evaluation context to be matched.
 % The key idea behind observations is that if we find an evaluation context that satisfies our copattern, we can substitute the context with the outcome of the respective observation.
-The simplest of a stream is all \scm|zeroes| --- whose \scm|'head| is \scm|0| and whose \scm|'tail| is more \scm|zeroes| --- which can be defined as:
+Using \scm{define*}, we can define the trivial \scm|zeroes| stream  --- whose \scm|'head| is \scm|0| and whose \scm|'tail| is more \scm|zeroes| --- as:
 \begin{minted}{scheme}
 (define* [(zeroes 'head) = 0]
          [(zeroes 'tail) = zeroes])
@@ -185,19 +185,19 @@ This lets us patch our existing arithmetic evaluator with an environment and the
 The \scm|with-environment| function is the most complex code we have seen so far, but it just spells out the usual steps a functional programmer uses to modify existing code with an environment.
 \begin{itemize}
 \item Given the evaluator \scm|eval-ext|, it returns a new first-class \scm|object| (which is the same as \scm|define-object| without assigning a name) that expects both an environment and expression to process.
-\item This new object then invokes \scm|eval-ext| by passing just the expression, except that if \scm|eval-ext| ever tries to recurse on itself with a sub-expression, the calls \scm|(self sub-expr)| gets replaced with \scm|(self env sub-expr)| just like the template transformation.
+\item This new object then invokes \scm|eval-ext| by passing just the expression, except that if \scm|eval-ext| ever tries to recur with a sub-expression, the calls \scm|(self sub-expr)| gets replaced with \scm|(self env sub-expr)| just like the template transformation.
 \item This transformation of the evaluator's notion of self is done by the \scm|with-self| operation, which can override the original recursive \scm|self|.
 \item Finally, if none of the clauses of \scm|eval-ext| succeed, then this updated evaluator also falls through as before, forgetting the application had ever happened via \scm|try-apply-forget|.
 \end{itemize}
 The complete algebraic evaluator can then be made from an open-ended, extensible version of the arithmetic evaluator --- retrieved from \scm|(eval-arith 'unplug)| --- horizontally composed to take an environment and vertically composed with the single-line \scm|eval-var|.
-It can now successfully evaluate algebraic expressions, such as \scm|(define expr2 '(add (var x) (mul (num 3) (var y))))|, so that running \scm|(eval-arith '((x . 10) (y . 20)) expr)| returns \scm|70| because the environment maps \scm|x| to \scm|10| and \scm|y| to \scm|20|.
+It can now successfully evaluate algebraic expressions, such as \scm|(define expr2 '(add (var x) (mul (num 3) (var y))))|, so that running \scm|(eval-arith '((x . 10) (y . 20)) expr2)| returns \scm|70| because the environment maps \scm|x| to \scm|10| and \scm|y| to \scm|20|.
 
 Another possible way to evaluate expressions with variables is \emph{constant folding}, a common optimization where operations are simplified unless they are blocked by variables whose values are unknown.
 In other words, the evaluator might return a blocked expression if it cannot fully calculate the final number.
 Ideally, we would like to extend our existing evaluator as-is, with the additional cases when blocked expressions are encountered.  
 However, as written, the equation handling \scm|(eval `(add ,l ,r))| already commits to a real numeric addition, even if evaluating \scm|l| or \scm|r| does not give a numeric result.
 
-To avoid over-committing before we know whether evaluation will successfully calculate a final number or not, we can --- for the first time --- rewrite the basic clauses of evaluation in a more defensive style.
+To avoid over-committing before we know whether evaluation will successfully calculate a final number or not, we can --- at the first glance --- rewrite the basic clauses of evaluation in a more defensive style.
 Essentially, this splits evaluation into two separate steps:
 \begin{enumerate*}[(1)]
 \item check which operation we are supposed to do and evaluate the two sub-expressions,
@@ -212,7 +212,8 @@ For example, the two steps for addition look like:
   = (+ x y)])
 \end{minted}
 Here, the evaluation step is explicated by a \scm|'eval| tag, to help distinguish from the other operation \scm|'add| for adding the left and right results.
-Note that in this code, the \scm|'add| clause only performs a numeric addition \scm|+| if it knows for sure that \emph{both} of the arguments are actually numbers, check by the \scm|try-if| guards.
+Note that in this code, the \scm|'add| clause only performs a numeric addition \scm|+| if it knows for sure that \emph{both} of the arguments are actually numbers.
+This is checked by the \scm|try-if| guards.
 We can now compose the original base-case for evaluating numbers with this ``safer'' version of addition that fails to match cases where sub-expressions don't evaluate to numbers (multiplication could be added as well in a similar style):
 \begin{minted}{scheme}
 (define eval-arith-safe (eval-num 'compose eval-add-safe))
@@ -230,10 +231,10 @@ In each of those cases, we must reform the addition expression out of what we fi
   [(reform 'add l r) (try-if (number? r)) = (reform 'add l `(num ,r))]
   [(reform 'add l r)                      = (list 'add l r)])
 \end{minted}
-The final constant-folding algorithm can be composed from this ``safe'' version of evaluation, along with the cases for leaving variables alone and reforming partially-evaluated additions:
+The final constant-folding algorithm can be composed from this ``safe'' version of evaluation, along with the cases for leaving variables alone and reforming partially-evaluated additions and multiplications, which can be defined using the same approach employed in \scm|reform-addition|.
 \begin{minted}{scheme}
 (define constant-fold
-  (eval-arith-safe 'compose leave-variables reform-addition))
+  (eval-arith-safe 'compose leave-variables reform-addition reform-mult))
 \end{minted}
 So now \scm|(constant-fold 'eval expr2)| successfully returns \scm|expr2| itself (because there are no operations to perform without knowing the values of variables \scm|x| and \scm|y|).
 And running \scm|(constant-fold 'eval expr3)| on the expression

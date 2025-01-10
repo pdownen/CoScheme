@@ -27,10 +27,10 @@ In particular, Agda currently does not understand if \agda|fibs| is well-founded
 There is also some support for copatterns in OCaml~\cite{LaforgueR17}, but as an unofficial extension that has not been merged into the main compiler.
 
 We want to be able to write this kind of copattern-based code and have it fully integrated into a real, general-purpose programming language.
-The easiest way to do so is to start with a programmable programming language~\cite{ProgrammablePL} --- we focus in particular on Scheme and Racket --- which offers a robust macro system for seamlessly implementing new language features.
-We show a new method for implementing copatterns as a collection of macros in order to program with copatterns in Scheme-like languages.
+The easiest way to do so is to start with a programmable programming language~\cite{ProgrammablePL} and provide a new language extension as a library~\cite{LanguageLibrary}. We focus, in particular, on Scheme and Racket, which offers a robust macro system for seamlessly implementing new language features.
 
-Rather than just recapping the previous macro-definition of copatterns~\cite{LaforgueR17}, we focus on providing new methods of extensibility not available before.
+We show a new method for implementing copatterns in Scheme-like languages.
+Rather than just recapping the previous macro-based definition of copatterns~\cite{LaforgueR17}, we also use macros, but we focus on providing new methods of extensibility not available before.
 In particular, code defined by our copattern macros can be composed in a variety of ways,
 offering a new solution to the expression problem~\cite{ExpressionProblem}.
 Not only do copatterns allow us to easily define code using equational reasoning in Scheme, but these new dimensions of composition also allow us to capture some ``design patterns'' used by functional programmers as first-class abstractions.

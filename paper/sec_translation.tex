@@ -7,14 +7,14 @@ Other challenges are specific to our extensions to copatterns --- the ability to
 \subsubsection{Timing and the order of copattern matching}
 \label{sec:timing-challenges}
 
-Because we cannot gain any information from a static type system, we must interpret the programmer's code as it is written.
-This means we have to deal with copatterns that may have ambiguous cases where two different overlapping copattern equations match the same application.
-For example, this function moves a number by \scm|1| away from \scm|0| --- positives are incremented and negatives are decremented:
+Copatterns may have ambiguous cases where two different overlapping copattern equations match the same application.
+For example, this following function moves a number by \scm|1| away from \scm|0| --- positives are incremented and negatives are decremented:
 \begin{minted}{scheme}
 (define* [(away-from0 x) (try-if (>= x 0)) = (+ x 1)]
-         [(away-from0 x) (try-if (<= x 0)) = (- x 1)])
+ [(away-from0 x) (try-if (<= x 0)) = (- x 1)])
 \end{minted}
-The two different equations overlap for \scm|0| itself: either one matches the call \scm|(away-from0 0)|.
+Consequently, we must interpret the programmer's code as it is written since we cannot gain any information from a static type system.
+In the previous example, the two different equations overlap for \scm|0| itself: either one matches the call \scm|(away-from0 0)|.
 To disambiguate overlapping copatterns, the listed equations are always tried top-down, and the first full match ``wins,'' as is typical in functional languages.
 In this case, the first line wins, so \scm|(away-from0 0)| is \scm|1|.
 Furthermore, guards like \scm|try-if| and \scm|try-match| are run left-to-right with shortcircuiting --- the moment a copattern or a guard fails, everything to the right is skipped.
@@ -97,7 +97,7 @@ f next x1    x2    ... = next x1 x2 ...
 \end{minted}
 
 For example, consider the single-line \scm|eval-add| evaluator object from \cref{sec-examples}.
-In order to compose \scm|eval-add| with another evaluator handling a different case, like \scm|eval-add|, its internal extensible code takes an extra hidden argument saying what to try \scm|next| if its line does not match, analogous to:
+In order to compose \scm|eval-add| with another evaluator handling a different case, like \scm|eval-mul|, its internal extensible code takes an extra hidden argument saying what to try \scm|next| if its line does not match, analogous to:
 \begin{minted}{scheme}
 (define (eval-add-ext1 next)
   (lambda* [(self 'eval `(add ,l ,r)) = (+ (self 'eval l) (self 'eval r))]
@@ -107,7 +107,7 @@ Note that, unlike the Haskell code above, the hidden \scm|next| parameter also t
 Why?
 Because if the \scm|next| set of equations needs to recurse, it cannot actually jump to itself directly --- that would skip the \scm|eval-add| code entirely --- but needs to jump back to the very first equation to try.
 This \scm|self| parameter holds the value of the \emph{whole} object after all compositions have been done, as it appeared in the original call site.
-Thus, the internal extensible code \scm|eval-add-ext| \emph{also} takes this second \scm|self| parameter for the same reason: it may be the second component of a composition, and can be further expanded into built-in Racket primitives like so:
+Thus, the internal extensible code \scm|eval-add-ext| \emph{also} takes this second \scm|self| parameter for the same reason: it may be the second component of a composition, and it is similar to the following Racket definition:
 \begin{minted}{scheme}
 (define ((eval-add-ext2 next) self)
   (match-lambda* [(list 'eval `(add ,l ,r)) (+ (self 'eval l) (self 'eval r))]
@@ -251,7 +251,7 @@ Smaller special cases of matching include pattern lambdas ($\lambda P. O$) that 
 Finally, we have the terminators for ending a sequence of matching.
 A template can end in the empty $\varepsilon$ (which just fails, because there is no code to handle the case) or a $\Continue x \to M$ which serves as the default ``catch-all'' case.
 The parameter $x$ bound by $\Continue x \to M$ is another way to introduce a name for the recursive reference to the object itself at the end of a template  and allows for $M$ to restart from the top and continue the computation.
-The familiar syntactic sugar $\Else M$ covers the common case where $M$ give an answer without recursively continuing.
+The syntactic sugar $\Else M$ covers the common case where $M$ give an answer without recursively continuing.
 Similarly, an extension can end with $\Try x \to B$. This gives a ``catch-all'' case that runs some other (non-extensible) template $B$.
 The parameter $x$ bound by $\Try x \to B$ gives a name to the next option that would have been tried after this one and allows $B$ to explicitly move on to the next option if it needs to.
 The syntactic sugar $\Do M$ covers the most common case of $\Try$ which definitively commits to a particular term $M$ to return as the result without trying any further options.
@@ -281,9 +281,9 @@ Translating new terms:
 \begin{align*}
   \den{\lamstar B}
   &=
-  (\Rec \mathit{self} = T\den{B} ~ (\lambda x. \mathit{self} ~ x))
-  &=_\eta
   (\Rec \mathit{self} = T\den{B} ~ \mathit{self})
+  &=_\eta
+  (\Rec \mathit{self} = T\den{B} ~ (\lambda x. \mathit{self} ~ x))
   \\
   \den{\Template B}
   &=
@@ -302,17 +302,17 @@ Translating templates:
 \begin{align*}
   T\den{\varepsilon}
   &=
-  \lambda s. \mathit{fail}~s
+  \mathit{fail}
   &
   &=_\eta
-  \mathit{fail}
+  \lambda s. \mathit{fail}~s
   \\
   T\den{O; B}
   &=
-  \lambda s. E\den{O} ~ T\den{B} ~ s
+  E\den{O} ~ T\den{B}
   &
   &=_\eta
-  E\den{O} ~ T\den{B}
+  \lambda s. E\den{O} ~ T\den{B} ~ s
   \\
   T\den{\Continue x \to M}
   &=
@@ -339,17 +339,17 @@ Translating other extensions:
 \begin{align*}
   E\den{\varepsilon}
   &=
-  \lambda b. \lambda s. b ~ s
+  \lambda b. b
   &
   &=_\eta
-  \lambda b. b
+  \lambda b. \lambda s. b ~ s
   \\
   E\den{O; O'}
   &=
-  \lambda b. \lambda s. E\den{O} ~ (E\den{O'}~b) ~ s
+  E\den{O} \comp E\den{O'}
   &
   &=_\eta
-  E\den{O} \comp E\den{O'}
+  \lambda b. \lambda s. E\den{O} ~ (E\den{O'}~b) ~ s
   \\
   E\den{\lambda x. O}
   &=

@@ -143,7 +143,7 @@ Values ($V, W$) include the usual ones for call-by-value $\lambda$-calculus ($x$
 Matching a value $V$ against a pattern $P$ will succeed if the variables ($\many{x}$) in the pattern can be replaced by other values ($\many{W}$) to generate exactly that $V$: $P\subst{\many{x}}{\many{W}} = V$.
 In contrast, matching fails if the two are known to be \emph{apart}, written $P \apart V$ and defined in \cref{fig:target-equality}, which implies that all possible substitutions of $P$ will \emph{never} generate $V$.
 Note that while matching and apartness are mutually exclusive, there are some values that are neither matching nor apart from some patterns.
-For example, compare the value $x$ against the pattern $\Null$; $x$ may indeed stand for $\Null$ or another value like $\lambda y. M$.
+For example, compare the variable $x$ against the pattern $\Null$; $x$ may indeed stand for $\Null$ or another value like $\lambda y. M$.
 
 The first usual property is that the translation specified in \cref{fig:translation} is a \emph{conservative extension}: any two terms that are equal by the target equational theory are still equal after translation.
 Because the translation is hygienic and compositional by definition,  we can follow the proof strategy in \cite{DownenAriola2014CSCC}.

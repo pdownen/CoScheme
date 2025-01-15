@@ -1,0 +1,664 @@
+% \documentclass[aspectratio=169]{beamer}
+\documentclass{beamer}
+
+\usepackage{stmaryrd}
+\usepackage{cmll}
+\usepackage{braket}
+\usepackage{tikz}
+\usepackage{tikz-cd}
+\usepackage{listings}
+\usepackage{minted}
+
+\usepackage{preamble}
+\usepackage{slides-preamble}
+
+\DeclareUnicodeCharacter{3BB}{$\lambda$}
+
+\setlength{\jot}{0pt}
+
+\setminted{fontsize=\footnotesize}
+
+\setbeamercolor{alerted text}{fg=orange}
+\colorlet{whisper}{gray}
+\colorlet{good}{green}
+\colorlet{bad}{red}
+
+\newcommand{\whisper}[1]{{\color{whisper}{#1}}}
+
+\title{CoScheme}
+\subtitle{Compositional Copatterns in Scheme}
+\author{
+  {\large\bf \emph{Paul Downen} and Adriano Corbelino II}
+  \\
+  University of Massachusetts Lowell
+}
+\date{TFP --- Thursday, January 16, 2025}
+
+\begin{document}
+\maketitle
+
+% 25 minute time limit (~20 minute talk, ~5 minute Q&A)
+
+\begin{frame}
+  \frametitle{Why Copatterns in Scheme?}
+  \framesubtitle{Composition, Composition, Composition!}
+
+  \begin{pointed}
+  \item Programs defined by equational reasoning on their context (\ala ML, Haskell)
+  \item Composition of extensible fragments at run-time
+    \begin{pointed}
+    \item \alert{Vertical} --- \textit{either or} --- compose alternative
+      options, handling failure
+    \item \alert{Horizontal} --- \textit{and then} --- compose sequence of
+      steps, parameters, matching, guards
+    \item \alert{Circular} --- \textit{self} --- recursion back on the entire
+      composition itself
+    \end{pointed}
+  \item Library of composable macros
+  \item Side benefit: supports infinite objects, some OO-style designs
+  \end{pointed}
+\end{frame}
+
+\section{Copatterns in Scheme}
+
+\begin{frame}[fragile]
+\frametitle{Encoding Functional Equations}
+\framesubtitle{Procedural style via manual operations}
+
+\begin{haskell}
+zip (x:xs) (y:ys) = (x, y) : zip xs ys
+zip xs     ys     = []
+\end{haskell}
+
+\vspace{2.75em}
+\pause
+
+\begin{scheme}
+(define (zip xs ys)
+  (cond
+    [(and (pair? xs) (pair? ys))
+     (cons (cons (car xs) (car ys))
+           (zip (cdr xs) (cdr ys)))]
+    [else '()]))
+\end{scheme}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Encoding Functional Equations}
+\framesubtitle{Hybrid style via pattern matching}
+
+\begin{haskell}
+zip (x:xs) (y:ys) = (x, y) : zip xs ys
+zip xs     ys     = []
+\end{haskell}
+
+\vspace{0.5em}
+
+\begin{scheme}
+(define (zip xs ys)
+  (match xs
+    [`(,x . ,xs-rest)
+     (match ys
+       [`(,y . ,ys-rest)
+        `((,x . ,y) . ,(zip xs-rest ys-rest))]
+       [_ '()])]
+    [_ '()]))
+\end{scheme}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Encoding Functional Equations}
+\framesubtitle{Equational style via copattern matching}
+
+\begin{haskell}
+zip (x:xs) (y:ys) = (x, y) : zip xs ys
+zip xs     ys     = []
+\end{haskell}
+
+\vspace{5.25em}
+
+\begin{scheme}
+(define*
+  [(zip `(,x . ,xs) `(,y . ,ys))
+  = `((,x . ,y) . ,(zip xs ys))]
+  [(zip xs ys) = `()])
+\end{scheme}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Encoding Infinite Objects}
+\framesubtitle{Streams observed through head and tail projecections}
+
+Stuttering stream from 0:
+\begin{alignat*}{5}
+  &stutter~&&0 &&= 0, 0, 1, 1, 2, 2, 3, 3, \dots
+\end{alignat*}
+Stuttering stream from n:
+\begin{alignat*}{5}
+  &stutter~&&n &&= n, n, n+1, n+1, n+2, n+2, n+3, n+3, \dots
+\end{alignat*}
+
+\pause
+
+$\Stream a = (\mathtt{'head} \to a) ~\&~ (\mathtt{'tail} \to \Stream a)$
+
+\begin{scheme}
+(define*
+  [ ((stutter n) 'head)        = n]
+  [(((stutter n) 'tail) 'head) = n]
+  [(((stutter n) 'tail) 'tail) = (stutter (+ n 1))])
+\end{scheme}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Equational Reasoning Pop Quiz}
+\framesubtitle{Counter objects}
+
+\begin{scheme}
+(define*
+  [((counter x) 'add y) = (counter (+ x y))]
+  [((counter x) 'get)   = x])
+\end{scheme}
+
+\scm|((counter 5) 'get) = | \pause \scm|5|
+
+\pause
+
+\scm|(((counter 5) 'add 6) 'get)|
+\pause
+
+\scm|= ((counter 11) 'get)  = 11|
+
+\pause
+
+\begin{scheme}
+(define c (counter 10))
+\end{scheme}
+
+\scm|(list ((c 'add 2) 'get) ((c 'add 4) 'get))|
+
+\pause
+
+\scm|= (list ((counter 12) 'get) ((counter 14) 'get))|
+
+\scm|= '(12 14)|
+\end{frame}
+
+\section{The \\ Expression Problem}
+
+\begin{frame}[fragile]
+\frametitle{A Simple Evaluator}
+\framesubtitle{Arithmetic expressions with just numbers and addition}  
+
+\begin{scheme}
+;; Expr = `(num ,Number)
+;;      | `(add ,Expr ,Expr)
+
+;; expr0 : Expr
+(define expr0
+  '(add (num 1) (add (num 2) (num 3))))
+
+;; eval : Expr -> Number
+(define*
+  [(eval `(num ,n))    = n]
+  [(eval `(add ,l ,r)) = (+ (eval l) (eval r))])
+\end{scheme}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{The Expression Problem}
+
+Easy to add new operations:
+\begin{scheme}
+;; expr? : Any -> Bool
+(define*
+  [(expr? `(num ,n))    = (number? n)]
+  [(expr? `(add ,l ,r)) = (and (expr? l) (expr? r))]
+  [(expr? _)            = #f])
+
+;; list-nums : Expr -> List Number
+(define*
+  [(list-nums `(num ,n))    = (list n)]
+  [(list-nums `(add ,l ,r))
+  = (append (list-nums l) (list-nums r))])
+\end{scheme}
+
+Hard to add new expression cases:
+\begin{scheme}
+;; Expr = ... | `(mul ,Expr ,Expr)
+???
+\end{scheme}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{A De/Re-composed Evaluator}
+\framesubtitle{As extensible objects}
+
+\begin{scheme}
+(define-object
+  [(eval-num `(num ,n)) = n])
+
+(define-object
+  [(eval-add `(add ,l ,r))
+  = (+ (eval-add l) (eval-add r))])
+
+;; same as before, but now defined via composition
+(define eval (eval-num 'compose eval-add))
+\end{scheme}
+
+\pause
+
+\begin{scheme}
+eval
+=
+(object
+  [(eval-num `(num ,n))    = n]
+  [(eval-add `(add ,l ,r))
+  = (+ (eval-add l) (eval-add r))])
+\end{scheme}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Simple Extensions of the Expression Language}
+\framesubtitle{Vertical composition}
+
+\begin{scheme}
+;; Expr = ... | `(mul ,Expr ,Expr)
+
+(define-object
+  [(eval-mul `(mul ,l ,r))
+  = (* (eval-mul l) (eval-mul r))])
+
+(define eval-arith
+  (eval 'compose eval-mul))
+\end{scheme}
+
+\pause
+
+\begin{scheme}
+eval-arith
+=
+(object
+  [(eval-num `(num ,n))    = n]
+  [(eval-add `(add ,l ,r))
+  = (+ (eval-add l) (eval-add r))]
+  [(eval-mul `(mul ,l ,r))
+  = (* (eval-mul l) (eval-mul r))])
+\end{scheme}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Challenge: Adding Variables \& Environments}
+
+Evaluating variable expressions requires an environment
+\begin{scheme}
+;; Expr = ... | `(var ,Symbol)
+
+(define-object
+  [(eval-var env `(var ,x)) =
+   (dict-ref env x)])
+\end{scheme}
+
+\begin{scheme}
+(eval-var '((x . 10) (y . 20)) '(var y)) = 20
+\end{scheme}
+
+How to compose (binary) \scm|eval-var| with (unary) \scm|eval-arith|?
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Solution 1: Fixing the Environment}
+\framesubtitle{Run-time vertical composition}
+
+\begin{scheme}
+(define (fix-environment alg-evaluator env)
+  (object
+    [(_ expr)
+     (try-apply-forget alg-evaluator env expr)]))
+;; try-apply-forget attemps an application,
+;; if it fails to match, continue with next option
+   
+(define-object eval-alg
+  [(_ env expr)
+  = (((fix-environment (eval-var 'unplug) env)
+      'compose eval-arith)
+     expr)])
+;; 'unplug is an inherited-by-default method of objects
+;; that converts it to a composable extension
+\end{scheme}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Solution 2: Threading the Environment}
+\framesubtitle{Horizontal composition \& first-class failure continuation}
+
+\vspace{-2em}
+\begin{alignat*}{2}
+  &eval ~ expr &&= \dots eval ~ subexpr \dots \\
+  &&&\Downarrow \\
+  &eval ~ env ~ expr &&= \dots eval ~ env ~ subexpr \dots
+\end{alignat*}
+
+\pause
+
+\begin{scheme}[fontsize=\scriptsize]
+(define (with-environment arith-evaluator)
+  (object
+   [(self env expr)
+    (with-self
+        (override-λ* self
+          [(_ sub-expr) = (self env sub-expr)])
+      (try-apply-forget arith-evaluator expr))]))
+;; Implement environment extension by hiding environment
+;; and overriding its concept of "self" to bring it back
+
+(define eval-alg
+  ((with-environment (eval-arith 'unplug))
+   'compose eval-var))
+\end{scheme}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Challenge: Constant Folding}
+\framesubtitle{Doing what you can}
+
+Instead of using an environment to evaluate variables, just leave them alone:
+\begin{scheme}
+(constant-fold '(mul (add (num 1) (num 2))
+                     (add (var x) (num 4))))
+=
+               '(mul (num 3)
+                     (add (var x) (num 4)))
+\end{scheme}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Intermezzo: More Cautious Error Handling}
+\framesubtitle{Safer arithmetic}
+
+\begin{scheme}
+(define-object eval-add-safe
+  [(self `(add ,l ,r))
+  = (self 'add (self l) (self r))]
+  [(self 'add x y)
+   (try-if (and (number? x) (number? y)))
+  = (+ x y)])
+
+(define-object eval-mul-safe
+  [(self `(mul ,l ,r))
+  = (self 'mul (self l) (self r))]
+  [(self 'mul x y)
+   (try-if (and (number? x) (number? y)))
+  = (* x y)])
+
+(define eval-arith-safe
+  (eval-num 'compose eval-add-safe eval-mul-safe))
+\end{scheme}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Leave Variables Alone}
+\framesubtitle{And reform blocked expressions}
+
+\begin{scheme}
+(define-object
+  [(leave-variables `(var ,x)) = `(var ,x)])
+
+\end{scheme}
+\pause
+\begin{scheme}
+(define (operation? s)
+  (or (equal? s 'add) (equal? s 'mul)))
+
+(define-object reform-operations
+  [(reform op l r) (try-if (operation? op))
+                   (try-if number? l)
+  = (reform op `(num ,l) r)]
+  [(reform op l r) (try-if (operation? op))
+                   (try-if number? r)
+  = (reform op l `(num ,r))]
+  [(reform op l r) (try-if (operation? op))
+  = (list op l r)])
+\end{scheme}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Solution: Constant Folding Made Easy}
+\framesubtitle{Simple vertical composition}
+
+\begin{scheme}
+(define constant-fold
+  (eval-arith-safe 'compose
+                   leave-variables
+                   reform-operations))
+\end{scheme}
+\end{frame}
+
+\section{(How) \\ Does It Work?}
+
+\begin{frame}
+\frametitle{The Tower of Extensibility}
+\framesubtitle{Objects, Templates, Extensions}
+
+\begin{align*}
+  Object
+  &=
+  \text{some type of usable function}
+  \\\\
+  Template
+  &=
+  \alt<1>{Object}{(self : Object)} \to Object'
+  \\\\
+  Extension
+  &=
+  \alt<1-2>{Template}{(next : Template)} \to Template'
+  \\
+  &=
+  \alt<1-2>{Template}{(next : Template)}
+  \to \alt<1-2>{Object}{(self : Object)}
+  \to Object'
+\end{align*}
+
+\pause\pause
+\end{frame}
+
+\let\mintscheme\scheme
+\let\mintendscheme\endscheme
+\let\scheme\relax
+\let\endscheme\relax
+\lstnewenvironment{scheme}{\lstset{language=Scheme}}{}
+
+\begin{frame}[fragile]
+\frametitle{Expanding Definition Macros}
+
+\begin{scheme}
+(define* name clause ...)
+= (define name (λ* clause ...))
+
+(define-object name clause ...)
+= (define name (object clause ...))
+\end{scheme}
+\pause
+\begin{scheme}
+(λ* clause ...) = (introspect (template clause ...))
+
+(object (<: mod) clause ...)
+= (plug (mod (extension clause ...)))
+
+(object clause ...)
+= (object (<: (default-object-modifier)) clause ...)
+\end{scheme}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Expanding ``Big'' Macros}
+
+\begin{scheme}
+(template clause ...)
+= (closed-cases (extension clause ...))
+
+(extension [copat step ...] ...)
+= (compose [chain (comatch copat) step ...] ...)
+\end{scheme}
+\pause
+\begin{scheme}
+(chain (op ...) step ... ext)
+= (op ... (chain step ... ext))
+(chain = expr)
+= (always-is expr)
+\end{scheme}
+\pause
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Some ``Small'' Macros}
+
+\begin{scheme}[fontsize=\small]
+(try next self expr)
+= (λ(next) (λ(self) expr))
+
+(always-is expr) = (try _ _ expr)
+
+(try-if check ext)
+= (try next self
+       (if check
+           ((ext next) self)
+           (next self)))
+\end{scheme}
+\pause
+\begin{scheme}[fontsize=\small]
+(try-λ x ext)
+= (try next self
+       (λ x
+         ((ext (λ(s) (apply (next s) x)))
+          self)))
+\end{scheme}
+\end{frame}
+
+\begin{frame}
+\frametitle{Soundness of Equational Reasoning}
+
+\begin{pointed}
+\item Model macros as a (selective) CPS-like translation
+  % on a specified syntactic grammar
+\item Target: $\lambda$-calculus + recursion + symbols + lists + patterns
+\item Source: Target + copatterns + templates + extensions + $\lamstar$
+\item Translations from Source to Target:
+  \begin{align*}
+    \den{\_}  &: Term \to Target && \text{(only translates new forms)} \\
+    T\den{\_} &: Template \to Target && \text{(always a unary function)} \\
+    E\den{\_} &: Extension \to Target && \text{(always a binary function)}
+  \end{align*}
+\end{pointed}
+\pause
+\begin{theorem}[Conservative Extension]
+  If $M = N$ in the \alert{target} theory, then $M = N$ in the \alert{source}
+  theory.
+\end{theorem}
+\begin{theorem}[Soundness]
+  If $M = N$ in the \alert{source} theory, then $\den{M} = \den{N}$ in the
+  \alert{target} theory.
+\end{theorem}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{(Co)Pattern Matching Equalities}
+
+\begin{pointed}
+\item Patterns $P$ against \emph{values} $V$:
+  \begin{itemize}
+  \item Matching iff $P[\many{W}/\many{x}] = V$
+  \item Apart iff $P \apart V$ (inductively defined over structure of $P$)
+  \end{itemize}
+  \pause
+\item Copatterns $Q$ against \emph{contexts} $C$
+  \begin{itemize}
+  \item Matching iff $Q[\many{W}/\many{x}] = C$
+  \item Apart iff $Q \apart C$ (inductively defined over structure of $Q$)
+  \end{itemize}
+\end{pointed}
+\pause
+\begin{scheme}[fontsize=\small]
+(try-match P V ext)
+= ext[W.../x...]      ; if P[W.../x...] = V
+(try-match P V ext)
+= empty-extension     ; if P # V
+
+C[(λ* [Q[y] = expr] clause ...)]
+= expr[W.../x...]     ; if Q[W.../x...] = C
+C[(λ* [Q[y] = expr] [else deflt])]
+= C[deflt]            ; if Q # C
+\end{scheme}
+\end{frame}
+
+\let\scheme\mintscheme
+\let\endscheme\mintendscheme
+
+\begin{frame}
+\frametitle{CoScheme: Composable, Equational, Copatterns!}
+\framesubtitle{Try It Yourself!}
+
+\begin{frontandcenter}
+\url{https://github.com/pdownen/CoScheme}
+\includegraphics[keepaspectratio,width=0.75\textwidth,height=0.5\textheight]{qrcode.png}
+\end{frontandcenter}
+\end{frame}
+
+% \appendix
+
+\section{Factoring Copatterns}
+
+\begin{frame}[fragile]
+\frametitle{Nested definitions}
+\framesubtitle{Sharing constant parameters of a loop}  
+
+\begin{haskell}
+map f []     = []
+map f (x:xs) = f x : map f xs
+
+map f xs = go xs                -- map f = go
+  where go []     = []
+        go (x:xs) = f x : go xs
+\end{haskell}
+
+\pause
+\vspace{2em}
+
+\begin{scheme}
+(define*
+  [(map f xs) = ((map f) xs)]  ; (un)curried forms equal
+  [(map f) (nest)              ; map f = go
+    (extension
+     [(go `())         = `()]
+     [(go `(,x . ,xs)) = `(,(f x) . ,(go xs))])])
+\end{scheme}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Refactoring a Common Prefix}
+\framesubtitle{Sharing copatterns and computations}
+
+\begin{scheme}
+(define-object reform-operations
+  [(reform op l r) (try-if (operation? op))
+                   (try-if number? l)
+  = (reform op `(num ,l) r)]
+  [(reform op l r) (try-if (operation? op))
+                   (try-if number? r)
+  = (reform op l `(num ,r))]
+  [(reform op l r) (try-if (operation? op))
+  = (list op l r)])
+\end{scheme}
+common prefix: \scm|(reform op l r) (try-if (operation? op))|
+\pause
+\begin{scheme}
+(define-object reform-operations
+  [(reform op l r) (try-if (operation? op))
+   (extension
+    [_ (try-if (number? l)) = (reform op `(num ,l) r)]
+    [_ (try-if (number? r)) = (reform op l `(num ,r))]
+    [_                      = (list op l r)])])
+\end{scheme}
+\end{frame}
+
+\end{document}

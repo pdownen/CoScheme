@@ -1,0 +1,105 @@
+\ProvidesPackage{slides-preamble}
+
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+%\usepackage{arev}
+\usepackage{libertine} % Nice, keynote-like font
+%\usepackage{epigrafica}
+%\usepackage{amsmath}
+%\usepackage{amssymb}
+%\usepackage{amsthm}
+%\usepackage{units}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{ulem}
+\usepackage{tikz}
+
+%% Style formatting %%
+
+% \usetheme{default}
+\usetheme[titleformat=smallcaps]{metropolis}
+\usecolortheme[snowy]{owl}
+% \usefonttheme{professionalfonts}
+\usefonttheme[onlylarge]{structurebold}
+% \setbeamercovered{dynamic}
+\setbeamerfont{title}{size=\huge}
+\setbeamerfont{frametitle}{size=\Large}
+\setbeamerfont{standout}{size=\Huge}
+\setbeamerfont{section title}{size=\Huge}
+
+\setbeamercolor{framesubtitle}{fg=mDarkTeal}
+\addtobeamertemplate{frametitle}{}{%
+  \ifx\insertframesubtitle\@empty\else%
+  \usebeamerfont{framesubtitle}%
+  \usebeamercolor[fg]{framesubtitle}%
+  \hfill\insertframesubtitle%
+  \fi%
+}
+
+% Remove page numbers
+\setbeamertemplate{page number in head/foot}{}
+\setbeamertemplate{footline}{}
+
+%% Drawing around equations %%
+\usetikzlibrary{arrows,shapes,backgrounds,fit,shadows}
+
+\pgfdeclarelayer{background}
+\pgfdeclarelayer{foreground}
+\pgfsetlayers{background,main,foreground}
+\everymath{\displaystyle}
+\newcommand{\namemath}[2]
+{\tikz[remember picture,baseline=(#1.base)]{\node[inner sep=1pt] (#1) {$#2$};}}
+
+\tikzset{ redex/.style={rectangle,rounded corners,fill=red!25,fill
+    opacity=1.0,inner sep=0} }
+\tikzset{ context/.style={rectangle,rounded corners,fill=blue!25,fill
+    opacity=1.0,inner sep=2pt} }
+
+\newcommand{\likebeamer}[2]{%
+{%
+\usebeamerfont{#1}%
+\usebeamercolor[fg]{#1}%
+#2%
+}
+}
+
+\newenvironment{customsection}[2][1]
+{{\setbeamerfont{section title}{#1}\section{#2}}}
+
+%% Lists, elements, big text, and comments %%
+\newenvironment{pointed}
+{%
+\begin{itemize}%
+\setlength{\itemsep}{2ex}%
+}
+{\end{itemize}}
+
+\newtheorem{exercise}{Exercise}
+
+\newenvironment{frontandcenter}
+{\begin{center}\Huge}
+{\end{center}}
+
+\newcommand{\acomment}[2][0.5\textwidth]{\parbox{#1}{#2}}
+
+%% Pictures and colors %% 
+\newcommand{\graphic}[2][]
+{\includegraphics[keepaspectratio=true,#1]{#2}}
+\newcommand{\topgraphic}[2][]
+{\graphic[height=0.7\textheight,width=\textwidth,#1]{#2}}
+\newcommand{\fullgraphic}[2][]
+{\graphic[height=0.9\textheight,width=\textwidth,#1]{#2}}
+
+\newcommand{\colorpage}[4][h]{
+  \colorbox{#3}{
+    \begin{minipage}[#1]{#2}
+      #4
+    \end{minipage}
+  }
+}
+
+% A huge hack to put footnotes in titles. \titlenotemark goes in the frame title
+% itself, \titlenotetext is the actual footnote that must be given AFTER and
+% OUTSIDE the frame title macro.
+\newcommand{\titlenotemark}{\footnotemark}
+\newcommand{\titlenotetext}[1]{\stepcounter{footnote}\footnotetext{#1}\addtocounter{footnote}{-1}}

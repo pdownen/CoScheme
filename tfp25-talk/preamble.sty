@@ -1,0 +1,350 @@
+\ProvidesPackage{preamble}
+\RequirePackage{xargs}
+
+%% Annotations
+
+\newcommand{\paul}[1]{{\color{purple} \emph{Paul}: #1}}
+\newcommand{\adriano}[1]{{\color{teal} \emph{Adriano}: #1}}
+
+%% Multi-line math spacing
+
+\newcommand{\spaceheight}{0pt}
+\newenvironment{spacing}[1][\spaceheight]{\setlength{\jot}{#1}}{\ignorespacesafterend}
+\newenvironment{squeeze}[1]{\addtolength{\jot}{#1}}{\ignorespacesafterend}
+\newenvironment{contiguous}[1][\linewidth]
+{\center\minipage{#1}}
+{\endminipage\endcenter\ignorespacesafterend}
+
+\newcommand{\ruleskip}{0.5ex}
+\newcommand{\bigruleskip}{1ex}
+\newcommand{\defskip}{0.5ex}
+
+\newcommand{\qqquad}{\qquad\quad}
+\newcommand{\qqqquad}{\qquad\qquad}
+
+%% Phrase shorthands
+
+\newcommand{\etal}{{\em et al. \/}}
+\newcommand{\etc}[1][.]{{\em etc#1 \/}}
+\newcommand{\ie}{{\em i.e., \/}}
+\newcommand{\Ie}{{\em I.e., \/}}
+\newcommand{\viz}{{\em viz., \/}}
+\newcommand{\eg}{{\em e.g., \/}}
+\newcommand{\Eg}{{\em E.g., \/}}
+\newcommand{\ala}{\`a la \/}
+\newcommand{\aka}{{\em a.k.a \/}}
+
+%% Rewriting notation
+
+\newcommand{\from}{\leftarrow}
+\newcommand{\gives}{\Rightarrow}
+\newcommand{\takes}{\Leftarrow}
+
+\newcommand{\vect}[2][]{{\vv{#2}}^{#1}}
+\newcommand{\many}[2][]{#2\overset{{}_{#1}}{...}}
+
+\newcommand{\asub}[2]{{#2}/{#1}}
+\newcommand{\smallsubs}[1]{{[{#1}]}}
+\newcommand{\smallsubst}[2]{\smallsubs{\asub{#1}{#2}}}
+\newcommand{\bigsubs}[1]{{\left[{#1}\right]}}
+\newcommand{\bigsubst}[2]{\bigsubs{\asub{#1}{#2}}}
+\newcommand{\subs}{\smallsubs}
+\newcommand{\subst}{\smallsubst}
+
+\newcommand{\hole}{\square}
+
+\newcommand{\apart}{\mathrel{\#}}
+
+%% Explicit substitution
+
+\newcommand{\abind}[2]{{#1}:={#2}}
+\newcommand{\smallbinds}[1]{{[{#1}]}}
+\newcommand{\smallbind}[2]{\smallbinds{\abind{#1}{#2}}}
+\newcommand{\bigbinds}[1]{{\left[{#1}\right]}}
+\newcommand{\bigbind}[2]{\bigsubs{\abind{#1}{#2}}}
+\newcommand{\binds}{\smallbinds}
+\newcommand{\bind}{\smallbind}
+
+\newcommand{\adefn}[2]{{#1}\mapsto{#2}}
+\newcommand{\smalldefns}[1]{{\{{#1}\}}}
+\newcommand{\smalldefn}[2]{\smalldefns{\adefn{#1}{#2}}}
+\newcommand{\bigdefns}[1]{{\left\{{#1}\right\}}}
+\newcommand{\bigdefn}[2]{\bigdefns{\adefn{#1}{#2}}}
+\newcommand{\defns}{\smalldefns}
+\newcommand{\defn}{\smalldefn}
+
+%% Denotational semantics notation
+
+\newcommand{\bbrak}[1]{\llbracket{#1}\rrbracket}
+\newcommand{\Bbrak}[1]{\left\llbracket{#1}\right\rrbracket}
+\newcommand{\Abrak}[1]{\langle\!\langle{#1}\rangle\!\rangle}
+\newcommand{\trans}{\densmall}
+\newcommand{\den}{\densmall}
+\newcommandx{\denbig}[3][1,3]{{\Bbrak{#2}^{#1}_{#3}}}
+\newcommandx{\densmall}[3][1,3]{{\bbrak{#2}^{#1}_{#3}}}
+
+\newcommand{\comp}{\circ}
+
+%% Type theory notation
+
+\newcommand{\mt}{\bullet}
+\newcommand{\stoup}{\mathrel{;}}
+\newcommand{\sstoup}{\mathrel{{;}{;}}}
+\newcommand{\wstoup}{\stoup}
+\newcommand{\softstoup}{\mathrel{{;}{;}}}
+\newcommand{\hardstoup}{\mathrel{;}}
+
+\newcommand{\checked}{\Leftarrow}
+
+%% Syntax Styles
+
+\newcommand{\keywordstyle}[1]{\operatorname{\mathbf{#1}}}
+\newcommand{\newkeyword}[2]{\newcommand{#1}{\keywordstyle{#2}}}
+\newcommand{\renewkeyword}[2]{\renewcommand{#1}{\keywordstyle{#2}}}
+
+\newcommand{\operationstyle}[1]{\operatorname{#1}}
+% \newcommand{\operationstyle}[1]{\operatorname{\mathsf{#1}}}
+\newcommand{\newoperation}[2]{\newcommand{#1}{\operationstyle{#2}}}
+\newcommand{\renewoperation}[2]{\renewcommand{#1}{\operationstyle{#2}}}
+
+%% Pure Functional Syntax
+
+\newkeyword{\Let}{let}
+\newkeyword{\Rec}{rec}
+\newkeyword{\Val}{val}
+\newkeyword{\In}{in}
+\newkeyword{\Where}{where}
+\newkeyword{\Case}{case}
+\newkeyword{\Of}{of}
+\newkeyword{\Match}{match}
+\newkeyword{\With}{with}
+
+\newkeyword{\If}{if}
+\newkeyword{\Then}{then}
+\newkeyword{\Else}{else}
+\newkeyword{\Otherwise}{otherwise}
+\newoperation{\True}{True}
+\newoperation{\False}{False}
+
+\newoperation{\Inl}{inl}
+\newoperation{\Inr}{inr}
+\newoperation{\Fst}{fst}
+\newoperation{\Snd}{snd}
+
+\newoperation{\Pair}{pair}
+\newoperation{\Split}{split}
+
+\newcommand{\ccomment}[1]{\text{\it -{}- #1}}
+
+%% Scheme syntax
+
+\newcommand{\q}{\text{\tt'}}
+\newcommand{\qq}{\text{\tt`}}
+\newcommand{\splice}{\text{\tt,}}
+\newoperation{\Null}{null}
+\newoperation{\Cons}{cons}
+\newoperation{\List}{list}
+\newoperation{\Stream}{stream}
+\newoperation{\Head}{head}
+\newoperation{\Tail}{tail}
+
+%% Join points
+
+\let\join\Join
+
+\renewkeyword{\Join}{join}
+\newkeyword{\Fun}{fun}
+\newkeyword{\Jump}{jump}
+
+%% Sequent calculus
+
+\newcommand{\cmid}{\mathbin{|\!\!|}}
+\newcommand{\cut}[2]{\braket{#1 \cmid #2}}
+\newcommand{\rmu}{{\reflectbox{$\mu$}}}
+\newcommand{\tmu}{{\tilde{\mu}}}
+\newcommand{\tlam}{{\rlap{\hspace{3.5pt}\raisebox{-2.5pt}{$\widetilde{}$}}\lambda}}
+% \newcommand{\tlam}{{\tilde{\lambda}}}
+\newcommand{\rlam}{{\reflectbox{$\lambda$}}}
+
+%% CBPV Syntax
+
+\newcommand{\CBPV}{{\mathit{CBPV}}}
+
+\newoperation{\LazyTy}{Lazy}
+\newoperation{\Thunk}{thunk}
+\newoperation{\Force}{force}
+\newkeyword{\Return}{return}
+\newkeyword{\Do}{do}
+
+\newcommand{\valty}[1]{#1}
+\newcommand{\compty}[1]{\underline{#1}}
+\newoperation{\Uf}{U}
+\newoperation{\Ff}{F}
+
+\newcommand{\valvar}[1]{#1}
+\newcommand{\compvar}[1]{\overline{#1}}
+
+%% CU Syntax
+
+\newcommand{\CU}{{\mathit{CU}}}
+
+\newcommand{\poslbl}[1]{#1}
+\newcommand{\neglbl}[1]{\overline{#1}}
+
+\newoperation{\Stack}{stack}
+\newoperation{\Throw}{throw}
+
+\newcommand{\lsquareparenthesis}
+{%
+  \mathopen{%
+    \sbox0{$()$}%
+    \setlength{\unitlength}{\dimexpr\ht0+\dp0}%
+    \raisebox{-\dp0}{%
+      \begin{picture}(.48,1)
+        \linethickness{\fontdimen8\textfont3}
+        \roundcap
+        \put(0,0){\raisebox{\depth}{$($}}
+        \polyline(0.36,0)(0,0)(0,1)(0.36,1)
+      \end{picture}%
+    }%
+  }%
+}
+\newcommand{\rsquareparenthesis}
+{%
+  \mathclose{%
+    \sbox0{$()$}%
+    \setlength{\unitlength}{\dimexpr\ht0+\dp0}%
+    \raisebox{-\dp0}{%
+      \begin{picture}(.48,1)
+      \linethickness{\fontdimen8\textfont3}
+      \roundcap
+      \put(-0.06,0){\raisebox{\depth}{$)$}}
+      \polyline(0,0)(0.36,0)(0.36,1)(0,1)
+      \end{picture}%
+    }%
+  }%
+}
+\newcommand{\stck}[1]{{\llparenthesis{#1}\rrparenthesis}}
+\newcommand{\thrw}[1]{{\lsquareparenthesis{#1}\rsquareparenthesis}}
+
+\newcommand{\Contra}{\Perp}
+
+%% Other syntax
+
+\newcommand{\compo}{\mathbin{\|}}
+
+\newkeyword{\Define}{define}
+
+\newcommand{\lamstar}{\lambda^{\!*}}
+
+\newcommand{\Definestar}{\Define^*}
+
+\newkeyword{\Guard}{guard}
+\newkeyword{\Comatch}{comatch}
+\newkeyword{\Self}{self}
+\newkeyword{\Next}{next}
+\newkeyword{\Try}{try}
+\newkeyword{\Handle}{handle}
+\newkeyword{\Continue}{continue}
+\newkeyword{\Restart}{restart}
+\newkeyword{\Start}{start}
+\newkeyword{\Resume}{resume}
+\newkeyword{\Fail}{fail}
+\newkeyword{\End}{end}
+\newkeyword{\Closed}{closed}
+\newkeyword{\Cases}{cases}
+\newkeyword{\Merge}{merge}
+\newkeyword{\Template}{template}
+\newkeyword{\Extension}{extension}
+\newkeyword{\Include}{include}
+\newkeyword{\Initial}{initial}
+\newkeyword{\Nested}{nested}
+\newkeyword{\Nest}{nest}
+\newkeyword{\Forget}{forget}
+\newkeyword{\Finally}{finally}
+\newkeyword{\Finish}{Finish}
+
+
+%% Coloring
+
+\newcommand{\hi}[2][black!15]{{%
+\setlength{\fboxsep}{1pt}\kern-1pt%
+\mathchoice%
+{\colorbox{#1}{$\displaystyle#2$}}%
+{\colorbox{#1}{$\textstyle#2$}}%
+{\colorbox{#1}{$\scriptstyle#2$}}%
+{\colorbox{#1}{$\scriptscriptstyle#2$}}\kern-1pt}%
+}%
+\newcommand{\hitxt}[2][yellow!15]{{%
+\setlength{\fboxsep}{1pt}\kern-1pt%
+\colorbox{#1}{#2}%
+}}
+
+
+%% Minted environments
+
+% \setminted[scheme]{extrakeywords={object}}
+
+\newminted[scheme]{scheme}{}
+\newmintinline[scm]{scheme}{}
+
+\newminted[racket]{racket}{}
+\newmintinline[rkt]{racket}{}
+
+\newminted[haskell]{haskell}{}
+\newmintinline[hs]{haskell}{}
+
+\newminted[agdacode]{agda}{}
+\newmintinline[agda]{agda}{}
+
+
+%% Listings environments
+
+\newcommand{\kwstyling}{\bf\ttfamily\color[rgb]{0,.3,.7}}
+\newcommand{\kwstyle}[1]{{\kwstyling #1}}
+
+\lstdefinelanguage{Scheme}{
+  inputencoding=utf8,
+  morekeywords=[1]{
+    define, define-syntax, define-macro, define*, define-object, =
+  },
+  morekeywords=[2]{
+    lambda, lambda*, override-lambda*, object,
+    extension, template, chain, comatch, try, try-if, try-match, try-lambda, always-is,
+    begin, call-with-current-continuation, call/cc,
+    case, match, cond,
+    do, else, for-each, if,
+    let*, let, let-syntax, letrec, letrec-syntax,
+    let-values, let*-values,
+    delay, force,
+    quasiquote, quote, unquote, unquote-splicing,
+    syntax, syntax-rules, % eval, environment, query,
+  },
+  morekeywords=[3]{import, export},
+  alsodigit=!\$\%&*+-./:<=>?@^_~,
+  literate={
+    {`}{{`}}{1}
+    {λ}{{\kwstyle{$\lambda$}}}{1}
+    {λ*}{{\kwstyle{$\lambda$*}}}{2}
+    {try-λ}{{\kwstyle{try-$\lambda$}}}{5}
+    {override-λ*}{{\kwstyle{override-$\lambda$*}}}{11}
+  },
+  sensitive=true,
+  morecomment=[l]{;},
+  morecomment=[s]{\#|}{|\#},
+  morestring=[b]",
+  basicstyle=\footnotesize\ttfamily,
+  keywordstyle=\kwstyling,
+  commentstyle=\color[rgb]{0.133,0.545,0.133},
+  stringstyle={\color[rgb]{0.75,0.49,0.07}},
+  upquote=true,
+  breaklines=true,
+  breakatwhitespace=true,
+  showstringspaces=false
+}
+
+% \lstnewenvironment{scheme}{\lstset{language=Scheme}}{}
+% \newcommand{\scm}{\relax}
+% \lstMakeShortInline[language=Scheme]|
+
+% \lstnewenvironment{haskell}{\lstset{language=Haskell}}{}

@@ -16,6 +16,8 @@
 
 \setlength{\jot}{0pt}
 
+\setbeamersize{text margin left = 1em}
+
 \setminted{fontsize=\footnotesize}
 
 \setbeamercolor{alerted text}{fg=orange}
@@ -25,8 +27,8 @@
 
 \newcommand{\whisper}[1]{{\color{whisper}{#1}}}
 
-\title{CoScheme}
-\subtitle{Compositional Copatterns in Scheme}
+\title{CoScheme: Compositional Copatterns in Scheme}
+\subtitle{Or, ``Equals'' Means Equals}
 \author{
   {\large\bf \emph{Paul Downen} and Adriano Corbelino II}
   \\
@@ -44,7 +46,7 @@
   \framesubtitle{Composition, Composition, Composition!}
 
   \begin{pointed}
-  \item Programs defined by equational reasoning on their context (\ala ML, Haskell)
+  \item Programs defined by equational reasoning on their context \\ (\ala ML, Haskell)
   \item Composition of extensible fragments at run-time
     \begin{pointed}
     \item \alert{Vertical} --- \textit{either or} --- compose alternative
@@ -243,18 +245,18 @@ Hard to add new expression cases:
   = (+ (eval-add l) (eval-add r))])
 
 ;; same as before, but now defined via composition
-(define eval (eval-num 'compose eval-add))
+(define eval-obj (eval-num 'compose eval-add))
 \end{scheme}
 
 \pause
 
 \begin{scheme}
-eval
-=
-(object
-  [(eval-num `(num ,n))    = n]
-  [(eval-add `(add ,l ,r))
-  = (+ (eval-add l) (eval-add r))])
+eval-obj expr = eval expr
+
+eval-obj = (object
+             [(eval-num `(num ,n))    = n]
+             [(eval-add `(add ,l ,r))
+             = (+ (eval-add l) (eval-add r))])
 \end{scheme}
 \end{frame}
 
@@ -270,7 +272,7 @@ eval
   = (* (eval-mul l) (eval-mul r))])
 
 (define eval-arith
-  (eval 'compose eval-mul))
+  (eval-obj 'compose eval-mul))
 \end{scheme}
 
 \pause
@@ -295,8 +297,7 @@ Evaluating variable expressions requires an environment
 ;; Expr = ... | `(var ,Symbol)
 
 (define-object
-  [(eval-var env `(var ,x)) =
-   (dict-ref env x)])
+  [(eval-var env `(var ,x)) = (dict-ref env x)])
 \end{scheme}
 
 \begin{scheme}
@@ -318,8 +319,8 @@ How to compose (binary) \scm|eval-var| with (unary) \scm|eval-arith|?
 ;; try-apply-forget attemps an application,
 ;; if it fails to match, continue with next option
    
-(define-object eval-alg
-  [(_ env expr)
+(define-object
+  [(eval-alg env expr)
   = (((fix-environment (eval-var 'unplug) env)
       'compose eval-arith)
      expr)])
@@ -432,6 +433,16 @@ Instead of using an environment to evaluate variables, just leave them alone:
                    leave-variables
                    reform-operations))
 \end{scheme}
+\pause
+\begin{scheme}
+(define expr3
+  '(add (add (num 1) (num 1))
+        (mul (var x)
+             (mul (num 2) (add (num 2) (num 3))))))
+
+(constant-fold expr3)
+= '(add (num 2) (mul (var x) (num 10)))
+\end{scheme}
 \end{frame}
 
 \section{(How) \\ Does It Work?}
@@ -507,7 +518,6 @@ Instead of using an environment to evaluate variables, just leave them alone:
 (chain = expr)
 = (always-is expr)
 \end{scheme}
-\pause
 \end{frame}
 
 \begin{frame}[fragile]
@@ -598,10 +608,14 @@ C[(λ* [Q[y] = expr] [else deflt])]
 \frametitle{CoScheme: Composable, Equational, Copatterns!}
 \framesubtitle{Try It Yourself!}
 
-\begin{frontandcenter}
-\url{https://github.com/pdownen/CoScheme}
+\begin{itemize}
+\item \url{https://github.com/pdownen/CoScheme}
+\begin{center}
 \includegraphics[keepaspectratio,width=0.75\textwidth,height=0.5\textheight]{qrcode.png}
-\end{frontandcenter}
+\end{center}
+\item Racket
+\item R${}^6$RS
+\end{itemize}
 \end{frame}
 
 % \appendix

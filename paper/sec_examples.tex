@@ -1,3 +1,5 @@
+\subsection{Infinite streams}
+
 Let us consider some examples of programming by equational reasoning to get familiar with copatterns and how we can use them in Scheme.
 % Deletion candidate
 % In these examples, it can help to think about types informally to keep ourselves oriented.
@@ -77,6 +79,18 @@ Even with other observations like \scm|takes|, which passes around partial appli
 %   [(((zigzag xs ys) 'tail) 'head) = (ys 'head)]
 %   [(((zigzag xs ys) 'tail) 'tail) = (zigzag (xs 'tail) (ys 'tail))])
 % \end{minted}
+
+\subsection{Self-referrential objects}
+
+Topics to cover
+\begin{itemize}
+\item Open recursion / the internal explicit ``self'' parameter versus the
+  externally visible name
+\item Some classic OO-style example
+\item Inheritance
+\end{itemize}
+
+\subsection{Decomposing the expression problem}
 
 However, definitions by copatterns are useful for more programming tasks than just streams and other infinite objects.
 % In particular, we can define a depth-first search on a finite binary tree.

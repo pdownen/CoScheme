@@ -1,5 +1,5 @@
-% \documentclass[aspectratio=169]{beamer}
-\documentclass{beamer}
+\documentclass[aspectratio=169]{beamer}
+% \documentclass{beamer}
 
 \usepackage{stmaryrd}
 \usepackage{cmll}
@@ -28,7 +28,7 @@
 \newcommand{\whisper}[1]{{\color{whisper}{#1}}}
 
 \title{CoScheme: Compositional Copatterns in Scheme}
-\subtitle{Or, ``Equals'' Means Equals}
+\subtitle{Or, ``Equal'' Means Equal}
 \author{
   {\large\bf \emph{Paul Downen} and Adriano Corbelino II}
   \\
@@ -46,7 +46,7 @@
   \framesubtitle{Composition, Composition, Composition!}
 
   \begin{pointed}
-  \item Programs defined by equational reasoning on their context \\ (\ala ML, Haskell)
+  \item Programs defined by equational reasoning on their context (\ala ML, Haskell)
   \item Composition of extensible fragments at run-time
     \begin{pointed}
     \item \alert{Vertical} --- \textit{either or} --- compose alternative
@@ -72,7 +72,7 @@ zip (x:xs) (y:ys) = (x, y) : zip xs ys
 zip xs     ys     = []
 \end{haskell}
 
-\vspace{2.75em}
+\vspace{2.25em}
 \pause
 
 \begin{scheme}
@@ -94,7 +94,7 @@ zip (x:xs) (y:ys) = (x, y) : zip xs ys
 zip xs     ys     = []
 \end{haskell}
 
-\vspace{0.5em}
+\vspace{0em}
 
 \begin{scheme}
 (define (zip xs ys)
@@ -117,14 +117,15 @@ zip (x:xs) (y:ys) = (x, y) : zip xs ys
 zip xs     ys     = []
 \end{haskell}
 
-\vspace{5.25em}
+\vspace{1.75em}
 
 \begin{scheme}
 (define*
-  [(zip `(,x . ,xs) `(,y . ,ys))
-  = `((,x . ,y) . ,(zip xs ys))]
-  [(zip xs ys) = `()])
+  [(zip `(,x . ,xs) `(,y . ,ys)) = `((,x . ,y) . ,(zip xs ys))]
+  [(zip xs          ys)          = `()])
 \end{scheme}
+
+\vspace{4em}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -221,8 +222,7 @@ Easy to add new operations:
 ;; list-nums : Expr -> List Number
 (define*
   [(list-nums `(num ,n))    = (list n)]
-  [(list-nums `(add ,l ,r))
-  = (append (list-nums l) (list-nums r))])
+  [(list-nums `(add ,l ,r)) = (append (list-nums l) (list-nums r))])
 \end{scheme}
 
 Hard to add new expression cases:
@@ -241,8 +241,7 @@ Hard to add new expression cases:
   [(eval-num `(num ,n)) = n])
 
 (define-object
-  [(eval-add `(add ,l ,r))
-  = (+ (eval-add l) (eval-add r))])
+  [(eval-add `(add ,l ,r)) = (+ (eval-add l) (eval-add r))])
 
 ;; same as before, but now defined via composition
 (define eval-obj (eval-num 'compose eval-add))
@@ -255,8 +254,7 @@ eval-obj expr = eval expr
 
 eval-obj = (object
              [(eval-num `(num ,n))    = n]
-             [(eval-add `(add ,l ,r))
-             = (+ (eval-add l) (eval-add r))])
+             [(eval-add `(add ,l ,r)) = (+ (eval-add l) (eval-add r))])
 \end{scheme}
 \end{frame}
 
@@ -268,8 +266,7 @@ eval-obj = (object
 ;; Expr = ... | `(mul ,Expr ,Expr)
 
 (define-object
-  [(eval-mul `(mul ,l ,r))
-  = (* (eval-mul l) (eval-mul r))])
+  [(eval-mul `(mul ,l ,r)) = (* (eval-mul l) (eval-mul r))])
 
 (define eval-arith
   (eval-obj 'compose eval-mul))
@@ -282,10 +279,8 @@ eval-arith
 =
 (object
   [(eval-num `(num ,n))    = n]
-  [(eval-add `(add ,l ,r))
-  = (+ (eval-add l) (eval-add r))]
-  [(eval-mul `(mul ,l ,r))
-  = (* (eval-mul l) (eval-mul r))])
+  [(eval-add `(add ,l ,r)) = (+ (eval-add l) (eval-add r))]
+  [(eval-mul `(mul ,l ,r)) = (* (eval-mul l) (eval-mul r))])
 \end{scheme}
 \end{frame}
 
@@ -381,15 +376,13 @@ Instead of using an environment to evaluate variables, just leave them alone:
 (define-object eval-add-safe
   [(self `(add ,l ,r))
   = (self 'add (self l) (self r))]
-  [(self 'add x y)
-   (try-if (and (number? x) (number? y)))
+  [(self 'add x y) (try-if (and (number? x) (number? y)))
   = (+ x y)])
 
 (define-object eval-mul-safe
   [(self `(mul ,l ,r))
   = (self 'mul (self l) (self r))]
-  [(self 'mul x y)
-   (try-if (and (number? x) (number? y)))
+  [(self 'mul x y) (try-if (and (number? x) (number? y)))
   = (* x y)])
 
 (define eval-arith-safe
@@ -412,11 +405,9 @@ Instead of using an environment to evaluate variables, just leave them alone:
   (or (equal? s 'add) (equal? s 'mul)))
 
 (define-object reform-operations
-  [(reform op l r) (try-if (operation? op))
-                   (try-if number? l)
+  [(reform op l r) (try-if (operation? op)) (try-if number? l)
   = (reform op `(num ,l) r)]
-  [(reform op l r) (try-if (operation? op))
-                   (try-if number? r)
+  [(reform op l r) (try-if (operation? op)) (try-if number? r)
   = (reform op l `(num ,r))]
   [(reform op l r) (try-if (operation? op))
   = (list op l r)])
@@ -483,21 +474,17 @@ Instead of using an environment to evaluate variables, just leave them alone:
 \frametitle{Expanding Definition Macros}
 
 \begin{scheme}
-(define* name clause ...)
-= (define name (λ* clause ...))
+(define* name clause ...) = (define name (λ* clause ...))
 
-(define-object name clause ...)
-= (define name (object clause ...))
+(define-object name clause ...) = (define name (object clause ...))
 \end{scheme}
 \pause
 \begin{scheme}
 (λ* clause ...) = (introspect (template clause ...))
 
-(object (<: mod) clause ...)
-= (plug (mod (extension clause ...)))
+(object (<: mod) clause ...) = (plug (mod (extension clause ...)))
 
-(object clause ...)
-= (object (<: (default-object-modifier)) clause ...)
+(object clause ...) = (object (<: (default-object-modifier)) clause ...)
 \end{scheme}
 \end{frame}
 
@@ -513,19 +500,17 @@ Instead of using an environment to evaluate variables, just leave them alone:
 \end{scheme}
 \pause
 \begin{scheme}
-(chain (op ...) step ... ext)
-= (op ... (chain step ... ext))
-(chain = expr)
-= (always-is expr)
+(chain (op ...) step ... ext) = (op ... (chain step ... ext))
+
+(chain = expr) = (always-is expr)
 \end{scheme}
 \end{frame}
 
 \begin{frame}[fragile]
 \frametitle{Some ``Small'' Macros}
 
-\begin{scheme}[fontsize=\small]
-(try next self expr)
-= (λ(next) (λ(self) expr))
+\begin{scheme}
+(try next self expr) = (λ(next) (λ(self) expr))
 
 (always-is expr) = (try _ _ expr)
 
@@ -536,7 +521,7 @@ Instead of using an environment to evaluate variables, just leave them alone:
            (next self)))
 \end{scheme}
 \pause
-\begin{scheme}[fontsize=\small]
+\begin{scheme}
 (try-λ x ext)
 = (try next self
        (λ x
@@ -548,7 +533,7 @@ Instead of using an environment to evaluate variables, just leave them alone:
 \begin{frame}
 \frametitle{Soundness of Equational Reasoning}
 
-\begin{pointed}
+\begin{itemize}
 \item Model macros as a (selective) CPS-like translation
   % on a specified syntactic grammar
 \item Target: $\lambda$-calculus + recursion + symbols + lists + patterns
@@ -559,7 +544,7 @@ Instead of using an environment to evaluate variables, just leave them alone:
     T\den{\_} &: Template \to Target && \text{(always a unary function)} \\
     E\den{\_} &: Extension \to Target && \text{(always a binary function)}
   \end{align*}
-\end{pointed}
+\end{itemize}
 \pause
 \begin{theorem}[Conservative Extension]
   If $M = N$ in the \alert{target} theory, then $M = N$ in the \alert{source}
@@ -589,15 +574,11 @@ Instead of using an environment to evaluate variables, just leave them alone:
 \end{pointed}
 \pause
 \begin{scheme}[fontsize=\small]
-(try-match P V ext)
-= ext[W.../x...]      ; if P[W.../x...] = V
-(try-match P V ext)
-= empty-extension     ; if P # V
+(try-match P V ext) = ext[W.../x...]      ; if P[W.../x...] = V
+(try-match P V ext) = empty-extension     ; if P # V
 
-C[(λ* [Q[y] = expr] clause ...)]
-= expr[W.../x...]     ; if Q[W.../x...] = C
-C[(λ* [Q[y] = expr] [else deflt])]
-= C[deflt]            ; if Q # C
+C[(λ* [Q[y] = expr] clause ...)]   = expr[W.../x...]  ; if Q[W.../x...] = C
+C[(λ* [Q[y] = expr] [else deflt])] = C[deflt]         ; if Q # C
 \end{scheme}
 \end{frame}
 
@@ -654,11 +635,9 @@ map f xs = go xs                -- map f = go
 
 \begin{scheme}
 (define-object reform-operations
-  [(reform op l r) (try-if (operation? op))
-                   (try-if number? l)
+  [(reform op l r) (try-if (operation? op)) (try-if number? l)
   = (reform op `(num ,l) r)]
-  [(reform op l r) (try-if (operation? op))
-                   (try-if number? r)
+  [(reform op l r) (try-if (operation? op)) (try-if number? r)
   = (reform op l `(num ,r))]
   [(reform op l r) (try-if (operation? op))
   = (list op l r)])

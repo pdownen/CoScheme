@@ -441,7 +441,7 @@
     [(object (<: mod) clause ...)
      (plug (mod (extension clause ...)))]
     [(object (<: mod ...) clause ...)
-     (plug (compose (mod ...) (extension clause ...)))]
+     (plug ((compose mod ...) (extension clause ...)))]
     [(object clause ...)
      (plug ((default-object-modifier) (extension clause ...)))]))
 

@@ -1,0 +1,241 @@
+\subsubsection{Top-level definitions}
+
+\begin{figure}[t]
+\centering
+
+\begin{minted}{scheme}
+TemplateStx  ::= ExtensionStx | ExtensionStx (else Expr)
+               | ExtensionStx (continue x Expr)
+ExtensionStx ::= (Copattern ResponseStx) ...
+ResponseStx  ::= (op ...) ResponseStx | = Expr | try x Template
+
+Params    ::= x | (Pattern ...) | (Pattern ... . x)
+Copattern ::= x | _
+            | (Copattern Pattern ...)
+            | (Copattern Pattern ... . x)
+            | (apply Copattern Pattern ... x)
+Pattern   ::= x | _ | 'Expr | `QQPat | ...
+QQPat     ::= ,Pattern | (QQPat ...) | Expr
+\end{minted}
+
+Definitional forms:
+\begin{minted}{scheme}
+(define* x TemplateStx)
+(define* TemplateStx)
+(define-object (x <: Expr ...) ExtensionStx)
+(define-object x ExtensionStx)
+(define-object (<: Expr ...) ExtensionStx)
+(define-object ExtensionStx)
+\end{minted}
+
+\caption{Grammar of syntax used by multi-clause definitions and multi-step operations.}
+\label{fig:macro-syntax}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+
+Object formation:
+\begin{minted}{scheme}
+(λ* TemplateStx)                    : Object
+(object ExtensionStx)               : Object
+(object (<: Expr ...) ExtensionStx) : Object
+(plug Extension)                    : Object
+(introspect Template)               : Object
+\end{minted}
+
+Template formation:
+\begin{minted}{scheme}
+(template TemplateStx)   : Template
+(continue x Expr)        : Template
+(non-rec Expr)           : Template
+(closed-cases Extension) : Template
+\end{minted}
+
+Extension formation:
+\begin{minted}{scheme}
+(extension ExtensionStx)           : Extension
+(compose Extension ...)            : Extension
+(comatch Copattern Extension)      : Extension
+(chain ResponseStx)                : Extension
+(always-is Expr)                   : Extension
+(try x Template)                   : Extension
+(try-if Bool Extension)            : Extension
+(try-match Expr Pattern Extension) : Extension
+(try-λ Params Extension)           : Extension
+(nest Extension)                   : Extension
+\end{minted}
+\caption{Compositional copattern API.}
+\label{fig:api}
+\end{figure}
+
+\begin{minted}{scheme}
+(define* x TemplateStx)        = (define x (λ* TemplateStx))
+(define-object x ExtensionStx) = (define x (object ExtensionStx))
+
+(define-object (x <: Expr ...) ExtensionStx)
+= (define x (object <: Expr ...) ExtensionStx)
+\end{minted}
+If the name \mintinline{scheme}|x| is at the root position of
+\mintinline{scheme}|Copattern|, then
+\begin{minted}{scheme}
+(define* TemplateStx)        = (define* x Template)
+(define-object ExtensionStx) = (define-object x ExtensionStx)
+
+(define-object (<: Expr ...) ExtensionStx)
+= (define-object (x <: Expr ...) ExtensionStx)
+\end{minted}
+
+\subsubsection{First-class objects, templates, and extensions}
+
+\begin{minted}{scheme}
+(λ* TemplateStx)      = (introspect (template TemplateStx))
+(object ExtensionStx) = (plug (meta (extension ExtensionStx)))
+
+(object (<: Expr ...) ExtensionStx)
+= (plug (compose Expr ...) (extension ExtensionStx))
+\end{minted}
+
+\begin{minted}{scheme}
+(define (meta ext)
+  (extension
+    [(self 'unplug)    = ext]
+    [(self 'adapt mod) = (plug (meta (mod (self 'unplug))))]
+    [(self 'compose . os)
+    = (plug (meta (apply compose
+                         (self 'unplug)
+                         (map (λ(o) (o 'unplug)) os))))]))
+\end{minted}
+
+\begin{minted}{scheme}
+(template ExtensionStx [continue x Expr])
+= ((extension ExtensionStx) (continue x Expr))
+(template ExtensionStx [else Expr])
+= ((extension ExtensionStx) (non-rec Expr))
+(template ExtensionStx)
+= (closec-cases (extension ExtensionStx))
+\end{minted}
+
+\begin{minted}{scheme}
+(extension [Copattern ResponseStx] ...)
+= (compose [(comatch Copattern) (chain ResponseStx)] ...)
+\end{minted}
+
+\subsubsection{Nested copattern matching and guards}
+
+\begin{minted}{scheme}
+(comatch (Copattern . x) Extension)
+= (comatch Copattern (try-λ x Extension))
+(comatch (Copattern Pattern ...) Extension)
+= (comatch Copattern (try-λ (Pattern ...) Extension))
+(comatch (Copattern Pattern ... . x) Extension)
+= (comatch Copattern (try-λ (Pattern ... . x) Extension))
+\end{minted}
+
+\begin{minted}{scheme}
+(chain (op ...) ResponseStx) = (op ... (chain ResponseStx))
+(chain = Expr)               = (always-is Expr)
+(chain try x Template)       = (try x Template)
+\end{minted}
+
+\subsubsection{Terminal operations and combinators}
+
+\begin{minted}{scheme}
+(try x Template)  = (λ(x) Template)
+(continue x Expr) = (λ(x) Expr)
+\end{minted}
+
+\begin{minted}{scheme}
+(non-rec Expr)   = (continue _ Expr)
+(always-is Expr) = (try _ (non-rec Expr))
+\end{minted}
+
+\begin{minted}{scheme}
+(try x y Expr) = (try x (continue y Expr))
+\end{minted}
+
+\begin{minted}{scheme}
+(try-if Bool Extension)
+= (try next self
+       (if Bool
+           ((Extension next) self)
+           (next self)))
+
+(try-match Expr Pattern Extension)
+= (try next self
+       (match Expr
+           [Pattern ((Extension next) self)]
+           [_ (next self)]))
+\end{minted}
+
+\begin{minted}{scheme}
+(try-λ (Pattern ...) Extension)
+= (try-λ (x ...) (chain (try-match x Pattern) ... Extension))
+\end{minted}
+
+\begin{minted}{scheme}
+(try-λ (x ...) Extension)
+= (try next self
+       (λ-case
+         [(x ...) ((Extension next) self)]
+         [_       (next self)]))
+\end{minted}
+
+\subsubsection{Object-manipulating functions}
+
+\begin{minted}{scheme}
+(closed-cases Extension) = (Extension (empty-template))
+(plug Extension)         = (introspect (closed-cases Extension))
+\end{minted}
+
+\begin{minted}{scheme}
+(introspect Template)
+= (letrec ([self (Template self)])
+    self)
+\end{minted}
+
+\begin{minted}{scheme}
+(introspect Template)
+= (letrec ([self (Template (λ args (apply self args)))])
+    self)
+\end{minted}
+
+\begin{minted}{scheme}
+(nest Extension)
+= (try next there
+     (letrec ([here ((Extension (non-rec (next there)))
+                     (λ args (apply here args)))])
+       here))
+\end{minted}
+
+\subsubsection{Use case: Defining new custom macros via the API}
+
+\begin{minted}{scheme}
+(override-λ* Expr ExtensionStx)
+= (λ* ExtensionStx [else Expr])
+\end{minted}
+
+\begin{minted}{scheme}
+(with-self new-self Extension)
+= (try next old-self ((Extension (non-rec (next old-self))) new-self))
+\end{minted}
+
+\begin{minted}{scheme}
+(try-apply-remember Extension Expr ...)
+= (try next self
+       (((Extension next) self) Expr ...))
+\end{minted}
+
+\begin{minted}{scheme}
+(try-apply-forget Extension Expr ...)
+= (try next self
+       (let ([forgetful (continue self (λ _ (next self)))])
+         (((Extension forgetful) self) Expr ...)))
+\end{minted}
+
+
+
+%%% Local Variables:
+%%% mode: LaTeX
+%%% TeX-master: "coscheme"
+%%% End:

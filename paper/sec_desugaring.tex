@@ -1,4 +1,49 @@
-\subsubsection{Top-level definitions}
+To meet all the implementation challenges listed above, the API of our compositional copattern library revolves around three groups of first-class values:
+\begin{itemize}
+\item \emph{Objects} are ordinary values, typically functions, that can be used directly via application.  Their exact interface varies based on their definition --- such as a function from a list of numbers to a list of booleans, an evaluator from expression trees to numbers, or an object following the infinite stream interface --- but they can be applied without any additional information.
+\item \emph{Templates} represent openly-recursive, self-referential code without a fixed self.
+  Instead, the ``self'' placeholder remains unbound for now, and it can be instantiated later via application to yield an \emph{object} described above.
+\item \emph{Extensions} represent extensible code that can be composed together both vertically and horizontally.
+  Instead of failing on an unsuccessful match, will try an as-of-yet unspecified ``next'' option specified later via application to a template to produce a new template.
+  This way, the ``self'' placeholder is also unbound for now --- just like with templates --- and can be bound later when the whole object is finished being composed.
+\end{itemize}
+
+\begin{figure}[t]
+\centering
+
+Object formation:
+\begin{minted}{scheme}
+(λ* TemplateStx)                    : Object
+(object ExtensionStx)               : Object
+(object (<: Expr ...) ExtensionStx) : Object
+(plug Extension)                    : Object
+(introspect Template)               : Object
+\end{minted}
+
+Template formation:
+\begin{minted}{scheme}
+(template TemplateStx)   : Template
+(continue x Expr)        : Template
+(non-rec Expr)           : Template
+(closed-cases Extension) : Template
+\end{minted}
+
+Extension formation:
+\begin{minted}{scheme}
+(extension ExtensionStx)           : Extension
+(compose Extension ...)            : Extension
+(comatch Copattern Extension)      : Extension
+(chain ResponseStx)                : Extension
+(always-is Expr)                   : Extension
+(try x Template)                   : Extension
+(try-if Expr Extension)            : Extension
+(try-match Expr Pattern Extension) : Extension
+(try-λ Params Extension)           : Extension
+(nest Extension)                   : Extension
+\end{minted}
+\caption{Compositional copattern API.}
+\label{fig:api}
+\end{figure}
 
 \begin{figure}[t]
 \centering
@@ -32,97 +77,114 @@ Definitional forms:
 \label{fig:macro-syntax}
 \end{figure}
 
-\begin{figure}[t]
-\centering
+\Cref{fig:api} describes a core API for forming or manipulating objects, templates, and extensions as first-class values.  These individual operations can implement all of the examples seen thus far which make heavy use of top-level definitional forms like \scm|define*| and \scm|define-object|.  The grammar of syntax supported by these definitional forms, and the operations which interpret copatterns and multi-clause equations, is described in \cref{fig:macro-syntax}.  Let's now look at how each layer of the abstractions --- from top-level definitions, multi-equation first-class values, nested copatterns, and the small terminal operations --- can be desugared to the next one, all the way down to basic, purely-functional Scheme.
 
-Object formation:
-\begin{minted}{scheme}
-(λ* TemplateStx)                    : Object
-(object ExtensionStx)               : Object
-(object (<: Expr ...) ExtensionStx) : Object
-(plug Extension)                    : Object
-(introspect Template)               : Object
-\end{minted}
+\subsubsection{Top-level definitions}
 
-Template formation:
-\begin{minted}{scheme}
-(template TemplateStx)   : Template
-(continue x Expr)        : Template
-(non-rec Expr)           : Template
-(closed-cases Extension) : Template
-\end{minted}
-
-Extension formation:
-\begin{minted}{scheme}
-(extension ExtensionStx)           : Extension
-(compose Extension ...)            : Extension
-(comatch Copattern Extension)      : Extension
-(chain ResponseStx)                : Extension
-(always-is Expr)                   : Extension
-(try x Template)                   : Extension
-(try-if Bool Extension)            : Extension
-(try-match Expr Pattern Extension) : Extension
-(try-λ Params Extension)           : Extension
-(nest Extension)                   : Extension
-\end{minted}
-\caption{Compositional copattern API.}
-\label{fig:api}
-\end{figure}
-
+There are two main styles of top-level definitions.  The simplest one is when an explicit name is given to the definition in question, which directly expands to an ordinary definition bound to a first class object --- described via \scm|λ*| or \scm|object| --- like so:
 \begin{minted}{scheme}
 (define* x TemplateStx)        = (define x (λ* TemplateStx))
 (define-object x ExtensionStx) = (define x (object ExtensionStx))
-
-(define-object (x <: Expr ...) ExtensionStx)
-= (define x (object <: Expr ...) ExtensionStx)
 \end{minted}
-If the name \mintinline{scheme}|x| is at the root position of
-\mintinline{scheme}|Copattern|, then
+This style can be used to evoke an object-oriented flavor of code, in which an object is externally named \scm|x| to the outside world, but internally refers to itself by some other name like \scm|self| or \scm|this| for recursive calls.
+
+In a more functional style of code, recursive function definitions use the same name for both external callers as well as internal recusive calls, so there is no need to declare the name another time.
+We support this style of definition, too, by looking for the ``root'' of the initial copattern on the left-hand side, which gives a name to the function itself in the context of some application.
+Following the syntax of \scm|Copattern|s in \cref{fig:macro-syntax}, the root of the identifier \scm|x| is just \scm|x|, the anonymous wildcard \scm|_| has no root, and the root of any other nested copattern is the root of its inner \scm|Copattern|.
+Eliding the full details of digging into a copattern to reveal its root, if the name \scm|x| is the root of first \scm|Copattern| inside \scm|TemplateStx| or \scm|ExtensionStx|, then the implicitly-named definitional forms expand into the explicitly-named ones by copying that first recursive name:%
+\footnote{Note that we only extract the root name in the \emph{first} clause of the definition to be used for the external name.
+  In its full generality, a different internal name can be used in each clause.
+  Only good taste dictates that the names in each clause should be the same to fit within a standard functional style.}
 \begin{minted}{scheme}
 (define* TemplateStx)        = (define* x Template)
 (define-object ExtensionStx) = (define-object x ExtensionStx)
+\end{minted}
 
+Two more conspicuous cases introduce a \emph{inheritance declaration}
+\scm|<: Expr ...| to the definition.
+This implicitly incorporate additional code from a list of super-types in \scm|Expr ...| to an object which is not explicitly written in the definition itself, allowing for a form of object-oriented-like inheritance evoked by the sub-typing \scm|<:| syntax.
+The generalized definition implemented directly in terms of the support for inheritance in anonymous \scm|object|s.
+A \scm|define-object| with an explicit name is expanded to just:
+\begin{minted}{scheme}
+(define-object (x <: Expr ...) ExtensionStx)
+= (define x (object <: Expr ...) ExtensionStx)
+\end{minted}
+For an implicitly-named \scm|define-object|, we must look for the name as before; assuming \scm|x| is the first root inside \scm|ExtensionStx|, the two forms produce the same definition:
+\begin{minted}{scheme}
 (define-object (<: Expr ...) ExtensionStx)
 = (define-object (x <: Expr ...) ExtensionStx)
 \end{minted}
 
 \subsubsection{First-class objects, templates, and extensions}
 
+The most unassuming way to form a usable object --- which does not introduce any implicit code not given in the object itself --- is with the multi-clause \scm|λ*| form.  A \scm|λ*| interprets the list of clauses as an openly-recursive \scm|template|, and then closes off the recursive loop via \scm|introspect| that binds the final object value in for the recursive parameter:
 \begin{minted}{scheme}
-(λ* TemplateStx)      = (introspect (template TemplateStx))
-(object ExtensionStx) = (plug (meta (extension ExtensionStx)))
-
-(object (<: Expr ...) ExtensionStx)
-= (plug (compose Expr ...) (extension ExtensionStx))
+(λ* TemplateStx) = (introspect (template TemplateStx))
 \end{minted}
 
+In contrast, an \scm|object| is like a \scm|λ*|, but enhanced with the ability to inherit code --- given in a \scm|(<: Expr ...)| constraint --- which can extend or modify the clauses it contains.
+These modifiers are themselves transformations on extensions --- first-class functions from old extensions to new extensions --- which is applied to the given \scm|extension| value before it is closed off with the \scm|plug| operation on extensions analogous to \scm|introspect| above:
+\begin{minted}{scheme}
+(object (<: Expr ...) ExtensionStx)
+= (plug ((compose Expr ...) (extension ExtensionStx)))
+
+(object ExtensionStx)
+= (object (<: meta) ExtensionStx)
+\end{minted}
+Note that the multiple extension modifiers are composed together using ordinary function composition, so the left-most one has precedence (being the final function in the chain).
+If no \scm|(<: Expr ...)| constraint is given, then the default \scm|meta| is used as the implicit superclass of ``all'' objects.%
+\footnote{The library implemenation stores this choice of the default superclass in a mutable parameter \scm|default-superclass| that can be changed by the programmer.}
+
+The default \scm|meta| superclass provides the extra code for composition seen in the examples, including \scm|'compose| and \scm|'unplug|.
+How does it work?
+Since the superclasses used by the object inheritence mechanism are just extension transformers, we can implement \scm|meta| directly as a function that composes the extension value making up an object with extra methods for manipulating it:
 \begin{minted}{scheme}
 (define (meta ext)
-  (extension
-    [(self 'unplug)    = ext]
-    [(self 'adapt mod) = (plug (meta (mod (self 'unplug))))]
-    [(self 'compose . os)
-    = (plug (meta (apply compose
-                         (self 'unplug)
-                         (map (λ(o) (o 'unplug)) os))))]))
+  (compose ext
+           (extension
+             [(self 'unplug)    = ext]
+             [(self 'adapt mod) = (plug (meta (mod (self 'unplug))))]
+             [(self 'compose . os)
+             = (plug (meta (apply compose
+                                  (self 'unplug)
+                                  (map (λ(o) (o 'unplug)) os))))]))
 \end{minted}
+In other words, \scm|(meta ext)| does everything that \scm|ext| does, and in addition supports the methods:
+\begin{itemize}
+\item \scm|(self 'unplug)| returns \scm|ext| in its original state,
+\item \scm|(self 'adapt mod)| is defined in terms of \scm|(self 'unplug)| to retrieve the original extension value and apply some new transformation to it --- plugging it back together with the same \scm|meta| functionality --- and
+\item \scm|(self 'compose o ...)| will \scm|'unplug| this object and each of \scm|o ...| to get all the underlying extensions, composes them together vertically into one, and then plugs it back into a usable \scm|meta| object again.
+\end{itemize}
 
-\begin{minted}{scheme}
-(template ExtensionStx [continue x Expr])
-= ((extension ExtensionStx) (continue x Expr))
-(template ExtensionStx [else Expr])
-= ((extension ExtensionStx) (non-rec Expr))
-(template ExtensionStx)
-= (closec-cases (extension ExtensionStx))
-\end{minted}
-
+Now, what are these first-class extensions and templates, and how are they created?
+The \scm|extension| macro --- defined in terms of a list of clauses with an initial \scm|Copattern| paired with some response (a combination of guards or other operations before a right-hand side) --- interprets each line separately as its own horizontal composition \scm|chain| before vertically composing them together with \scm|compose| like so:
 \begin{minted}{scheme}
 (extension [Copattern ResponseStx] ...)
-= (compose [(comatch Copattern) (chain ResponseStx)] ...)
+= (compose [chain (comatch Copattern) ResponseStx] ...)
 \end{minted}
+The main difference between a template and an extension is that a template is responsible for providing the final ``catch-all'' clause saying what to do if nothing matches.
+As such, the \scm|template| macro first builds an \scm|extension| out of the given syntax, and then applies it to one of three final clauses:
+\begin{minted}{scheme}
+(template ExtensionStx [else Expr])
+= ((extension ExtensionStx) (non-rec Expr))
+(template ExtensionStx [continue x Expr])
+= ((extension ExtensionStx) (continue x Expr))
+(template ExtensionStx)
+= (closed-cases (extension ExtensionStx))
+\end{minted}
+The first case has an \scm|[else Expr]| clause that evaluates some default expression if nothing else matches.
+The \scm|[continue x Expr]| clause in the second case is similar but more general:
+\scm|Expr| is evaluated if nothing else matches, and \scm|x| is bound to the whole template itself, allowing for \scm|Expr| to continue the recursive loop again if it uses \scm|x|.
+The final case, providing no catch-all clause, uses \scm|closed-cases| to instead raise an error if nothing matches.
 
-\subsubsection{Nested copattern matching and guards}
+\subsubsection{Nested copattern matching and chains}
 
+Nested copattern matching is now straightforward to desugar in terms of horizontally composing curried sequences of more basic, $\lambda$-like forms.
+More specifically, \scm|try-λ| is a functional abstraction over extensions analogous to the normal functional abstraction over expressions, and mimics all three of Scheme's \scm|λ| forms:
+\scm|(try-λ (Pattern ...) Extension)| matches a sequence of arguments against the given sequence of parameter patterns,
+\scm|(try-λ (Pattern ... . x) Extension)| does the same while binding any additional arguments as a list to \scm|x|, and
+\scm|(try-λ x Extension)| just binds any list of arguments to \scm|x|.
+These three forms correspond to three application contexts in a copattern, which are desugared like so:
 \begin{minted}{scheme}
 (comatch (Copattern . x) Extension)
 = (comatch Copattern (try-λ x Extension))
@@ -131,36 +193,52 @@ If the name \mintinline{scheme}|x| is at the root position of
 (comatch (Copattern Pattern ... . x) Extension)
 = (comatch Copattern (try-λ (Pattern ... . x) Extension))
 \end{minted}
+Alternate copattern forms written in terms of \scm|apply| --- like \scm|(apply Copattern x y z)| --- are defined similarly to the above.
 
+An \scm|extension| value is also created by chaining this initial \scm|comatch| with some response.
+In practice, this chaining just involves reassociating the parentheses of intermediate operations and interpreting the right-hand side, so \scm|chain| has the following behavior:
 \begin{minted}{scheme}
 (chain (op ...) ResponseStx) = (op ... (chain ResponseStx))
 (chain = Expr)               = (always-is Expr)
 (chain try x Template)       = (try x Template)
 \end{minted}
+Because reassociation does not depend on the operations \scm|op| involved, extension chains automatically work with \emph{any} new user-defined operations --- macros or functions --- which turn an extension (as their last argument) into another extension.
 
 \subsubsection{Terminal operations and combinators}
 
+Single-step operations and combinators are terminal forms, defined directly in terms of plain Scheme expressions.
+The simplest ones of these are also the most general:
+the \scm|try| and \scm|continue| macros let programmers write arbitrary extensions and templates (respectively) by abstracting over the next template to try or the object to continue recursion (respectively).
+In reality, both of these forms desugar directly into plain $\lambda$-abstractions.
 \begin{minted}{scheme}
 (try x Template)  = (λ(x) Template)
 (continue x Expr) = (λ(x) Expr)
 \end{minted}
-
+Common special cases include the self-contained forms:
+the non-recursive template \scm|(non-rec Expr)| and the fully-commited extension \scm|(always-is Expr)| that evaluate and run \scm|Expr| without failing to the next case or looping back to the beginning.
+Both forms are shorthand for the above abstractions that just never use the bound variable.
 \begin{minted}{scheme}
 (non-rec Expr)   = (continue _ Expr)
-(always-is Expr) = (try _ (non-rec Expr))
+(always-is Expr) = (try _ (non-rec Expr)) = (try _ (continue _ Expr))
 \end{minted}
 
+The remaining basic combinators for adding guards and functional abstractions to extensions can be defined in terms of the above.
+A convenient shorthand for manually writing new extension combinators is to abstract over both the ``next'' case to try and the ``self'' reference at the same time, which is just a shorter notation for a curried function:
 \begin{minted}{scheme}
-(try x y Expr) = (try x (continue y Expr))
+(try next self Expr) = (try next (continue self Expr))
+                     = (λ(next) (λ(self) Expr))
 \end{minted}
-
+The boolean \scm|try-if| guard will check some boolean expression first:
+if it is true it continues to try the underlying extension (which may succeed or fail on its own accord), and otherwise skips it entirely.
 \begin{minted}{scheme}
-(try-if Bool Extension)
+(try-if Expr Extension)
 = (try next self
-       (if Bool
+       (if Expr
            ((Extension next) self)
            (next self)))
-
+\end{minted}
+The pattern-matching guard \scm|try-if| operates similarly, but generalizes the simple boolean check to matching the value of an expression against a given pattern.
+\begin{minted}{scheme}
 (try-match Expr Pattern Extension)
 = (try next self
        (match Expr
@@ -168,38 +246,59 @@ If the name \mintinline{scheme}|x| is at the root position of
            [_ (next self)]))
 \end{minted}
 
+The most complicated single combinator is the the \scm|try-λ| functional abstraction over an extension.
+This form presents a functional interface that can pattern-match against its arguments:
+if the match succeeds then the variables in the pattern are bound while trying to execute the underlying extension,
+but if the match fails the extension is never tried at all.
+The pattern-matching component can be factored out of \scm|try-λ| via horizontal composition by first just binding the arguments as is, and then matching them against the given patterns in a second step like so:%
+\footnote{This equation is more of a specification than an efficient implementation.
+  In practice, the followup \scm|try-match| operations are only generated if the given pattern is non-trivial.}
 \begin{minted}{scheme}
 (try-λ (Pattern ...) Extension)
 = (try-λ (x ...) (chain (try-match x Pattern) ... Extension))
 \end{minted}
-
+Now we only have to handle the simpler job of accepting a given number of arguments.  This operation can still fail if applied to a different number of arguments, or if the underlying extension fails.
+We can efficiently define different cases for these two cases using a \scm|case-λ| which combines functions of different numbers of arguments like so:
+\footnote{Alternatively, some implementations like Racket have a built-in \scm|match-λ| which effectively extends \scm|case-λ| to pattern-match directly on the arguments.
+  In these systems, we can use \scm|match-λ| here to handle both pattern-matching and argument passing here at the same time.}
 \begin{minted}{scheme}
 (try-λ (x ...) Extension)
 = (try next self
-       (λ-case
-         [(x ...) ((Extension next) self)]
-         [_       (next self)]))
+       (case-λ
+         [(x ...) ((Extension (continue s ((next s) x ...))) self)]
+         [args    (apply (next self) args)]))
 \end{minted}
+Notice the most subtle part of \scm|try-λ|:
+we must ensure that when we try the next case to handle failure, they must be copied and passed again whenever \scm|next| is invoked.
+If we forgot to wrap both applications of \scm|next| with the given arguments, they would disappear forever if we handle to fall through to the next case.
 
 \subsubsection{Object-manipulating functions}
 
+The final operations remaining in the API are not even macros: they are just ordinary functions.
+For example, the \scm|compose| that we have used twice now --- to implement vertical composition of extensions as well as to combine multiple superclass constraints --- is just ordinary function composition!
+Some of the other purely functional operations are similarly simple.
+For example, \scm|closed-cases| closes off an extension by providing a final catch-all case that raises an error when run, and \scm|plug|ging an extension to get an object is just composition of \scm|introspect| and \scm|closed-cases|.
 \begin{minted}{scheme}
-(closed-cases Extension) = (Extension (empty-template))
+(closed-cases Extension) = (Extension (non-rec (error "...")))
 (plug Extension)         = (introspect (closed-cases Extension))
 \end{minted}
-
+The \scm|introspect| function is a little tricker, because it needs plug in the final form of an object while creating that object.
+Attempting to recursively tie the knot directly as
 \begin{minted}{scheme}
 (introspect Template)
-= (letrec ([self (Template self)])
-    self)
+=/= (letrec ([self (Template self)])
+      self)
 \end{minted}
-
+will cause a run-time error: since Scheme is a call-by-value langauge, it will try to evaluate \scm|self| before it is actually bound to a value yet.
+So instead, we have to delay the self-reference just by one step by $\eta$-expanding, since $\lambda$-abstractions return values without evaluating their bodies.
 \begin{minted}{scheme}
 (introspect Template)
 = (letrec ([self (Template (λ args (apply self args)))])
     self)
 \end{minted}
-
+The \scm|nest| operation does the same knot-tying as \scm|introspect|, but also returns a new extension, rather than an object.
+To do so, it will recursively instantiate the view of the extension at this point in time --- after some applications and guards have been evaluated --- to provide as the new self-referencing value.
+If at any point this extension fails and falls past its last case, the updated self-reference will be undone, and reverts back to its old form.
 \begin{minted}{scheme}
 (nest Extension)
 = (try next there
@@ -210,22 +309,29 @@ If the name \mintinline{scheme}|x| is at the root position of
 
 \subsubsection{Use case: Defining new custom macros via the API}
 
+To demonstrate the flexibility of the API, we show how some other, more niche, operations can be defined in terms of the ones we already saw.
+In particular, the case study on the expression problem involved some complex meta-programming facilities.
+First, we needed to override some of the behavior of multi-clause \scm|λ*|s, which can be done by wrapping its value in a new \scm|λ*| that handles the new behavior or else falls through to the original.
 \begin{minted}{scheme}
 (override-λ* Expr ExtensionStx)
 = (λ* ExtensionStx [else Expr])
 \end{minted}
-
+Next, we needed to temporarily replace the self-reference in an extension with another, until we fall out of the scope of that extension.
+This can be done by capturing the old notion of the object itself --- to be used if the extension ever falls through past its end --- and passing a new one in its place like so:
 \begin{minted}{scheme}
 (with-self new-self Extension)
 = (try next old-self ((Extension (non-rec (next old-self))) new-self))
 \end{minted}
-
+Finally, we needed a combinator to apply a functional extension to some argument(s) in the form of a new extension.
+The most direct way to do so is to apply those arguments after passing the \scm|next| template and \scm|self| object
 \begin{minted}{scheme}
 (try-apply-remember Extension Expr ...)
 = (try next self
        (((Extension next) self) Expr ...))
 \end{minted}
-
+however, this does not give the desired behavior!
+This application looks ``permanent'' from the perspective of the next cases that follow this extension, who will be passed the arguments \scm|Expr ...| as if they were in the original calling context.
+Instead, we want any alternatives that handle \scm|Extension|'s failure to be evaluated in the same context, and so the extra arguments \scm|Expr ...| need to be forgotten like so:
 \begin{minted}{scheme}
 (try-apply-forget Extension Expr ...)
 = (try next self

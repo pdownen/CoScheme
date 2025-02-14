@@ -2,7 +2,8 @@
 
 (library (composable)
 
-(export define* lambda* override-lambda* define-object object <: extends meta
+(export define* lambda* override-lambda*
+        define-object object <: extends meta default-superclass
         extension apply-extension template apply-template
         chain nest comatch try always-do try-if try-match
         try-lambda try-case-lambda try-match-lambda try-apply-remember try-apply-forget
@@ -478,7 +479,7 @@
 ;; Combines the 'unplug, 'adapt, and 'compose methods above with the methods of the given extension itself
 (define (meta ext) (compose ext (unplug ext) composition adapt))
 
-(define default-object-modifier meta)
+(define default-superclass (list meta))
 
 ;; try-object : Codata -> Extension
 ;; Unplug as a function, useful as a try-style operation for meta-enabled objects instead of extensions
@@ -530,7 +531,7 @@
 
 ;; object : TemplateSyntax -> Codata
 ;; object : ((<: (Extension -> Extension) ...), TemplateSyntax) -> Codata
-;; the main way to define an (anonymous) codata object which inherits additional behavior from some external source; if not given explicitly with an initial (<: mod), default-object-modifier is implicitly used. In the most general case, the modifiers can by any sequence of extension-modifiying functions to be composed together, which allows each modifier in turn to copy and re-use the extensible form of the object before it is finally plugged (with a base case and recursive reference to itself). In a common special case, this modifier can merely compose (vertically or horizontally) the given extension with other inherited behavior, giving preference to either the new code or inherited code in cases of overlap.
+;; the main way to define an (anonymous) codata object which inherits additional behavior from some external source; if not given explicitly with an initial (<: mod), default-superclass is implicitly used. In the most general case, the modifiers can by any sequence of extension-modifiying functions to be composed together, which allows each modifier in turn to copy and re-use the extensible form of the object before it is finally plugged (with a base case and recursive reference to itself). In a common special case, this modifier can merely compose (vertically or horizontally) the given extension with other inherited behavior, giving preference to either the new code or inherited code in cases of overlap.
 (define-syntax object
   (syntax-rules (extends <:)
     [(object (<: mod) clause ...)
@@ -540,9 +541,9 @@
     [(object (extends mod ...) clause ...)
      (object (<: mod ...) clause ...)]
     [(object clause ...)
-     (plug (default-object-modifier (extension clause ...)))]))
+     (plug ((car default-superclass) (extension clause ...)))]))
 
-;; define-object is like define*, but creating a (named) object with inherited behavior rather than just using the written code as-is. As with define*, define-object will infer the externally-visible name for this object from the initial copattern of the first clause if no explicit name is given. As with object, define-object will inherit behavior from default-object-modifier if no modifiers are given.
+;; define-object is like define*, but creating a (named) object with inherited behavior rather than just using the written code as-is. As with define*, define-object will infer the externally-visible name for this object from the initial copattern of the first clause if no explicit name is given. As with object, define-object will inherit behavior from default-superclass if no modifiers are given.
 (define-syntax define-object
   (lambda(stx)
     (syntax-case stx (extends <: apply)
@@ -566,8 +567,8 @@
        #'(define-object (name <: mod ...) clause ...)]
       [(define-object name clause ...)
        (identifier? #'name)
-       #'(define-object (name extends default-object-modifier) clause ...)]
+       #'(define-object (name extends (car default-superclass)) clause ...)]
       [(define-object clause ...)
-       #'(define-object (extends default-object-modifier) clause ...)])))
+       #'(define-object (extends (car default-superclass)) clause ...)])))
 
 )

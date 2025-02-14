@@ -1,11 +1,10 @@
 
-To explain the correctness and behavior of composable copattern matching, we give a high-level translation into a conventional $\lambda$-calculus with recursion and pattern matching (given in \cref{fig:target-syntax}).
+To help study the behavior and correctness of composable copattern matching, we model a simplified version of the library API in the form of an extended $\lambda$-calculus, and
+give a high-level translation into a conventional $\lambda$-calculus with recursion and pattern matching (given in \cref{fig:target-syntax}).
 Our pattern language is modeled after a small common core found among various implementations of Scheme, which includes normal variable wildcards $x$ that can match anything, quoted symbols $\q{x}$, and lists of the form $\Null$ or $(\Cons P \, P')$.
 Note that we assume all bound variables $x$ in a pattern are distinct.
-% TODO: Deletion Candidate
 As shorthand, we write a list of patterns $P_1 ~ P_2 ~ \dots ~ P_n$ for $(\Cons P_1 ~ (\Cons P_2 ~ \dots (\Cons P_n \Null)))$.
-To model the patterns found in typed functional languages like ML and Haskell, such as constructor applications $K ~ \many{P}$, we can represent the constructor  as a quoted symbol $\q{K}$ and the application as a list $\q{K} ~ \many{P}$.
-% TODO: Deletion Candidate
+To model the patterns found in typed functional languages like ML and Haskell, such as constructor applications $K ~ \many{P}$, we can represent the constructor as a quoted symbol $\q{K}$ and the application as a list $\q{K} ~ \many{P}$.
 The patterns' specifics are surprisingly not essential to the main copattern translation and could be extended with other features found in more specific implementations.  
 
 \begin{figure}[t]
@@ -32,17 +31,18 @@ The patterns' specifics are surprisingly not essential to the main copattern tra
 \label{fig:target-syntax}
 \end{figure}
 
-For simplicity, this translation begins from a small source language with copatterns (given in \cref{fig:source-syntax}) separated into three main syntactic categories:
+For simplicity, this translation begins from a smaller source language with copatterns (given in \cref{fig:source-syntax}) separated into three main syntactic categories that reflect the different groups of values from the macro library:
 \begin{itemize}
-\item[($M, N$)] \emph{Terms} represent ordinary first-class values as well as applications.
-  The new forms of terms are $\lamstar B$, which gives a self-referential copattern-matching object, along with $\Template B$ and $\Extension O$ which include the other two syntactic categories as first-class values.
-\item[($B$)] \emph{Templates} represent self-referential code without a fixed self.
-  Instead, the ``self'' placeholder remains unbound for now, and it can be instantiated later as $\Template B ~ V$ (where the ``self'' of the template is bound to $V$) or $\lamstar B$ (where the ``self'' of the template is recursively bound to $\lamstar B$).
-\item[($O$)] \emph{Extensions} represent extensible code that can be composed together both vertically and horizontally.
-  Instead of failing on an unsuccessful match, will try an as-of-yet unspecified ``next'' option.
-  To support recursion, the ``self'' placeholder is also unbound for now --- just like with templates --- and can be bound later when the whole object is finished being composed.
-  The ``next'' thing to try can be given by the vertical composition with another extension $O; O'$ or a base-case template $O; B$.
-  Arbitrary first-class values can passed in as the next option ($V$) and the self object ($W$) as $\Extension O ~ V ~ W$.
+\item[($M, N$)] \emph{Term} syntax represents all ordinary expressions of the host langauge as well as the new first-class \emph{objects} of the library.
+  The new forms of terms are $\lamstar B$, which gives a self-referential copattern-matching object, along with $\Template B$ and $\Extension O$ which include the other two syntactic categories as first-class values that can be applied as functions to instantiate their open-ended recursion and composition.
+\item[($B$)] \emph{Template} syntax represents a simplified grammar supported by \scm|template| and similar macros specified as \scm|TemplateStx| in \cref{fig:macro-syntax}.
+  Including some extension cases in a template is written as $O; B$, the catch-all clause which may continue the loop again via a recursive object bound to $x$ is written as $\Continue x \to M$, and the closed case where the catch-all clause raises an error is the empty string $\varepsilon$.
+  Since the simpler final $\Else$ clause is a special case of $\Continue$, we treat it as syntactic sugar.
+\item[($O$)] \emph{Extension} syntax represents a simplified grammar supported by \scm|extension| and similar macros specified as \scm|ExtensionStx| in \cref{fig:macro-syntax} with terser notation.
+  Vertical composition is written as $O; O'$, similar to $O; B$, with the empty string $\varepsilon$ as its neutral element.
+  Copattern-matching is written as $Q[x] O$, where $Q$ is a copattern context with $x$ as the root identifier naming the recursive object itself.
+  The more basic forms are written as $\lambda P. O$ for a functional abstraction over an extension, $\Match P \gets M ~ O$ for a pattern-matching guard, and $\Try x \to B$ for the statement which binds the following cases to $x$ before running a template specified by $B$.
+  We treat if-guards and the form $(= M)$ as syntactic sugar for special cases of the more general forms, and also sometimes use the alternative notation $\Do M$ in place of $(= M)$ in contexts where the latter notation appears awkward.
 \end{itemize}
 
 \begin{figure}[t]
@@ -108,23 +108,15 @@ Syntactic sugar:
 \label{fig:source-syntax}
 \end{figure}
 
-The remaining new syntax gives ways to define and combine copattern-matching expressions.
-Copatterns $Q[x]$ themselves are a subset of contexts, $Q$, surrounding an object internally named $x$.
-Two lines separated by a semicolon ($O; O'$) is vertical composition that tries either $O$ or $O'$, and prefixing with a copattern-matching expression ($Q[x] O$) is horizontal composition that tries $Q[x]$ and then $O$.
-The $\varepsilon$ represents an empty extension with respect to vertical composition: it immediately refers to the next option.
-Smaller special cases of matching include pattern lambdas ($\lambda P. O$) that try to match a new argument against $P$, and pattern guards ($\Match P \gets M ~ O$) that try to match a given expression $M$ against $P$; both of which continue as $O$ if they succeed.
-% $\Nest O$ allows for nesting multiple copatterns with a partially applied self object from this point.
+The syntax in $B$ and $O$ directly reflects the core operations for forming and combining copattern-matching expressions of the library API.
+Here, the copattern syntax $Q[x]$ itself is expressed as a subset of contexts, $Q$, surrounding an object internally named $x$.
+Two lines separated by a semicolon ($O; O'$) represents a binary vertical composition \scm|compose| that tries either $O$ or $O'$, 
+and $\varepsilon$ represents an empty extension \scm|(extend)| with respect to vertical composition: it immediately refers to the next option.
+Prefixing with a copattern-matching expression ($Q[x] ~ O$) represents the \scm|(comatch Q[x] O)| form that tries $Q[x]$ and then $O$.
+Smaller special cases of matching include pattern lambdas ($\lambda P. O$) for \scm|try-λ|, and pattern guards ($\Match P \gets M ~ O$) for \scm|try-match|.
+Other operations use the same names as in \cref{fig:api}.
 
-Finally, we have the terminators for ending a sequence of matching.
-A template can end in the empty $\varepsilon$ (which just fails, because there is no code to handle the case) or a $\Continue x \to M$ which serves as the default ``catch-all'' case.
-The parameter $x$ bound by $\Continue x \to M$ is another way to introduce a name for the recursive reference to the object itself at the end of a template  and allows for $M$ to restart from the top and continue the computation.
-The syntactic sugar $\Else M$ covers the common case where $M$ give an answer without recursively continuing.
-Similarly, an extension can end with $\Try x \to B$. This gives a ``catch-all'' case that runs some other (non-extensible) template $B$.
-The parameter $x$ bound by $\Try x \to B$ gives a name to the next option that would have been tried after this one and allows $B$ to explicitly move on to the next option if it needs to.
-The syntactic sugar $\Do M$ covers the most common case of $\Try$ which definitively commits to a particular term $M$ to return as the result without trying any further options.
-To write examples in a similar style to ML-family languages, we also use the syntactic sugar $(= M)$ with the same meaning, which looks odd out of context but expresses the equational nature of copattern matching when used in examples.
-
-Thus, the full translation from the source (\cref{fig:source-syntax}) to target (\cref{fig:target-syntax}) is given in \cref{fig:translation}.
+This simplified grammar makes it easier to define the full macro expansion as a translation from the source (\cref{fig:source-syntax}) to target (\cref{fig:target-syntax}) as given in \cref{fig:translation}.
 This translation shares many similarities to continuation-passing style (CPS) translations.
 However, we explicitly avoid converting the entire program to CPS.
 Notably, every syntactic form for the source language is unchanged; for example, $\den{M~N} = \den{M} ~ \den{N}$.

@@ -1,39 +1,33 @@
-For decades, functional programmers have had a reliable and versatile method for representing tree-shaped structures: inductive data types.
-These can model data of any size --- for example, lists of an arbitrary length --- but each instance must be \emph{finite}.
-Infinite information --- like a stream of input that can go on forever --- does not fit into an inductive type, so the programmer must use some other representation to model potentially infinite objects.
+The expression problem~\cite{ExpressionProblem} is a familiar foe.
+It is concerned with the intricacy of extending data abstractions with both new forms and operations.
+Traditionally, functional languages can easily extend abstractions with more operations, and conversely, object-oriented languages have an advantage in adding more variants to a data type over adding new operations.
+The literature presented multiple solutions to the expression problem using various features and spreading on multiple paradigms.
 
-Fortunately, the inductive data types used by functional programmers every day have a polar opposite: \emph{coinductive codata types}.
-The \emph{coinductive} descriptor signals that values of the type may contain infinite information.
-Haskell programmers are already well-versed in coinductive styles of types since non-strict languages blur the line between induction and coinduction.
-For example, consider the usual example of the infinite list of Fibonacci numbers in Haskell:
-\begin{minted}{haskell}
-fibs = 0 : 1 : zipWith (+) fib (tail fib)
-\end{minted}
-\hs|fibs| cannot be fully evaluated because it has no base case --- it would eventually expand out to \hs|0 : 1 : 1 : 2 : 3 : 5 : 8 : ...| forever --- but this is no problem in a non-strict language that only evaluates as much as needed.
+The Visitor pattern~\cite{GangOfFour} is a classic solution in the object-oriented world.
+However, we have other options such as~\cite{wehr_javagi_2011}, which brings Java interfaces closer to Haskell's type classes, and~\cite{hutchison_extensibility_2012}, which presents the abstraction of object algebras that are easily integrated into OO languages, since they do not depend upon fancy features.
+On the other hand, on the functional paradigm side, we have solutions like~\cite{swierstra_data_2008} and~\cite{keep_nanopass_2013}.
+The former utilizes Haskell's type system, specifically type classes, to provide a modular way to construct data types and functions.
+However, this approach relies on a type system.
+The latter is a compiler framework that provides tools to specify different languages for the compiler passes. The framework achieves this by automatically handling a portion of the mapping between two given entities.
 
-In contrast, \emph{codata} describes types defined by primitive \emph{destructors} that \emph{use} values of the codata type, as opposed to the primitive constructors that define how to build values of a data type.
-For example, the usual \agda|Stream a| codata type of infinite \agda|a|'s is defined by two destructors: \agda|Head : Stream a -> a| extracts the first element and \agda|Tail : Stream a -> Stream a| discards the first element and returns the rest.
-To define new streams, we can describe how they react to different combinations of \agda|Head| and \agda|Tail| destructions using \emph{copatterns}~\cite{APTS2013C}.  The copattern-based definition of the same \agda|fibs| function above is:
-\begin{minted}{agda}
-fibs : Stream Nat
-Head fibs = 0
-Head (Tail fibs) = 1
-Tail (Tail fibs) = zipWith _+_ fibs (Tail fibs)
-\end{minted}
-Unfortunately, if we want to actually produce working code in this style, our choices are limited.
-Agda gives the most full-fledged implementation of copatterns in a real system~\cite{ElaboratingDependentCopatterns}.
+This work presents a novel solution to the expression problem: composable copatterns.
+Copatterns~\cite{APTS2013C} are often associated with codata types, but their use is not limited to just that.
+Their composition, in particular, allows us to define programs by performing equational reasoning in the evaluation context.
+Performing the ``substitution of equals for equals''~\cite{wadler_critique_1987} enhances the predictability and composability of our programs since we can analyze our part code in isolation.
+
+Previous implementations of copatterns are associated with strongly typed languages.
+For example, Agda gives the most full-fledged implementation of copatterns in a real system~\cite{ElaboratingDependentCopatterns}.
 However, Agda is primarily a proof assistant rather than a general-purpose programming language, and as such, has different concerns than an ordinary functional programmer.
-In particular, Agda currently does not understand if \agda|fibs| is well-founded --- it is --- and so \agda|fibs| is rejected by the termination checker.
 There is also some support for copatterns in OCaml~\cite{LaforgueR17}, but as an unofficial extension that has not been merged into the main compiler.
 
-We want to be able to write this kind of copattern-based code and have it fully integrated into a real, general-purpose programming language.
-The easiest way to do so is to start with a programmable programming language~\cite{ProgrammablePL} and provide a new language extension as a library~\cite{LanguageLibrary}. We focus, in particular, on Scheme and Racket, which offers a robust macro system for seamlessly implementing new language features.
+Rather than just recapping the macro-based definitions of copatterns~\cite{LaforgueR17}, we also use macros, but we focus on providing new methods of extensibility that were not available before and presenting an untyped encoding for copatterns.
+To achieve that and fully integrate it into a real, general-purpose programming language, we choose a programmable programming language~\cite{ProgrammablePL} and provide a new language extension as a library~\cite{LanguageLibrary}.
+We focus, in particular, on Scheme and Racket, which offers a robust macro system for seamlessly implementing new language features.
 
-We show a new method for implementing copatterns in Scheme-like languages.
-Rather than just recapping the previous macro-based definition of copatterns~\cite{LaforgueR17}, we also use macros, but we focus on providing new methods of extensibility not available before.
-In particular, code defined by our copattern macros can be composed in a variety of ways,
-offering a new solution to the expression problem~\cite{ExpressionProblem}.
-Not only do copatterns allow us to easily define code using equational reasoning in Scheme, but these new dimensions of composition also allow us to capture some ``design patterns'' used by functional programmers as first-class abstractions.
+Our extension presents three different composition flavors, allowing us to capture some ``design patterns'' used by functional programmers as first-class abstractions.
+First, we have \emph{vertical} composition, which permits us to gather a collection of alternative options with failure handling.
+Second, we have \emph{horizontal} composition, which permits us to compose a sequence of steps, parameters, matching, or guards.
+Third, we have \emph{circular}, which allows us to recurse back on the entire composition itself.
 
 Our primary contributions are organized as follows:
 \begin{itemize}

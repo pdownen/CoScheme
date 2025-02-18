@@ -6,15 +6,17 @@
 
 > I changed our introduction a lot, I will change the little summary in the end and the abstract latter. I am planing to move all the coinductive discussion to section 2.
 
-One page 2, you switch from the Haskell definition of fibs using pattern syntax and laziness, to the Agda definition using copatterns. There may be a good chance here to motivate the need for copattern syntax, i.e., why should one not just continue to define fibs in the Haskell way but declare that Stream is a coinductive type?
+❓One page 2, you switch from the Haskell definition of fibs using pattern syntax and laziness, to the Agda definition using copatterns. There may be a good chance here to motivate the need for copattern syntax, i.e., why should one not just continue to define fibs in the Haskell way but declare that Stream is a coinductive type?
+
+> Is saying that they restore the duality enough? I moved this to section 2, but I think this is still and odd placement.
 
 ### Section 2
 
-When you first define eval-arith, you have a footnote stating that the recursive calls to eval-mul must somehow know how to call eval-num and eval-add. True, but this is an absolutely vital part of your design, and should not be relegated to a footnote for the astute reader! Furthermore, the footnote explains the problem (the system must somehow do X) but not the solution (open recursion). You should be stating clearly that functions in your system use open recursion so that the recursive call to eval-mul actually invokes eval-arith in this case. This is also your chance to introduce the "self" parameter, which currently makes its firs appearance without any explanation in an example on the following page.
+✅ When you first define eval-arith, you have a footnote stating that the recursive calls to eval-mul must somehow know how to call eval-num and eval-add. True, but this is an absolutely vital part of your design, and should not be relegated to a footnote for the astute reader! Furthermore, the footnote explains the problem (the system must somehow do X) but not the solution (open recursion). You should be stating clearly that functions in your system use open recursion so that the recursive call to eval-mul actually invokes eval-arith in this case. This is also your chance to introduce the "self" parameter, which currently makes its firs appearance without any explanation in an example on the following page.
 
-* We moved this to footnote during the butcher season, can we promote it to the main text and add some text regarding the open recursion?
+> Section 2.2
 
-In eval-add-safe, the syntax for declaring clauses seems to change and I do not understand the semantics. On the previous page you have
+✅In eval-add-safe, the syntax for declaring clauses seems to change and I do not understand the semantics. On the previous page you have
 
    (define-object [(eval-add `(add ,l ,r)) = ...])
 
@@ -22,10 +24,13 @@ and on this page
 
    (define-object eval-add-safe [(self 'eval ('add l r)) = ...])
 
-
 where now there is an extra argument 'eval. How do these two definitions manage to have the same type (as it were)? Now I notice that eval-add-safe in the extra materials does not have an 'eval argument, so maybe this is a mistake.
 
-Here it gradually becomes apparent that you use an object metaphor throughout the library: functions are defined with define-object, and atoms such as 'add are analogous to messages which the objects accept. This also helps me to understand why the strange syntax for composition - (o1 'compose o2) rather than (compose o1 o2) - it's because (I think) 'compose is just a message that all objects implement. But you don't point out this object metaphor in the paper until Section 3, which made the syntax a lot harder to grasp for me. Please bring it up when introducing your library!
+> Section 2.2?
+
+✅Here it gradually becomes apparent that you use an object metaphor throughout the library: functions are defined with define-object, and atoms such as 'add are analogous to messages which the objects accept. This also helps me to understand why the strange syntax for composition - (o1 'compose o2) rather than (compose o1 o2) - it's because (I think) 'compose is just a message that all objects implement. But you don't point out this object metaphor in the paper until Section 3, which made the syntax a lot harder to grasp for me. Please bring it up when introducing your library!
+
+> Section 2.2
 
 Perhaps I'm being a bit nitpicky, but it seems like the way constant-fold is implemented is rather complicated. All the difficulties arise because numbers can appear in the expression tree in two forms: either as e.g. '(num 3) or as just a numeric literal 3. eval-arith expects its argument to use the first form but returns the second form, leading to noncompositionality and chaos. If numeric literals were represented as just e.g. 3 instead of '(num 3), then things would get simpler. Alternatively, one could do constant folding by just recursing through the expression tree and calling eval-arith at each node; if it returns a number x, then constant folding returns `(num ,x). I mean, it is impressive that your system can express such a complex composition quite easily, but I find myself a bit distracted since I'm not sure the complexity is really needed here.
 
@@ -59,7 +64,9 @@ I had not previously seen the idea of proving a translation correct by reasoning
 
 # Review 2
 
-p.2, `fibs`: I expected to see a discussion of how the library knows there are enough cases in `fibs` to constitute a well-founded definition. Say explicitly that the library here does not check, that it's up to the user to decide.
+✅ p.2, `fibs`: I expected to see a discussion of how the library knows there are enough cases in `fibs` to constitute a well-founded definition. Say explicitly that the library here does not check, that it's up to the user to decide.
+
+> Moved this dicussion to the preamble in sec 2.
 
 ✅p.2 "We show a new method for implementing copatterns as a collection of macros": it sounds like macros are the interesting part, but that is not the case. OCaml copatterns used macros too, as we discover in an offhand way in the next paragraph. Split into two sentences? (new technique. using macros.) Acknowledge the macros in [14] at the first reference?
 

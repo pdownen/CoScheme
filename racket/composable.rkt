@@ -187,7 +187,7 @@
     [(try-case-λ (arg-id ...) ext)
      (andmap identifier? (syntax->list #'(arg-id ...)))
      #'(try next self
-            (case-λ
+            (case-lambda
              [(arg-id ...)
               (apply-extension
                ext
@@ -197,7 +197,7 @@
     [(try-case-λ (arg-id ... . rest-id) ext)
      (andmap identifier? (syntax->list #'(arg-id ... rest-id)))
      #'(try next self
-            (case-λ
+            (case-lambda
              [(arg-id ... . rest-id)
               (apply-extension
                ext
@@ -215,7 +215,7 @@
   (syntax-rules ()
     [(try-match-λ (pattern ...) ext)
      (try next self
-          (match-λ*
+          (match-lambda*
            [(and args (list pattern ...))
             (apply-extension
              ext
@@ -224,7 +224,7 @@
            [args (apply (apply-template next self) args)]))]
     [(try-match-λ (pattern ... . rest-id) ext)
      (try next self
-          (match-λ*
+          (match-lambda*
            [(and args (list-rest pattern ... rest-id))
             (apply-extension
              ext

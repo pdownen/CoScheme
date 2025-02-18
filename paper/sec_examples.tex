@@ -1,73 +1,63 @@
-One of the uses of Copatterns is to define codata, and infinite streams are the cliché example.
-Before starting our stream journey, let us recapitulate what codata is.
+\subsection{Infinite streams}
+
+% One of the uses of Copatterns is to define codata, and infinite streams are the cliché example.
+% Before starting our stream journey, let us recapitulate what codata is.
+% For decades, functional programmers have had a reliable and versatile method for representing tree-shaped structures: inductive data types.
+% These can model data of any size --- for example, lists of an arbitrary length --- but each instance must be \emph{finite}.
+% Infinite information --- like a stream of input that can go on forever --- does not fit into an inductive type, so the programmer must use some other representation to model potentially infinite objects.
+% Fortunately, the inductive data types used by functional programmers every day have a polar opposite: \emph{coinductive codata types}.
+% The \emph{coinductive} descriptor signals that values of the type may contain infinite information.
+
 For decades, functional programmers have had a reliable and versatile method for representing tree-shaped structures: inductive data types.
 These can model data of any size --- for example, lists of an arbitrary length --- but each instance must be \emph{finite}.
-Infinite information --- like a stream of input that can go on forever --- does not fit into an inductive type, so the programmer must use some other representation to model potentially infinite objects.
-Fortunately, the inductive data types used by functional programmers every day have a polar opposite: \emph{coinductive codata types}.
-The \emph{coinductive} descriptor signals that values of the type may contain infinite information.
+But how does a program handle infinite amounts of information, that cannot possibly occupy a finite memory space?
 
-Haskell programmers are already well-versed in coinductive styles of types since non-strict languages blur the line between induction and coinduction.
-For example, consider the usual example of the infinite list of Fibonacci numbers in Haskell:
+One method of modeling infinite information is through laziness, as in the Haskell programming language.
+For example, consider the usual infinite list of Fibonacci numbers in Haskell:
 \begin{minted}{haskell}
 fibs = 0 : 1 : zipWith (+) fib (tail fib)
 \end{minted}
-
 \hs|fibs| cannot be fully evaluated because it has no base case --- it would eventually expand out to \hs|0 : 1 : 1 : 2 : 3 : 5 : 8 : ...| forever --- but this is no problem in a non-strict language that only evaluates as much as needed.
+But what if we are working within a strict language without laziness built in?
+Must we give up on the approach entirely, or is there an alternate solution that works just as well with eager and lazy evaluation?
 
-In contrast, \emph{codata} describes types defined by primitive \emph{destructors} that \emph{use} values of the codata type, as opposed to the primitive constructors that define how to build values of a data type.
+In contrast, \emph{codata} describes types defined by primitive \emph{destructors} that \emph{use} values of the codata type --- as opposed to the primitive constructors that define how to build values of a data type --- and lets us easily model infinite data in eager languages, too.
 For example, the usual \agda|Stream a| codata type of infinite \agda|a|'s is defined by two destructors: \agda|Head : Stream a -> a| extracts the first element and \agda|Tail : Stream a -> Stream a| discards the first element and returns the rest.
 To define new streams, we can describe how they react to different combinations of \agda|Head| and \agda|Tail| destructions using \emph{copatterns}~\cite{APTS2013C}.
 Borrowing Agda's syntax, a possible copattern-based definition of the same \agda|fibs| function above is:
-
 \begin{minted}{agda}
 fibs : Stream Nat
 Head fibs = 0
 Head (Tail fibs) = 1
 Tail (Tail fibs) = zipWith _+_ fibs (Tail fibs)
 \end{minted}
+However, at the moment, Agda currently does not understand if \agda|fibs| is well-founded --- it is --- and so \agda|fibs| is rejected.
+As a proof assitant, Agda has has demanding requirements on all definitions to ensure well-foundedness:
+they must never have unproductive infinite loops, and they must cover every possible case (when matching on arguments or copatterns, as in \agda|fibs|).
+But for a general-purpose programming language, we expect to be able to write arbitrary loops that may or may not terminate.
+Copattern-based definitions need to gracefully handle cases that fail to return --- either due to an infinite loop or an exception, like an unhandled case, which are semantically similar \cite{ImpreciseExceptions} --- and should generate code based on whatever is given.
+In this kind of setting, the language does not enforce --- and indeed, our implementation does not check --- coverage, which is instead up to the programmer to determine.
 
-However, at the moment, Agda currently does not understand if \agda|fibs| is well-founded --- it is --- and so \agda|fibs| is rejected by the termination checker.
-Instead of requiring flags to disable checks, we leave the responsibility of performing the coverage analysis to the user.
-In addition, using copatterns over plain codata declarations allows us to have a more symmetrical language since they restore the duality between patterns/copatterns~\cite{APTS2013C}.
-
-Codata can also be used to implement regular data.
-In order to define new coinductive processes, one of the main entry points is the top-level, multi-line \scm{define*} macro.
-This macro enables us to declare codata objects through a list of equations between a copattern on the left-hand side and an expression on the right-hand side.
-At the root of every copattern is a name for the object \emph{itself}, which can be inside any number of applications --- the applications may just list parameter names or more specific patterns, narrowing down the concrete arguments that match.
-% The fact that we can create \emph{nested} copatterns allows us to perform equational reasoning.
-% This happens because we can always add one more pattern to the copattern, thus dictating a more specific evaluation context to be matched.
-% The key idea behind observations is that if we find an evaluation context that satisfies our copattern, we can substitute the context with the outcome of the respective observation.
-To illustrate this, consider the following queue example:
-\begin{minted}{scheme}
-(define* queue
-  [((stack in out) 'enq e) = (stack in (cons e out))]
-  [((stack '() '()) 'deq) = (error "Invalid dequeue from an empty queue")]
-  [((stack '() out) 'deq) = ((stack (reverse out) '()) 'deq)]
-  [((stack in out) 'deq) = (list (car in) (stack (cdr in) out))]
-  )
-\end{minted}
-Where we have a queue implementation, that uses two lists as its internal state.
-We bound this declaration to the name \scm{queue}, and in each copattern, we perform pattern matching on its evaluation context.
-So, we defined a process that knows how to react to evaluation contexts containing \scm{'enq} and \scm{'deq}.
-Now, we can start our series of stream examples using our language extension.
-
-\subsection{Infinite streams}
-
-Let us consider some examples of programming by equational reasoning to get familiar with copatterns and how we can use them in Scheme.
+Let us now consider some examples of programming by equational reasoning to get familiar with copatterns and how we can use them in Scheme.
 % Deletion candidate
 % In these examples, it can help to think about types informally to keep ourselves oriented.
 For example, even in a dynamically-typed language like Scheme, linked lists can be thought of as an inductively-defined type combining two constructed forms: \scm#List a = null | (cons a (List a))#.
 Likewise, infinite streams can be understood as the type of a procedure that exhibits two different behaviors at the same time: \scm#Stream a = 'head -> a & 'tail -> Stream a#.
 In other words, any \scm|Stream a| is a procedure that takes one argument, and its response depends on the exact value: given \scm|'head| an \scm|a| is returned, and given \scm|'tail| another \scm|Stream a| is returned.
 
+In order to define new coinductive processes, one of the main entry points is the top-level, multi-line \scm{define*} macro.
+This macro enables us to declare codata objects through a list of equations between a copattern on the left-hand side and an expression on the right-hand side.
+At the root of every copattern is a name for the object \emph{itself}, which can be inside any number of applications --- the applications may just list parameter names or more specific patterns, narrowing down the concrete arguments that match.
 Using \scm{define*}, we can define the trivial \scm|zeroes| stream  --- whose \scm|'head| is \scm|0| and whose \scm|'tail| is more \scm|zeroes| --- as:
 \begin{minted}{scheme}
+;; zeroes : Stream nat
 (define* [(zeroes 'head) = 0]
          [(zeroes 'tail) = zeroes])
 \end{minted}
 Streams like \scm|zeroes| are black boxes that can only be observed by passing \scm|'head| or \scm|'tail| as arguments to get their response.
 Still, this is enough for many useful operations, like taking the first \scm|n| elements, which can be \scm|define*|d as:
 \begin{minted}{scheme}
+;; takes : (Stream a, nat) -> List a
 (define* [(takes s 0) = '()]
          [(takes s n) = (cons (s 'head) (takes (s 'tail) (- n 1)))])
 \end{minted}
@@ -76,6 +66,7 @@ A constant stream is not particularly useful; more interesting streams will chan
 For example, imagine a ``stuttering'' stream ($0, 0, 1, 1, 2, 2, 3, 3, \dots$) that repeats numbers twice before moving on.
 This stream can be defined by copattern matching equations:
 \begin{minted}{scheme}
+;; stutter : nat -> Stream nat
 (define* [ ((stutter n) 'head)        = n]
          [(((stutter n) 'tail) 'head) = n]
          [(((stutter n) 'tail) 'tail) = (stutter (+ n 1))])
@@ -83,7 +74,7 @@ This stream can be defined by copattern matching equations:
 So that \scm|(takes (stutter 1) 10) = '(1 1 2 2 3 3 4 4 5 5)|,% 
 \footnote{
   Try it!
-  The code provided in the supplemental materials implements \scm|define*| and related macros.
+  \url{https://github.com/pdownen/CoScheme} has implementations of \scm|define*| and related macros.
   All examples shown here are executable Scheme and Racket code.
 }
 because the first and second elements --- \scm|((stutter n) 'head)| and \scm|(((stutter n) 'tail) 'head)| respectively --- return the same \scm|n| before incrementing.
@@ -110,9 +101,9 @@ The \scm|Stream Nat| interface that \scm|stutter|'s output follows allows for an
 So \scm|stutter| behavior is defined no matter what is asked of it.
 Even with other observations like \scm|takes|, which passes around partial applications of \scm|stutter| as a first-class value, internally \scm|stutter| only ``sees'' the \scm|'head| and \scm|'tail| applications from \scm|takes|, and is dormant otherwise.
 
-% Reasoning about the coverage of our copatterns is important since our implementation does not provide coverage analysis.
-% If we encounter an uncovered case, our implementation emits a runtime error, explaining that this is an uncovered copattern.
-% Non-total configurations, akin to partial functions, are not always undesirable. They can simplify the development during a prototyping phase, and if the missing case does not make sense, they can be the most semantic thing to do.
+Reasoning about the coverage of our copatterns is important since our implementation does not provide coverage analysis.
+If we encounter an uncovered case, our implementation emits a runtime error, explaining that this is an uncovered copattern.
+Non-total configurations, akin to partial functions, are not always undesirable. They can simplify the development during a prototyping phase, and if the missing case does not make sense, they can be the most semantically meaningfull.
 
 % This framework is not limited by matching a single value in the initial group.
 % To illustrate, we can define a stream that intercalates elements from two different streams using a similar configuration, but observing two arguments instead of one.
@@ -127,7 +118,38 @@ Even with other observations like \scm|takes|, which passes around partial appli
 %   [(((zigzag xs ys) 'tail) 'tail) = (zigzag (xs 'tail) (ys 'tail))])
 % \end{minted}
 
+With this practice under our belt, we can now directly translate canonical Fibonacci example from Agda to Scheme like so:
+\begin{minted}{scheme}
+;; zips-with : ((a, b) -> c, Stream a, Stream b) -> Stream c
+(define*
+  [((zips-with f xs ys) 'head) = (f (xs 'head) (ys 'head))]
+  [((zips-with f xs ys) 'tail) = (zips-with f (xs 'tail) (ys 'tail))])
+
+;; fibs : Stream nat
+(define*
+  [ (fibs 'head)        = 0]
+  [((fibs 'tail) 'head) = 1]
+  [((fibs 'tail) 'tail) = (zips-with + fibs (fibs 'tail))])
+\end{minted}
+so that \scm|(takes fibs 10)| is \scm|'(0 1 1 2 3 5 8 13 21 34)|.
+
 \subsection{Self-referrential objects}
+
+Codata can also be used to implement an abstract interface over regular finite data.
+As an alternate syntax for \scm|define*|, we can explicitly give a top-level name to bind the definition to for external use, and on each equation give a hidden internal for self-reference and recursion.
+To illustrate this, consider the following queue example, which internally refers to itself by the name \scm|self| for an object-oriented feel:
+\begin{minted}{scheme}
+(define* queue
+  [ (self 'empty)          = (self '() '())]
+  [((self in  out) 'enq x) = (self in (cons x out))]
+  [((self '() '()) 'deq)   = (error "Invalid dequeue: empty queue")]
+  [((self '() out) 'deq)   = ((self (reverse out) '()) 'deq)]
+  [((self in  out) 'deq)   = (cons (car in) (self (cdr in) out))])
+\end{minted}
+This reflects the purely functional queue implementation in using two lists (an inbox and an outbox) as internal states.
+We externally bound this declaration to the name \scm{queue}, but internal recursion is through the name \scm|self|.
+This \scm|queue| object responds to three methods: \scm|'empty| returns a (potentially new) empty queue, \scm|'enq x| puts the \scm|x| to the end of the queue (\ie the top of the inbox), and \scm|'deq| returns the oldest enqueued element (from the top of the outbox or bottom of the inbox, as appropriate).
+Thus, \scm|((((queue 'empty) 'enq 1) 'enq 2) 'deq)| returns the oldest element \scm|1| and an opaque queue object containing only \scm|2|.
 
 Visualizing what we are defining through the lens of the object-oriented paradigm can be insightful.
 In this metaphor, we can pretend that our definitions are objects and that the copatterns specify how an object should respond to a sequence of messages.
@@ -135,24 +157,36 @@ For instance, \scm{zeroes} would be an object that knows how to respond to two m
 
 Previous works, such as \cite{Brown2009FunctionI}, show us that the concept of inheritance can be applied in the functional world.
 Thus, reversing the direction of our metaphor, what should be inheritance in our abstraction? 
-Amazingly, inheritance is composition! Specifically, \emph{vertical composition}.
-Let us introduce a guiding example to illustrate this:
+The answer should be familiar to functional programmers: inheritance is composition!
+Our implementation of copattern matching in Scheme includes new facilities for composing code snippets compared to current functional (or object-oriented) languages.
+However, to avoid unwanted surprises, the programmer does have to ask for them.
+This is a small request, and can be done by replacing \scm|define*| with \scm|define-object|, as in the following file system example:
 \begin{minted}{scheme}
-(define-object size-file [(size `(file ,s)) = s])
+(define-object size-file
+  [(size `(file ,s)) = s])
+
 (define-object size-dir
-  [(size `(dir ,cts)) (try-if (null? cts)) = 8]
-  [(size `(dir ,cts)) = (+ (size (car cts)) (size `(dir ,(cdr cts))))])
+  [(size `(dir . ,cts)) = (apply + 8 (map size cts))])
+
 (define size-fs (size-file 'compose size-dir))
 \end{minted}
-This example emulates the command of calculating the size of files and directories in a file system.
-A file has its size as metadata, and a directory contains a list of its contents.
-In this definition, we used our second way of creating top-level declarations: \scm{define-object}.
-For now, it is enough to think that \scm{define-object} exposes a different abstraction, \emph{templates}, which allows us to perform our composition operations.
-Besides this, the other new construct is \scm{try-if}, which resembles a match guard and forces the copattern only to match when the predicate \scm{null} succeeds.
-This definition stresses how we can exploit a modular design and composition.
-We declare how we should calculate the size of each type of content separately, and we glue them together with our composition operation.
+This example emulates calculating the size of files and directories in a file system.
+A file has its size \scm|s| already given as metadata, and a directory contains a list of \scm|files| as its contents.
+% In this definition, we used our second way of creating top-level declarations: \scm{define-object}.
+% For now, it is enough to think that \scm{define-object} exposes a different abstraction, \emph{templates}, which allows us to perform our composition operations.
+% Besides asking for the \scm|'compose| functionality provided by \scm|define-object|, the other new construct is \scm|try-if|, which resembles a boolean match guard and forces the copattern only to match when the predicate \scm|(null? files)| succeeds.
 
-In this definition, each appearance of \scm{size} plays a key role. It may seem that we are \scm{size} function, but in reality, nothing is bound to \scm{size}.
+This is the first example illustrating our guiding principle of composition.
+We declare how we should calculate the size of each type of content separately, and we glue them together afterward.
+We refer to this style of composition as \emph{vertical composition}, because the result acts as if we have glued the equations together vertically as:
+\begin{minted}{scheme}
+(define-object size-fs
+  [(size 'file s)       = s]
+  [(size `(dir . ,cts)) = (apply + 8 (map size cts))]))
+\end{minted}
+
+In this definition, each appearance of \scm{size} plays a key role.
+It may seem that we are \scm{size} function, but in reality, nothing is bound to \scm{size}.
 Here, what is actually happening is an example of open recursion.
 Each part can perform a recursive call that will respect all the parts after joining all parts together.
 However, one may question: what is \scm{size}?
@@ -166,10 +200,11 @@ If we remove \scm{size-file}, the internal name, the root of the copattern, will
 With those out of the way, we can focus on \scm{'compose}. Here, using our OO metaphor, \scm{'compose} is a message that every object knows how to respond to. As mentioned, we are performing a \emph{vertical composition}, which you may visualize as vertically stacking the cases.
 Drinking from the OO source, we also provide another variation of composition in the form of multiple inheritance/subtyping.
 \begin{minted}{scheme}
-(define-object (size-fs-sl <: size-fs) [(size `(sl)) = 32])
+(define-object (size-fs-sl <: (inherit-from-object size-fs))
+  [(size `(sl ,_)) = 32])
 \end{minted}
 Here, we created \scm{size-fs-sl}, an extended version capable of handling symbolic links.
-We use the \scm{<:} symbol to mark which ``\emph{classes}" we should inherit from.
+We use the \scm{<:} symbol to mark which ``\emph{classes}'' we should inherit from.
 Thus, the result will be able to manifest all the \scm{size-fs} behavior in addition to what is defined in \scm{size-fs-sl} locally, which has greater precedence.
 
   

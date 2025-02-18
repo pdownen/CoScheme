@@ -1,3 +1,11 @@
+While we use the expression problem as a motivating application of compositional copatterns, it has multiple previous solutions using various features and spreading on multiple paradigms.
+The Visitor pattern~\cite{GangOfFour} is a classic solution in the object-oriented world.
+However, we have other options such as~\cite{wehr_javagi_2011}, which brings Java interfaces closer to Haskell's type classes, and~\cite{hutchison_extensibility_2012}, which presents the abstraction of object algebras that are easily integrated into OO languages, since they do not depend upon fancy features.
+On the other hand, on the functional paradigm side, we have solutions like~\cite{swierstra_data_2008} and~\cite{keep_nanopass_2013}.
+The former utilizes Haskell's type system, specifically type classes, to provide a modular way to construct data types and functions.
+However, this approach relies on a type system.
+The latter is a compiler framework that provides tools to specify different languages for the compiler passes. The framework achieves this by automatically handling a portion of the mapping between two given entities.
+
 Previously, copatterns have been developed exclusively from the perspective of statically-typed languages.
 Much of the work has been for dependently typed languages like Agda \cite{ElaboratingDependentCopatterns}, which use a type-driven approach to elaborate copatterns \cite{UnnestingCopatterns,ThibodeauMasters}.
 The closest related work is the implementation of copatterns as an OCaml macro \cite{LaforgueR17}, but this, too, is concerned with type system ramifications.

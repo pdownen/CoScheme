@@ -64,3 +64,36 @@
   [(takes strm 1) = (list (strm 'head))]
   [(takes strm n) (try-if (number? n))
                   = (cons (strm 'head) (takes (strm 'tail) (- n 1) ))])
+
+(define*
+  [((zips-with f xs ys) 'head) = (f (xs 'head) (ys 'head))]
+  [((zips-with f xs ys) 'tail) = (zips-with f (xs 'tail) (ys 'tail))])
+
+(define*
+  [ (fibs 'head)        = 0]
+  [((fibs 'tail) 'head) = 1]
+  [((fibs 'tail) 'tail) = (zips-with + fibs (fibs 'tail))])
+
+(define*
+  [((inherit-from-object super) sub)
+   =
+   (compose sub (super 'unplug))])
+
+(define* queue
+  [ (self 'empty)          = (self '() '())]
+  [((self in  out) 'enq x) = (self in (cons x out))]
+  [((self '() '()) 'deq)   = (error "Invalid dequeue: empty queue")]
+  [((self '() out) 'deq)   = ((self (reverse out) '()) 'deq)]
+  [((self in  out) 'deq)   = (cons (car in) (self (cdr in) out))])
+
+(define-object size-file
+  [(size `(file ,s)) = s])
+
+(define-object size-dir
+  [(size `(dir . ,cts)) = (apply + 8 (map size cts))])
+
+(define size-fs (size-file 'compose size-dir))
+
+(define-object (size-fs-sl <: (inherit-from-object size-fs))
+  [(size `(sl ,_)) = 32])
+

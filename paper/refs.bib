@@ -5821,3 +5821,20 @@ numpages = {10}
   author={Daniel S. Brown and William R. Cook},
   year={2009},
 }
+
+@inproceedings{ImpreciseExceptions,
+author = {Peyton Jones, Simon and Reid, Alastair and Henderson, Fergus and Hoare, Tony and Marlow, Simon},
+title = {A semantics for imprecise exceptions},
+year = {1999},
+isbn = {1581130945},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/301618.301637},
+doi = {10.1145/301618.301637},
+abstract = {Some modern superscalar microprocessors provide only imprecise exceptions. That is, they do not guarantee to report the same exception that would be encountered by a straightforward sequential execution of the program. In exchange, they offer increased performance or decreased chip area (which amount to much the same thing).This performance/precision tradeoff has not so far been much explored at the programming language level. In this paper we propose a design for imprecise exceptions in the lazy functional programming language Haskell. We discuss several designs, and conclude that imprecision is essential if the language is still to enjoy its current rich algebra of transformations. We sketch a precise semantics for the language extended with exceptions.The paper shows how to extend Haskell with exceptions without crippling the language or its compilers. We do not yet have enough experience of using the new mechanism to know whether it strikes an appropriate balance between expressiveness and performance.},
+booktitle = {Proceedings of the ACM SIGPLAN 1999 Conference on Programming Language Design and Implementation},
+pages = {25–36},
+numpages = {12},
+location = {Atlanta, Georgia, USA},
+series = {PLDI '99}
+}

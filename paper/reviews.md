@@ -120,6 +120,8 @@ p.14 Fig 3: Very jarring that there are 4 titles in this figure but it defines o
 
 > I changed the column order
 
+> Issues around eta are subtle in a call-by-value setting and don't always hold (not just a Scheme problem, even the theoretical model is CBV lambda calculus with eta issues), so the eta-expanded forms are the canonical definitions for purposes of correctness, etc. The eta-reduced versions are just for intuition. My preference is to completely remove the eta-reduction notes rather than to create potential confusion.
+
 ✅p.15 "fig 3 However": typo
 
 p.15 "(otherwise a run-time error may be encountered)": YIKES! "may" is far scarier than "will"

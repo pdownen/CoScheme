@@ -1,27 +1,27 @@
-The expression problem~\cite{ExpressionProblem} is a familiar foe.
-It is concerned with the intricacy of extending data abstractions with both new forms and operations.
-Traditionally, functional languages can easily extend abstractions with more operations, and conversely, object-oriented languages have an advantage in adding more variants to a data type over adding new operations.
-The literature presented multiple solutions to the expression problem using various features and spreading on multiple paradigms.
 
-The Visitor pattern~\cite{GangOfFour} is a classic solution in the object-oriented world.
-However, we have other options such as~\cite{wehr_javagi_2011}, which brings Java interfaces closer to Haskell's type classes, and~\cite{hutchison_extensibility_2012}, which presents the abstraction of object algebras that are easily integrated into OO languages, since they do not depend upon fancy features.
-On the other hand, on the functional paradigm side, we have solutions like~\cite{swierstra_data_2008} and~\cite{keep_nanopass_2013}.
-The former utilizes Haskell's type system, specifically type classes, to provide a modular way to construct data types and functions.
-However, this approach relies on a type system.
-The latter is a compiler framework that provides tools to specify different languages for the compiler passes. The framework achieves this by automatically handling a portion of the mapping between two given entities.
+Composition is one of the great promises of functional programming to combat complexity.
+As opposed to monolothic solutions, functional programming languages encourage us to decompose large problems into small, reusable, and reliable parts and then to recompose them back into a whole solution \cite{Hughes1989WFPM}.
+This practice is encouraged through tools like higher-order functions to abstract out common patterns and laziness to separate generation, selection, and consumption of information.
+Rather than implementing a complex algorithm as a single special-purpose loop, functional programming lets us express the same solution as the composition of simple domain-specific operations and generic combinators: maps, filters, folds, and unfolds.
+
+However, the \emph{expression problem}~\cite{ExpressionProblem} is a familiar foe that still resists this (de)compositional approach.
+It captures the common problem that arises when we want to maintain code --- such as an evaluator for the syntax trees of an expression language --- by extending it in two different directions: adding new forms of data (\ie classes of objects) and new operations (\ie methods) on them.
+Traditionally, functional languages can easily add new operations over any given data type, but adding a new constructor requires a major rewrite that can potentially alter the rest of the code.
+Conversely, object-oriented languages make it easy to add a new class of object, but extending a base class with a new method again requires major rewriting.
+Being a common obstacle in the way of maintaining, extending, and decomposing code, the expression problem has garnered many solutions in the object-oriented \cite{GangOfFour,wehr_javagi_2011} and functional \cite{swierstra_data_2008,keep_nanopass_2013} worlds, and especially hybrid languages that mix both \cite{BrachaC90Mixins,flatt1998mixin}.
 
 This work presents a novel solution to the expression problem: composable copatterns.
-Copatterns~\cite{APTS2013C} are often associated with codata types, but their use is not limited to just that.
+Copatterns~\cite{APTS2013C} are often associated with codata types for expressing infinite objects, but their use is not limited to just that.
 Their composition, in particular, allows us to define programs by performing equational reasoning in the evaluation context.
 Performing the ``substitution of equals for equals''~\cite{wadler_critique_1987} enhances the predictability and composability of our programs since we can analyze our part code in isolation.
 
-Previous implementations of copatterns are associated with strongly typed languages.
+Previous implementations of copatterns can be found in strongly typed languages which impose prescribed restrictions on their use.
 For example, Agda gives the most full-fledged implementation of copatterns in a real system~\cite{ElaboratingDependentCopatterns}.
 However, Agda is primarily a proof assistant rather than a general-purpose programming language, and as such, has different concerns than an ordinary functional programmer.
 There is also some support for copatterns in OCaml~\cite{LaforgueR17}, but as an unofficial extension that has not been merged into the main compiler.
 
-Rather than just recapping the macro-based definitions of copatterns~\cite{LaforgueR17}, we also use macros, but we focus on providing new methods of extensibility that were not available before and presenting an untyped encoding for copatterns.
-To achieve that and fully integrate it into a real, general-purpose programming language, we choose a programmable programming language~\cite{ProgrammablePL} and provide a new language extension as a library~\cite{LanguageLibrary}.
+The copatterns implemented here are also implemented as macros like \cite{LaforgueR17}, however, we present a different encoding that focuses on providing new methods of extensibility that were not available before, and can be desugared without any static typing information.
+To achieve that, and to fully integrate it into a practical general-purpose programming language, we choose a programmable programming language~\cite{ProgrammablePL} and provide a new language extension as a library~\cite{LanguageLibrary}.
 We focus, in particular, on Scheme and Racket, which offers a robust macro system for seamlessly implementing new language features.
 
 Our extension presents three different composition flavors, allowing us to capture some ``design patterns'' used by functional programmers as first-class abstractions.

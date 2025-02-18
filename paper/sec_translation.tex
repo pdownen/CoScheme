@@ -140,9 +140,9 @@ Translating new terms:
 \begin{align*}
   \den{\lamstar B}
   &=
-  (\Rec \mathit{self} = T\den{B} ~ \mathit{self})
-  &=_\eta
   (\Rec \mathit{self} = T\den{B} ~ (\lambda x. \mathit{self} ~ x))
+  &=_\eta
+  (\Rec \mathit{self} = T\den{B} ~ \mathit{self})
   \\
   \den{\Template B}
   &=
@@ -161,17 +161,17 @@ Translating templates:
 \begin{align*}
   T\den{\varepsilon}
   &=
-  \mathit{fail}
+  \lambda s. \mathit{fail}~s
   &
   &=_\eta
-  \lambda s. \mathit{fail}~s
+  \mathit{fail}
   \\
   T\den{O; B}
   &=
-  E\den{O} ~ T\den{B}
+  \lambda s. E\den{O} ~ T\den{B} ~ s
   &
   &=_\eta
-  \lambda s. E\den{O} ~ T\den{B} ~ s
+  E\den{O} ~ T\den{B}
   \\
   T\den{\Continue x \to M}
   &=
@@ -198,17 +198,17 @@ Translating other extensions:
 \begin{align*}
   E\den{\varepsilon}
   &=
-  \lambda b. b
+  \lambda b. \lambda s. b ~ s
   &
   &=_\eta
-  \lambda b. \lambda s. b ~ s
+  \lambda b. b
   \\
   E\den{O; O'}
   &=
-  E\den{O} \comp E\den{O'}
+  \lambda b. \lambda s. E\den{O} ~ (E\den{O'}~b) ~ s
   &
   &=_\eta
-  \lambda b. \lambda s. E\den{O} ~ (E\den{O'}~b) ~ s
+  E\den{O} \comp E\den{O'}
   \\
   E\den{\lambda x. O}
   &=

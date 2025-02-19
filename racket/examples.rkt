@@ -101,34 +101,34 @@
 
 ;; Arithmetic expressions with just numbers and addition
 
-;; Expr = `(num ,Number)
+;; Expr = Number
 ;;      | `(add ,Expr ,Expr)
 
 ;; expr0 : Expr
-(define expr0 '(add (num 1) (add (num 2) (num 3))))
+(define expr0 '(add 1 (add 2 3)))
 
 ;; expr? : Any -> Bool
 (define*
-  [(expr? `(num ,n))    = (number? n)]
-  [(expr? `(add ,l ,r)) = (and (expr? l) (expr? r))]
-  [(expr? _)            = false])
+  [(expr? n) (try-if (number? n)) = true]
+  [(expr? `(add ,l ,r))           = (and (expr? l) (expr? r))]
+  [(expr? _)                      = false])
 
 ;; eval : Expr -> Number
 (define*
-  [(eval `(num ,n))    = n]
-  [(eval `(add ,l ,r)) = (+ (eval l) (eval r))])
+  [(eval n) (try-if (number? n)) = n]
+  [(eval `(add ,l ,r))           = (+ (eval l) (eval r))])
 
 ;; eval-λ* : Expr -> Number
 ;; alternative definition via an anonymous λ*
 (define eval-λ*
-  (λ* [(eval `(num ,n))    = n]
-      [(eval `(add ,l ,r)) = (+ (eval l) (eval r))]))
+  (λ* [(eval n) (try-if (number? n)) = n]
+      [(eval `(add ,l ,r))           = (+ (eval l) (eval r))]))
 
 ;; list-nums : Expr -> List Number
 ;; return a list of all the numeric literals in an expression
 (define*
-  [(list-nums `(num ,n))    = (list n)]
-  [(list-nums `(add ,l ,r)) = (append (list-nums l) (list-nums r))])
+  [(list-nums n) (try-if (number? n)) = (list n)]
+  [(list-nums `(add ,l ,r))           = (append (list-nums l) (list-nums r))])
 
 (expr? expr0)
 (eval expr0)
@@ -138,13 +138,13 @@
 ;; list-nums* : Expr -> List Number
 ;; same as list-nums, but as an object inheriting extra functionality for composition
 (define-object
-  [(list-nums* `(num ,n))    = (list n)]
-  [(list-nums* `(add ,l ,r)) = (append (list-nums* l) (list-nums* r))])
+  [(list-nums* n) (try-if (number? n)) = (list n)]
+  [(list-nums* `(add ,l ,r))           = (append (list-nums* l) (list-nums* r))])
 
 ;; eval* : Expr -> Number
 ;; same as eval, but now defined as the composition of two separate objects
 (define-object
-  [(eval-num `(num ,n)) = n])
+  [(eval-num n) (try-if (number? n)) = n])
 
 (define-object
   [(eval-add `(add ,l ,r)) = (+ (eval-add l) (eval-add r))])
@@ -172,7 +172,7 @@
   (list-nums* 'compose list-mul))
 
 ;; expr1 : Expr
-(define expr1 '(add (mul (num 2) (num 3)) (num 4)))
+(define expr1 '(add (mul 2 3) 4))
 
 (eval-arith expr1)
 (list-nums-arith expr1)
@@ -199,7 +199,7 @@
   (list-nums-arith 'compose list-sub))
 
 ;; expr1-sub1 : Expr
-(define expr1-sub1 `(sub ,expr1 (num 1)))
+(define expr1-sub1 `(sub ,expr1 1))
 
 (eval-arith+sub expr1-sub1)
 (list-nums-arith+sub expr1-sub1)
@@ -213,7 +213,7 @@
 ;; Expr = ... | `(var ,Symbol)
 
 ;; expr2 : Expr
-(define expr2 '(add (var x) (mul (num 3) (var y))))
+(define expr2 '(add (var x) (mul 3 (var y))))
 
 ;; env-xy : ((Symbol . Number) ...)
 (define env-xy '((x . 10) (y . 20)))
@@ -309,33 +309,30 @@
 
 ;; Finally, we want to reform operations as another well-formed Expr tree if one or both of the sub-expressions are not numbers.
 
+;; If the respective operation op ('add, 'mul, or 'sub) cannot be performed numerically, then at least one argument is not a number. In that case, the operation op should be reformed as a syntax tree `(,op ,l ,r).
+(define-object reform-operations
+  [(reform 'add l r) = (list 'add l r)]
+  [(reform 'mul l r) = (list 'mul l r)]
+  [(reform 'sub l r) = (list 'sub l r)])
+
+;; The repeated reformation of each operation is a little redundant. We can factor it out once and for by checking that the message tag is an operation, and then doing the same thing in each case.
+(define-object reform-operations*
+  [(reform op l r) (try-if (operation? op)) = (list op l r)])
+
 ;; The possible operations so far are 'add, 'mul, or 'sub.
 (define (operation? s)
   (or (equal? s 'add) (equal? s 'mul) (equal? s 'sub)))
 
-;; If the respective operation op ('add, 'mul, or 'sub) cannot be performed numerically, then at least one argument is not a number. If the other argument *is* a number n, it should be turned back into a well-formed expression `(num ,n). Afterward, the operation should be reformed as a syntax tree `(,op ,l ,r).
-(define-object reform-operations
-  [(reform op l r) (try-if (and (operation? op) (number? l))) = (reform op `(num ,l) r)]
-  [(reform op l r) (try-if (and (operation? op) (number? r))) = (reform op l `(num ,r))]
-  [(reform op l r) (try-if (operation? op))                   = (list op l r)])
-
-;; The repeated check (operation? op) is a little redundant. We can factor it out once and for all by horizontally composing with an extension that says what to do in each sub-case.
-(define-object reform-operations*
-  [(reform op l r) (try-if (operation? op))
-                   (extension
-                    [_ (try-if (number? l)) = (reform op `(num ,l) r)]
-                    [_ (try-if (number? r)) = (reform op l `(num ,r))]
-                    [_                     = (list op l r)])])
-
 ;; Constant folding (i.e., partially evaluating up to operations blocked by variables) can then be composed from the "safe" arithmetic evaluator with handlers to leave variables alone and to reform blocked operations.
 (define constant-fold
-  (eval-arith-safe 'compose leave-variables reform-operations*))
+  (eval-arith-safe 'compose leave-variables reform-operations))
 
 
 ;; expr3 : Expr
-(define expr3 '(add (add (num 1) (num 1))
-                    (mul (var x)
-                         (mul (num 2) (add (num 2) (num 3))))))
+(define expr3
+  '(add (add 1 1)
+        (mul (var x)
+             (mul 2 (add 2 3)))))
 
 (constant-fold expr1)
 (constant-fold expr1-sub1)

@@ -32,7 +32,7 @@ Head (Tail fibs) = 1
 Tail (Tail fibs) = zipWith _+_ fibs (Tail fibs)
 \end{minted}
 However, at the moment, Agda currently does not understand if \agda|fibs| is well-founded --- it is --- and so \agda|fibs| is rejected.
-As a proof assitant, Agda has has demanding requirements on all definitions to ensure well-foundedness:
+As a proof assistant, Agda has demanding requirements on all definitions to ensure well-foundedness:
 they must never have unproductive infinite loops, and they must cover every possible case (when matching on arguments or copatterns, as in \agda|fibs|).
 But for a general-purpose programming language, we expect to be able to write arbitrary loops that may or may not terminate.
 Copattern-based definitions need to gracefully handle cases that fail to return --- either due to an infinite loop or an exception, like an unhandled case, which are semantically similar \cite{ImpreciseExceptions} --- and should generate code based on whatever is given.
@@ -103,7 +103,7 @@ Even with other observations like \scm|takes|, which passes around partial appli
 
 Reasoning about the coverage of our copatterns is important since our implementation does not provide coverage analysis.
 If we encounter an uncovered case, our implementation emits a runtime error, explaining that this is an uncovered copattern.
-Non-total configurations, akin to partial functions, are not always undesirable. They can simplify the development during a prototyping phase, and if the missing case does not make sense, they can be the most semantically meaningfull.
+Non-total configurations, akin to partial functions, are not always undesirable. They can simplify the development during a prototyping phase, and if the missing case does not make sense, they can be the most semantically meaningful.
 
 % This framework is not limited by matching a single value in the initial group.
 % To illustrate, we can define a stream that intercalates elements from two different streams using a similar configuration, but observing two arguments instead of one.
@@ -133,84 +133,182 @@ With this practice under our belt, we can now directly translate canonical Fibon
 \end{minted}
 so that \scm|(takes fibs 10)| is \scm|'(0 1 1 2 3 5 8 13 21 34)|.
 
-\subsection{Self-referrential objects}
+\subsection{Self-referential objects}
 
 Codata can also be used to implement an abstract interface over regular finite data.
 As an alternate syntax for \scm|define*|, we can explicitly give a top-level name to bind the definition to for external use, and on each equation give a hidden internal for self-reference and recursion.
 To illustrate this, consider the following queue example, which internally refers to itself by the name \scm|self| for an object-oriented feel:
 \begin{minted}{scheme}
 (define* queue
-  [ (self 'empty)          = (self '() '())]
-  [((self in  out) 'enq x) = (self in (cons x out))]
+  [ (self 'new)            = (self '() '())]
+  [((self in  out) 'enq x) = (self (cons x in) out)]
   [((self '() '()) 'deq)   = (error "Invalid dequeue: empty queue")]
-  [((self '() out) 'deq)   = ((self (reverse out) '()) 'deq)]
-  [((self in  out) 'deq)   = (cons (car in) (self (cdr in) out))])
+  [((self in  '()) 'deq)   = ((self '() (reverse in)) 'deq)]
+  [((self in  out) 'deq)   = (cons (car out) (self in (cdr out)))])
 \end{minted}
 This reflects the purely functional queue implementation in using two lists (an inbox and an outbox) as internal states.
 We externally bound this declaration to the name \scm{queue}, but internal recursion is through the name \scm|self|.
-This \scm|queue| object responds to three methods: \scm|'empty| returns a (potentially new) empty queue, \scm|'enq x| puts the \scm|x| to the end of the queue (\ie the top of the inbox), and \scm|'deq| returns the oldest enqueued element (from the top of the outbox or bottom of the inbox, as appropriate).
-Thus, \scm|((((queue 'empty) 'enq 1) 'enq 2) 'deq)| returns the oldest element \scm|1| and an opaque queue object containing only \scm|2|.
+This \scm|queue| object responds to three methods: \scm|'new| returns a new empty queue, \scm|'enq x| puts the \scm|x| to the end of the queue (\ie the top of the inbox), and \scm|'deq| returns the oldest enqueued element (from the top of the outbox or bottom of the inbox, as appropriate).
+Thus, \scm|((((queue 'new) 'enq 1) 'enq 2) 'deq)| returns the oldest element \scm|1| and a queue object containing only \scm|2|.
 
-Visualizing what we are defining through the lens of the object-oriented paradigm can be insightful.
-In this metaphor, we can pretend that our definitions are objects and that the copatterns specify how an object should respond to a sequence of messages.
-For instance, \scm{zeroes} would be an object that knows how to respond to two messages:  \scm{'head} and \scm{'tail}.
+Visualizing what we are defining through the lens of the object-oriented paradigm can give a new perspective here.
+With this metaphor, we can view our definitions as describing the protocols of objects, where the equations specify how an object should respond to a sequence of messages.
+Here, \scm|queue| itself can only directly respond to one message --- \scm|'new| --- that initializes the object with two empty lists for its private internal state.
+From there, the initialized \scm|queue| object now only responds to the \scm|'enq x| and \scm|'deq| messages which can read and update the object's internal state.
+However, besides these two messages, there is no other way to manipulate the internal state of an initialized \scm|queue| object;
+the \scm|in| and \scm|out| lists are completely hidden within an opaque procedural abstraction, enforcing an encapsulation of private state.
+Given an initialized \scm|queue| object, it would not be possible to, for instance, break the first-in-first-out ordering by taking an element from the \scm|in| list or put an element on the \scm|out| list.
 
-Previous works, such as \cite{Brown2009FunctionI}, show us that the concept of inheritance can be applied in the functional world.
-Thus, reversing the direction of our metaphor, what should be inheritance in our abstraction? 
-The answer should be familiar to functional programmers: inheritance is composition!
+Since we can already use encapsulation in copattern-based definitions, can we also model a functional version \cite{Brown2009FunctionI} of inheritance and dynamic dispatch?
 Our implementation of copattern matching in Scheme includes new facilities for composing code snippets compared to current functional (or object-oriented) languages.
 However, to avoid unwanted surprises, the programmer does have to ask for them.
 This is a small request, and can be done by replacing \scm|define*| with \scm|define-object|, as in the following file system example:
 \begin{minted}{scheme}
-(define-object size-file
-  [(size `(file ,s)) = s])
+(define-object
+  [((fs-object p . _) 'path) = p])
 
-(define-object size-dir
-  [(size `(dir . ,cts)) = (apply + 8 (map size cts))])
+(define-object (<: (import-object fs-object))
+  [((file p txt) 'text) = txt]
+  [((file p txt) 'size) = (string-length ((file p txt) 'text))])
 
-(define size-fs (size-file 'compose size-dir))
+(define-object (directory <: (import-object fs-object))
+  [((apply dir p cts) 'contents) = cts]
+  [((apply dir p cts) 'overhead) = 8]
+  [((apply dir p cts) 'size)
+   = (apply + ((apply dir p cts) 'overhead)
+              (map (λ(o) (o 'size)) ((apply dir p cts) 'contents)))])
 \end{minted}
-This example emulates calculating the size of files and directories in a file system.
-A file has its size \scm|s| already given as metadata, and a directory contains a list of \scm|files| as its contents.
-% In this definition, we used our second way of creating top-level declarations: \scm{define-object}.
-% For now, it is enough to think that \scm{define-object} exposes a different abstraction, \emph{templates}, which allows us to perform our composition operations.
-% Besides asking for the \scm|'compose| functionality provided by \scm|define-object|, the other new construct is \scm|try-if|, which resembles a boolean match guard and forces the copattern only to match when the predicate \scm|(null? files)| succeeds.
-
-This is the first example illustrating our guiding principle of composition.
-We declare how we should calculate the size of each type of content separately, and we glue them together afterward.
-We refer to this style of composition as \emph{vertical composition}, because the result acts as if we have glued the equations together vertically as:
+This example emulates some functionality of a filesystem, specifically calculating various sizes.
+Every filesystem object has a path, which is captured by the \scm|fs-object| object that only knows to calculating its \scm|'path| by returning the first piece of information it was given, and ignoring the rest of the object's internal data.
+Filesystem objects all also have a size, but calculating it requires more object-specific information.
+This additional functionality is spelled out by more specific filesystem objects:
+\begin{itemize}
+\item A \scm|file| contains some \scm|'text| and its \scm|'size| is the length of that text.
+\item A \scm|directory| contains any number of additional filesystem objects, stored as its \scm|'contents|, and its \scm|'size| is the sum of it's \scm|'contents| size plus an additional \scm|'overhead| that defaults to \scm|8|.
+\end{itemize}
+Both \scm|file| and \scm|directory| objects inherit the code for calculating it's \scm|'path| by importing \scm|fs-object| with the extension clause \scm|<: (import-object fs-object)|.
+Note that these three object definitions exercise three of the four possible definition forms, based on whether the external name is given explicitly or inferred, and on whether there is an extension clause is included:
+\begin{itemize}
+\item \scm|fs-object|'s external name is inferred from the internal name in its copattern equation, and it has no listed extension clause,
+\item \scm|file|'s external name is inferred from its internal one and it extends \scm|fs-object|,
+\item \scm|directory|'s external name is given explicitly (and is different from its internal name) and it extends \scm|fs-object|.
+\end{itemize}
+The last possibility is an explicit external name with no extensions, such as the following equivalent definition of \scm|fs-object| that elaborates the naming inference:
 \begin{minted}{scheme}
-(define-object size-fs
-  [(size 'file s)       = s]
-  [(size `(dir . ,cts)) = (apply + 8 (map size cts))]))
+(define-object fs-object
+  [((fs-object p . _) 'path) = p])
 \end{minted}
 
-In this definition, each appearance of \scm{size} plays a key role.
-It may seem that we are \scm{size} function, but in reality, nothing is bound to \scm{size}.
-Here, what is actually happening is an example of open recursion.
-Each part can perform a recursive call that will respect all the parts after joining all parts together.
-However, one may question: what is \scm{size}?
-\scm{size} is the internal name for a recursive call.
-It is not required to be the same in each component since it will only be used in the scope of that copattern.
-We could have other names instead of \scm{size}, like \scm{phony}, \scm{size-dir}, \scm{self}, and \scm{this}.
-The last two are familiar faces from OO languages, but nevertheless, all would be valid for our internal name.
-It is also possible to omit the name in a \scm{define*} declaration.
-If we remove \scm{size-file}, the internal name, the root of the copattern, will be used and exposed. 
-
-With those out of the way, we can focus on \scm{'compose}. Here, using our OO metaphor, \scm{'compose} is a message that every object knows how to respond to. As mentioned, we are performing a \emph{vertical composition}, which you may visualize as vertically stacking the cases.
-Drinking from the OO source, we also provide another variation of composition in the form of multiple inheritance/subtyping.
+While these definitions are functional, they contain some undesirable redundancy.
+In particular, we have to repeat the same initialization forms --- \scm|(file p txt)| and \scm|(apply dir p cts)| --- in front of every equational definition because the object must be initialized with parameters before it is used.
+What's worse, every time we want to ask a question about the object itself by recursively passing it a message, we have to repeat this same initialization again exactly as it occurred, leading to longer and more error-prone code.
+It would be better here to follow the common object-oriented factorization of steps:
+\emph{first} the object is initialized with some internal data at the time of its construction and \emph{then} we get an object with can (recursively) respond to methods.
+This can be done by factoring out the common construction phase in the above definitions using a \scm|construct| clause like so:
 \begin{minted}{scheme}
-(define-object (size-fs-sl <: (inherit-from-object size-fs))
-  [(size `(sl ,_)) = 32])
-\end{minted}
-Here, we created \scm{size-fs-sl}, an extended version capable of handling symbolic links.
-We use the \scm{<:} symbol to mark which ``\emph{classes}'' we should inherit from.
-Thus, the result will be able to manifest all the \scm{size-fs} behavior in addition to what is defined in \scm{size-fs-sl} locally, which has greater precedence.
+(define-object (<: (import-object fs-object))
+  [(file p txt) (construct (list p txt))
+   (object
+    [(self 'text) = txt]
+    [(self 'size) = (string-length (self 'text))])])
 
-  
+(define-object (directory <: (import-object fs-object))
+  [(apply dir p cts) (construct (cons p cts))
+   (object
+    [(self 'contents) = cts]
+    [(self 'overhead) = 8]
+    [(self 'size)
+     = (apply + (self 'overhead)
+                (map (λ(o) (o 'size)) (self 'contents)))])])
+\end{minted}
+The \scm|construct| operation lists its internal parameters given at the time of
+initialization.
+After this step, we describe a first-class anonymous \scm|object| that knows
+how to refer to its fully-constructed form by an internal name (here we use the
+name \scm|self|), so there is no need to re-construct \scm|(file p txt)| or \scm|(apply dir p cts)| to recursively call other methods.
+Factoring out the common copattern leads to shorter code, the definitions describe objects with exactly the same behavior as before.
+
+So far, we have only shaved off small parts of shared code: the common \scm|'path| method and the initial initialization copattern.
+Where this coding style starts to pay off is when we override some methods to automatically influence the result of others.
+For example, we might have a fancier type of directory structure that replicates the exact same behavior as a normal directory but its \scm|'overhead| is \scm|128| instead of \scm|8|.
+Or we might have static links that acts like a normal \scm|file|, except that only contains a path to the real place its text is stored, so it always has fixed size (\scm|8|).
+These specialized revisions of directories and files can be implemented by importing from the original definitions and modifying certain lines like so (where we omit the code for looking up the text for a static link):
+\begin{minted}{scheme}
+(define-object (fancy-directory <: (import-object directory))
+  [((fancy-dir p . cts) 'overhead) = 128])
+
+(define-object (<: (import-object file))
+  [(static-link p lnk) (construct (list p lnk))
+   (object
+    [(_ 'link) = lnk]
+    [(_ 'text) = "..."]
+    [(_ 'size) = 8])])
+\end{minted}
+Although \scm|fancy-directory| has only one defining equation about its \scm|'overhead|, the implication is that its \scm|'size| should be \scm|120| larger than a regular \scm|directory| due to the \scm|'overhead| increase.
+We can test out this use of inheritance and dynamic dispatch by simulating a small directory structure
+\begin{minted}{scheme}
+(define ham (file "hamlet.txt" "Words, words, words...."))
+(define guide (file "guide.txt" "Don't Panic"))
+(define books (directory* "Books" ham guide))
+(define shortcut (static-link "shortcut.txt" "Books/guide.txt"))
+(define docs (fancy-directory "Documents" shortcut books))
+\end{minted}
+and calculating the sizes of each filesystem object:
+\begin{minted}{scheme}
+(ham      'size) = 23  = (string-length "Words, words, words....")
+(guide    'size) = 11  = (string-length "Don't Panic")
+(books    'size) = 42  = (+ 8 23 11)
+(shortcut 'size) = 8
+(docs     'size) = 178 = (+ 128 8 42)
+\end{minted}
+
+The question is: how were we able to inject new code in the middle of an object like \scm|directory| to change its behavior?
+The key issue is that, within \scm|directory|, recursive calls to \scm|((apply dir p cts) 'overhead)| --- or just simply \scm|(self 'overhead)| in the second version --- cannot be tied to \emph{this} definition of \scm|directory|.
+Instead, we employ \emph{open recursion}: the internal references to the recursive object itself are left as unbound parameters that will only be bound to the full object value when the final definition is ready to use.
+This is why the internal and external names can be different --- like in \scm|queue| and \scm|directory| --- since the external name is bound to the final object value while the internal names are left (temporarily) open-ended and will be filled in later.
+In the same way, the internal names used in each clause are fully independent and can also differ from one another.
+This difference of using open recursion to leave internal names temporarily unbound also applies to definitions where the external name is inferred: although the external names \scm|file| and \scm|static-link| are inferred from the internal names in the copatterns, the internal variables are left unbound until the externally-visible name gets bound to the object value.
+
+Thankfully, this whole framework is still build on purely functional idioms, which make it easier to reason about code.
+How can we understand what inheritance should do?
+The answer should be familiar to functional programmers: inheritance is composition and substitution!
+For example, the inheritance dependencies can be fully inlined as-is into \scm|fancy-directory| to bring the full definition into one place by copying the inherited code into place like so:
+\begin{minted}{scheme}
+(define-object fancy-directory
+  [((fancy-dir p . cts) 'overhead) = 128]
+  [((apply dir p cts)   'overhead) = 8]
+  [((apply dir p cts)   'contents) = cts]
+  [((apply dir p cts)   'size)
+   = (apply + ((apply dir p cts) 'overhead)
+              (map (λ(o) (o 'size)) ((apply dir p cts) 'contents)))]
+  [((fs-object p . _)   'path)     = p])
+\end{minted}
+After na\"ive inlining, there are some irrelevant differences: there are three different internal names (\scm|fancy-dir|, \scm|dir|, and \scm|fs-object|) used in various clauses, and we use two equivalent syntaxes  (\scm|(fancy-dir p . cts)| and \scm|(apply dir p cts)|) for copatterns that bind arbitrary-length argument sequences to \scm|cts|.
+Cleaning up these differences by rewriting each initializing copattern to \scm|(apply self p cts)| and renaming as necessary gives the more uniform code:
+\begin{minted}{scheme}
+(define-object fancy-directory
+  [((apply self p cts) 'overhead) = 128]
+  [((apply self p cts) 'overhead) = 8]
+  [((apply self p cts) 'contents) = cts]
+  [((apply self p cts)   'size)
+   = (apply + ((apply self p cts) 'overhead)
+              (map (λ(o) (o 'size)) ((apply self p cts) 'contents)))]
+  [((apply self p cts) 'size)     = (apply + 128 (map (λ(o) (o 'size)) cts))]
+  [((apply self p _)   'path)     = p])
+\end{minted}
+From here, it becomes more obvious that the two different equations defining \scm|(... 'overhead)| overlap, so the first one takes precedence and the second one is dead code that can be completely erased.
+Furthermore, when there are no more future extensions, we can inline the recursive calls at this point, to get the simpler closed definition that reveals exactly what each method will do:
+\begin{minted}{scheme}
+(define* fancy-directory
+  [((apply self p cts) 'overhead) = 128]
+  [((apply self p cts) 'contents) = cts]
+  [((apply self p cts) 'size)     = (apply + 128 (map (λ(o) (o 'size)) cts))]
+  [((apply self p _)   'path)     = p])
+\end{minted}
+
 \subsection{Decomposing the expression problem}
 
-However, definitions by copatterns are useful for more programming tasks than just streams and other infinite objects.
+% However, definitions by copatterns are useful for more programming tasks than just streams and other infinite objects.
 % In particular, we can define a depth-first search on a finite binary tree.
 % For this goal, we need to specify what should happen in contexts containing leaves and nodes of a tree.
 % We can create observations that match a specific shape of the input.
@@ -222,6 +320,9 @@ However, definitions by copatterns are useful for more programming tasks than ju
 %                                                     (list e)
 %                                                     ((search r) 'dfs))])
 % \end{minted}
+
+Our notion of compositional copatterns can capture some object-oriented styles of code (de)composition with encapsulation, inheritance, and dynamic dispatch.
+How can this new capability for composition influence the kinds of functional programs we write?
 For example, consider the usual definition of a simple arithmetic expression evaluator in typed functional languages like Haskell and OCaml (we use Haskell syntax here):
 \begin{minted}{haskell}
 data Expr = Num Int | Add Expr Expr

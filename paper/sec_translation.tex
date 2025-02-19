@@ -141,8 +141,8 @@ Translating new terms:
   \den{\lamstar B}
   &=
   (\Rec \mathit{self} = T\den{B} ~ (\lambda x. \mathit{self} ~ x))
-  &=_\eta
-  (\Rec \mathit{self} = T\den{B} ~ \mathit{self})
+  % &=_\eta
+  % (\Rec \mathit{self} = T\den{B} ~ \mathit{self})
   \\
   \den{\Template B}
   &=
@@ -162,16 +162,16 @@ Translating templates:
   T\den{\varepsilon}
   &=
   \lambda s. \mathit{fail}~s
-  &
-  &=_\eta
-  \mathit{fail}
+  % &
+  % &=_\eta
+  % \mathit{fail}
   \\
   T\den{O; B}
   &=
   \lambda s. E\den{O} ~ T\den{B} ~ s
-  &
-  &=_\eta
-  E\den{O} ~ T\den{B}
+  % &
+  % &=_\eta
+  % E\den{O} ~ T\den{B}
   \\
   T\den{\Continue x \to M}
   &=
@@ -199,16 +199,16 @@ Translating other extensions:
   E\den{\varepsilon}
   &=
   \lambda b. \lambda s. b ~ s
-  &
-  &=_\eta
-  \lambda b. b
+  % &
+  % &=_\eta
+  % \lambda b. b
   \\
   E\den{O; O'}
   &=
   \lambda b. \lambda s. E\den{O} ~ (E\den{O'}~b) ~ s
-  &
-  &=_\eta
-  E\den{O} \comp E\den{O'}
+  % &
+  % &=_\eta
+  % E\den{O} \comp E\den{O'}
   \\
   E\den{\lambda x. O}
   &=
@@ -216,10 +216,10 @@ Translating other extensions:
   \\
   E\den{\Match P \gets M ~ O}
   &=
-  \rlap{$
+  % \rlap{$
     \lambda b. \lambda s.
     \Match \den{M} \With \set{P \to E\den{O}~b~s; \_ \to b~s}
-  $}
+  % $}
   % \lambda b. \lambda s.
   % \begin{aligned}[t]
   %   &\Match \den{M} \With \\

@@ -3,7 +3,7 @@
 (provide define* lambda* λ* override-lambda* override-λ*
          define-object object meta default-superclass
          extension apply-extension template apply-template
-         chain nest comatch try always-do try-if try-match
+         chain nest comatch try always-do try-if try-match try-let
          try-lambda try-λ try-case-lambda try-case-λ try-match-lambda try-match-λ
          try-apply-remember try-apply-forget try-object
          empty-extension empty-template choose commit
@@ -154,6 +154,11 @@
   (non-rec expr)
   (continue _ expr))
 
+(define-syntax-rule
+  (try-let binds ext)
+  (try next self
+       (let binds (apply-extension ext next self))))
+
 ;; try-if : Bool -> Extension -> Extension
 ;; Test the given boolean expression: if it is true, run the given extension, and if it is false, fall through to the next option.  To ensure a predictable evaluation order, this is defined as a macro so that the expression which returns the success extension only runs when the check is true.
 (define-syntax-rule
@@ -187,7 +192,7 @@
     [(try-case-λ (arg-id ...) ext)
      (andmap identifier? (syntax->list #'(arg-id ...)))
      #'(try next self
-            (case-lambda
+            (case-λ
              [(arg-id ...)
               (apply-extension
                ext
@@ -197,7 +202,7 @@
     [(try-case-λ (arg-id ... . rest-id) ext)
      (andmap identifier? (syntax->list #'(arg-id ... rest-id)))
      #'(try next self
-            (case-lambda
+            (case-λ
              [(arg-id ... . rest-id)
               (apply-extension
                ext
@@ -215,7 +220,7 @@
   (syntax-rules ()
     [(try-match-λ (pattern ...) ext)
      (try next self
-          (match-lambda*
+          (match-λ*
            [(and args (list pattern ...))
             (apply-extension
              ext
@@ -224,7 +229,7 @@
            [args (apply (apply-template next self) args)]))]
     [(try-match-λ (pattern ... . rest-id) ext)
      (try next self
-          (match-lambda*
+          (match-λ*
            [(and args (list-rest pattern ... rest-id))
             (apply-extension
              ext
@@ -290,7 +295,7 @@
      (identifier? #'args)
      #'(comatch copat (try-case-λ args ext))]
     [(comatch (apply copat arg1 arg ... rest) ext)
-     #'(comatch copat (try-λ(arg ... . rest) ext))]
+     #'(comatch copat (try-λ(arg1 arg ... . rest) ext))]
     [(comatch (copat arg ... . end) ext)
      #'(comatch copat (try-λ(arg ... . end) ext))]
     [(comatch _ ext)
@@ -437,31 +442,37 @@
 ;; object : ((<: (Extension -> Extension) ...), TemplateSyntax) -> Codata
 ;; the main way to define an (anonymous) codata object which inherits additional behavior from some external source; if not given explicitly with an initial (<: mod), default-superclass is implicitly used. In the most general case, the modifiers can by any sequence of extension-modifiying functions to be composed together, which allows each modifier in turn to copy and re-use the extensible form of the object before it is finally plugged (with a base case and recursive reference to itself). In a common special case, this modifier can merely compose (vertically or horizontally) the given extension with other inherited behavior, giving preference to either the new code or inherited code in cases of overlap.
 (define-syntax object
-  (syntax-rules (<:)
-    [(object (<: mod) clause ...)
+  (syntax-rules (<: !<:)
+    [(object (!<: mod) clause ...)
      (plug (mod (extension clause ...)))]
+    [(object (!<: mod ...) clause ...)
+     (object (!<: (compose mod ...)) clause ...)]
     [(object (<: mod ...) clause ...)
-     (plug ((compose mod ...) (extension clause ...)))]
+     (object (!<: (default-superclass) mod ...) clause ...)]
     [(object clause ...)
-     (plug ((default-superclass) (extension clause ...)))]))
+     (object (!<: (default-superclass)) clause ...)]))
 
 ;; define-object is like define*, but creating a (named) object with inherited behavior rather than just using the written code as-is. As with define*, define-object will infer the externally-visible name for this object from the initial copattern of the first clause if no explicit name is given. As with object, define-object will inherit behavior from default-superclass if no modifiers are given.
 (define-syntax (define-object stx)
-  (syntax-case stx (<: apply)
-    [(define-object (<: mod ...) [(apply copat args) step ...] clause ...)
+  (syntax-case stx (<: !<: apply)
+    [(define-object (!<: mod ...) [(apply copat args) step ...] clause ...)
      (identifier? #'args)
-     #'(define-object (<: mod ...) [copat (try-case-λ args) step ...] clause ...)]
-    [(define-object (<: mod ...) [(apply copat arg1 arg ... args) step ...] clause ...)
-     #'(define-object (<: mod ...) [copat (try-λ arg1 arg ... args) step ...] clause ...)]
-    [(define-object (<: mod ...) [(copat arg ... . end) step ...] clause ...)
-     #'(define-object (<: mod ...) [copat (try-λ(arg ... . end)) step ...] clause ...)]
-    [(define-object (<: mod ...) [name step ...] clause ...)
+     #'(define-object (!<: mod ...) [copat (try-case-λ args) step ...] clause ...)]
+    [(define-object (!<: mod ...) [(apply copat arg1 arg ... args) step ...] clause ...)
+     #'(define-object (!<: mod ...) [copat (try-λ arg1 arg ... args) step ...] clause ...)]
+    [(define-object (!<: mod ...) [(copat arg ... . end) step ...] clause ...)
+     #'(define-object (!<: mod ...) [copat (try-λ(arg ... . end)) step ...] clause ...)]
+    [(define-object (!<: mod ...) [name step ...] clause ...)
      (identifier? #'name)
-     #'(define-object (name <: mod ...) [name step ...] clause ...)]
+     #'(define-object (name !<: mod ...) [name step ...] clause ...)]
+    [(define-object (name !<: mod ...) clause ...)
+     #'(define name (object (!<: mod ...) clause ...))]
     [(define-object (name <: mod ...) clause ...)
      #'(define name (object (<: mod ...) clause ...))]
     [(define-object name clause ...)
      (identifier? #'name)
-     #'(define-object (name <: (default-superclass)) clause ...)]
+     #'(define name (object clause ...))]
+    [(define-object (<: mod ...) clause ...)
+     #'(define-object (!<: (default-superclass) mod ...) clause ...)]
     [(define-object clause ...)
-     #'(define-object (<: (default-superclass)) clause ...)]))
+     #'(define-object (!<: (default-superclass)) clause ...)]))

@@ -293,7 +293,6 @@ Cleaning up these differences by rewriting each initializing copattern to \scm|(
   [((apply self p cts)   'size)
    = (apply + ((apply self p cts) 'overhead)
               (map (λ(o) (o 'size)) ((apply self p cts) 'contents)))]
-  [((apply self p cts) 'size)     = (apply + 128 (map (λ(o) (o 'size)) cts))]
   [((apply self p _)   'path)     = p])
 \end{minted}
 From here, it becomes more obvious that the two different equations defining \scm|(... 'overhead)| overlap, so the first one takes precedence and the second one is dead code that can be completely erased.
@@ -302,7 +301,8 @@ Furthermore, when there are no more future extensions, we can inline the recursi
 (define* fancy-directory
   [((apply self p cts) 'overhead) = 128]
   [((apply self p cts) 'contents) = cts]
-  [((apply self p cts) 'size)     = (apply + 128 (map (λ(o) (o 'size)) cts))]
+  [((apply self p cts) 'size)
+   = (apply + 128 (map (λ(o) (o 'size)) cts))]
   [((apply self p _)   'path)     = p])
 \end{minted}
 
@@ -335,24 +335,25 @@ While Scheme does not have algebraic data types, we can encode them as a list st
 So \hs|Num 5| would be represented as the quoted list \scm|'(num 5)|, and \scm|Add l r| would be represented as the \emph{quasiquote} \scm|`(add ,l ,r)| which plugs in the values bound to variables \scm|l| and \scm|r| as the second and third elements of the list (denoted by the ``unquote'' comma \scm|,| before the variable names).
 We can then use the facilities of \scm|define*| to write almost identical code in Scheme like so:
 \begin{minted}{scheme}
-(define* [(eval `(num ,n))    = n]
-         [(eval `(add ,l ,r)) = (+ (eval l) (eval r))])
+(define*
+  [(eval `(num ,n))    = n]
+  [(eval `(add ,l ,r)) = (+ (eval l) (eval r))])
 \end{minted}
 Fantastic, it works!
 Both the Scheme and Haskell code have the same structure.
 And on the surface, they both share the same strengths and weaknesses.
 From the lens of the \emph{expression problem}~\cite{ExpressionProblem}, it is easy to add new operations to existing expressions --- such as listing the numeric literals in an expression
 \begin{minted}{scheme}
-(define* [(list-nums `(num ,n))    = (list n)]
-         [(list-nums `(add ,l ,r)) = (append (list-nums l) (list-nums r))])
+(define*
+  [(list-nums `(num ,n))    = (list n)]
+  [(list-nums `(add ,l ,r)) = (append (list-nums l) (list-nums r))])
 \end{minted}
 --- but adding new classes of expressions is hard.
 For example, if we wanted to support multiplication, we could add a \hs|Mult| constructor to the \hs|Expr| data type, but this would require modifying \emph{all} existing operations and case-splitting expressions over \hs|Expr| values.
 Even worse, if we wanted to support both expression languages --- with or without multiplication --- we would have to copy the code and maintain both versions.
 
-Thankfully, our implementation of copattern matching in Scheme includes new facilities for composing code snippets compared to current functional (or object-oriented) languages.
-However, to avoid unwanted surprises, the programmer does have to ask for them.
-This is a small request, and can be done by replacing \scm|define*| with \scm|define-object|, such as:
+Thankfully, our implementation of copattern matching in Scheme includes new facilities for composing code snippets.
+As we previously saw with the object-oriented examples, we can turn ordinary functional code into a more extensional form by using \scm|define-object| instead of \scm|define*|.
 \begin{minted}{scheme}
 (define-object
   [(list-nums* `(num ,n))    = (list n)]
@@ -370,15 +371,17 @@ So \scm|(eval expr)| is the same as \scm|(eval* expr)| for any well-formed expre
 Why program in this way?
 Now, if we want to extend the functionality of existing operations --- like evaluation and listing literals --- to support a new class of expression, we can define the new special cases separately as a patch and then \emph{compose} them with the existing code as-is like so:
 \begin{minted}{scheme}
-(define-object [(eval-mul `(mul ,l ,r)) = (* (eval-mul l) (eval-mul r))])
-(define-object [(list-mul `(mul ,l ,r)) = (append (list-mul l) (list-mul r))])
+(define-object
+  [(eval-mul `(mul ,l ,r)) = (* (eval-mul l) (eval-mul r))])
+(define-object
+  [(list-mul `(mul ,l ,r)) = (append (list-mul l) (list-mul r))])
 
 (define eval-arith (eval* 'compose eval-mul))
 (define list-nums-arith (list-nums* 'compose list-mul))
 \end{minted}
 So for an expression \scm|(define expr1 '(add (mul (num 2) (num 3)) (num 4)))|, the extended code successfully yields the correct answers \scm|(eval-arith expr1) = 10| and \scm|(list-nums-arith expr1) = '(2 3 4)| whereas the original code fails at the \scm|'mul| case.%
 \footnote{
-  The astute reader might notice that for this to work, the recursive calls to \scm|eval-mul| cannot be specifically tied to this definition because it only says what to do with multiplication and fails to handle the other cases.
+  The astute reader might notice the open recursion at work here: the recursive calls to \scm|eval-mul| cannot be specifically tied to this definition because it only says what to do with multiplication and fails to handle the other cases.
   Instead, recursive calls to \scm|eval-mul| must \emph{also} open to invoking the other code associated with \scm|eval-num| and \scm|eval-add| even though it not known to be associated with them yet.}
 %
 Note that this composition automatically generates \emph{new} functions and leaves the original code intact, which can still be used for the smaller expression language with only numbers and addition.

@@ -125,15 +125,21 @@ The most unassuming way to form a usable object --- which does not introduce any
 In contrast, an \scm|object| is like a \scm|λ*|, but enhanced with the ability to inherit code --- given in a \scm|(<: Expr ...)| constraint --- which can extend or modify the clauses it contains.
 These modifiers are themselves transformations on extensions --- first-class functions from old extensions to new extensions --- which is applied to the given \scm|extension| value before it is closed off with the \scm|plug| operation on extensions analogous to \scm|introspect| above:
 \begin{minted}{scheme}
+(object ExtensionStx)
+= (object (<:) ExtensionStx)
+
 (object (<: Expr ...) ExtensionStx)
+= (object (!<: meta Expr ...) ExtensionStx)
+
+(object (!<: Expr ...) ExtensionStx)
 = (plug ((compose Expr ...) (extension ExtensionStx)))
 
-(object ExtensionStx)
-= (object (<: meta) ExtensionStx)
 \end{minted}
 Note that the multiple extension modifiers are composed together using ordinary function composition, so the left-most one has precedence (being the final function in the chain).
-If no \scm|(<: Expr ...)| constraint is given, then the default \scm|meta| is used as the implicit superclass of ``all'' objects.%
+The empty inheritance \scm|(<:)| is the same as if no inheritance constraint is given.
+Furthermore, the normal inheritance \scm|(<: Expr ...)| is the same as a literal inheritance \scm|(!<: meta Expr ...)| adding \scm|meta| which is the implicit superclass of ``all'' objects.% 
 \footnote{The library implemenation stores this choice of the default superclass in a mutable parameter \scm|default-superclass| that can be changed by the programmer.}
+Literal inheritance \scm|(!<: Expr ...)| is instead iterpreted exactly as-is, with no added defaults.
 
 The default \scm|meta| superclass provides the extra code for composition seen in the examples, including \scm|'compose| and \scm|'unplug|.
 How does it work?
@@ -310,7 +316,8 @@ If at any point this extension fails and falls past its last case, the updated s
 \subsubsection{Use case: Defining new custom macros via the API}
 
 To demonstrate the flexibility of the API, we show how some other, more niche, operations can be defined in terms of the ones we already saw.
-In particular, the case study on the expression problem involved some complex meta-programming facilities.
+In particular, the case studies on the object-oriented file system and the expression problem involved some complex meta-programming facilities.
+
 First, we needed to override some of the behavior of multi-clause \scm|λ*|s, which can be done by wrapping its value in a new \scm|λ*| that handles the new behavior or else falls through to the original.
 \begin{minted}{scheme}
 (override-λ* Expr ExtensionStx)
@@ -322,7 +329,22 @@ This can be done by capturing the old notion of the object itself --- to be used
 (with-self new-self Extension)
 = (try next old-self ((Extension (non-rec (next old-self))) new-self))
 \end{minted}
-Finally, we needed a combinator to apply a functional extension to some argument(s) in the form of a new extension.
+
+For the object-oriented examples, we needed a way to import the code of one object into another.
+We also used shorthand to construct an object in two steps (initialization and then recursive method definition).
+Both of these two operations are implemented as ordinary functions using the above library functionality that behave like so:
+\begin{minted}{scheme}
+((import-object super-obj) sub-ext)
+= (compose sub-ext (super-obj 'unplug))
+
+(construct state obj)
+= (extension
+   [self try (with-self
+                 (λ args (apply (apply self state) args))
+               (obj 'unplug))]))
+\end{minted}
+
+Finally, to extend an evaluator with an environment, we needed a combinator to apply a functional extension to some argument(s) in the form of a new extension.
 The most direct way to do so is to apply those arguments after passing the \scm|next| template and \scm|self| object
 \begin{minted}{scheme}
 (try-apply-remember Extension Expr ...)

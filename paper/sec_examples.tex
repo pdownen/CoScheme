@@ -335,6 +335,7 @@ While Scheme does not have algebraic data types, we can encode them as a list st
 So \hs|Num 5| would be represented as the quoted list \scm|'(num 5)|, and \scm|Add l r| would be represented as the \emph{quasiquote} \scm|`(add ,l ,r)| which plugs in the values bound to variables \scm|l| and \scm|r| as the second and third elements of the list (denoted by the ``unquote'' comma \scm|,| before the variable names).
 We can then use the facilities of \scm|define*| to write almost identical code in Scheme like so:
 \begin{minted}{scheme}
+;; eval : Expr -> num
 (define*
   [(eval `(num ,n))    = n]
   [(eval `(add ,l ,r)) = (+ (eval l) (eval r))])
@@ -344,6 +345,7 @@ Both the Scheme and Haskell code have the same structure.
 And on the surface, they both share the same strengths and weaknesses.
 From the lens of the \emph{expression problem}~\cite{ExpressionProblem}, it is easy to add new operations to existing expressions --- such as listing the numeric literals in an expression
 \begin{minted}{scheme}
+;; list-nums : Expr -> List num
 (define*
   [(list-nums `(num ,n))    = (list n)]
   [(list-nums `(add ,l ,r)) = (append (list-nums l) (list-nums r))])
@@ -355,6 +357,7 @@ Even worse, if we wanted to support both expression languages --- with or withou
 Thankfully, our implementation of copattern matching in Scheme includes new facilities for composing code snippets.
 As we previously saw with the object-oriented examples, we can turn ordinary functional code into a more extensional form by using \scm|define-object| instead of \scm|define*|.
 \begin{minted}{scheme}
+;; list-nums* : Expr -> List num
 (define-object
   [(list-nums* `(num ,n))    = (list n)]
   [(list-nums* `(add ,l ,r)) = (append (list-nums* l) (list-nums* r))])
@@ -365,6 +368,8 @@ For example, the evaluator can be composed in terms of separate objects for each
 \begin{minted}{scheme}
 (define-object [(eval-num `(num ,n)) = n])
 (define-object [(eval-add `(add ,l ,r)) = (+ (eval-add l) (eval-add r))])
+
+;; eval* : Expr -> num
 (define eval* (eval-num 'compose eval-add))
 \end{minted}
 So \scm|(eval expr)| is the same as \scm|(eval* expr)| for any well-formed expression argument.
@@ -376,7 +381,10 @@ Now, if we want to extend the functionality of existing operations --- like eval
 (define-object
   [(list-mul `(mul ,l ,r)) = (append (list-mul l) (list-mul r))])
 
+;; eval-arith : Expr+Mul -> num
 (define eval-arith (eval* 'compose eval-mul))
+
+;; eval-arith : Expr+Mul -> List num
 (define list-nums-arith (list-nums* 'compose list-mul))
 \end{minted}
 So for an expression \scm|(define expr1 '(add (mul (num 2) (num 3)) (num 4)))|, the extended code successfully yields the correct answers \scm|(eval-arith expr1) = 10| and \scm|(list-nums-arith expr1) = '(2 3 4)| whereas the original code fails at the \scm|'mul| case.%
@@ -415,6 +423,9 @@ This lets us patch our existing arithmetic evaluator with an environment and the
                         [(_ sub-expr) = (self env sub-expr)])
              (try-apply-forget eval-ext expr))]))
 
+;; Env = List (Symbol . num)
+
+;; eval-alg : (Env, Expr+Mul+Var) -> num
 (define eval-alg ((with-environment (eval-arith 'unplug)) 'compose eval-var))
 \end{minted}
 % TODO: Maybe resume this part
@@ -439,20 +450,30 @@ Essentially, this splits evaluation into two separate steps:
 \item check which operation we are supposed to do and evaluate the two sub-expressions,
 \item combine the two expressions according to that operation.
 \end{enumerate*}
-For example, the two steps for addition look like:
+For example, the two steps for addition and multiplication look like:
 \begin{minted}{scheme} 
 (define-object eval-add-safe
   [(self 'eval ('add l r))
   = (self 'add (self 'eval l) (self 'eval r))]
   [(self 'add x y) (try-if (and (number? x) (number? y)))
   = (+ x y)])
+
+(define-object eval-mul-safe
+  [(self `(mul ,l ,r))
+   = (self 'mul (self l) (self r))]
+  [(self 'mul x y)
+   (try-if (and (number? x) (number? y)))
+   = (* x y)])
 \end{minted}
 Here, the evaluation step is explicated by a \scm|'eval| tag, to help distinguish from the other operation \scm|'add| for adding the left and right results.
 Note that in this code, the \scm|'add| clause only performs a numeric addition \scm|+| if it knows for sure that \emph{both} of the arguments are actually numbers.
 This is checked by the \scm|try-if| guards.
 We can now compose the original base-case for evaluating numbers with this ``safer'' version of addition that fails to match cases where sub-expressions don't evaluate to numbers (multiplication could be added as well in a similar style):
 \begin{minted}{scheme}
-(define eval-arith-safe (eval-num 'compose eval-add-safe))
+;; eval-arith-safe : ('eval, Expr+Mul) -> num
+;;                 & ('add, num, num) -> num
+;;                 & ('mul, num, num) -> num
+(define eval-arith-safe (eval-num 'compose eval-add-safe eval-mul-safe))
 \end{minted}
 So \scm|(eval-arith-safe expr1)| still evaluates to \scm|70|, but \scm|(eval-arith-safe expr2)| fails when it finds a variable sub-expression.
 
@@ -469,6 +490,9 @@ In each of those cases, we must reform the addition expression out of what we fi
 \end{minted}
 The final constant-folding algorithm can be composed from this ``safe'' version of evaluation, along with the cases for leaving variables alone and reforming partially-evaluated additions and multiplications, which can be defined using the same approach employed in \scm|reform-addition|.
 \begin{minted}{scheme}
+;; constant-fold : ('eval, Expr+Mul+Var) -> Expr+Mul+Var
+;;               & ('add, Expr+Mul+Var, Expr+Mul+Var) -> Expr+Mul+Var
+;;               & ('mul, Expr+Mul+Var, Expr+Mul+Var) -> Expr+Mul+Var
 (define constant-fold
   (eval-arith-safe 'compose leave-variables reform-addition reform-mult))
 \end{minted}

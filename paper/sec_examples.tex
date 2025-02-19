@@ -159,7 +159,7 @@ However, besides these two messages, there is no other way to manipulate the int
 the \scm|in| and \scm|out| lists are completely hidden within an opaque procedural abstraction, enforcing an encapsulation of private state.
 Given an initialized \scm|queue| object, it would not be possible to, for instance, break the first-in-first-out ordering by taking an element from the \scm|in| list or put an element on the \scm|out| list.
 
-Since we can already use encapsulation in copattern-based definitions, can we also model a functional version \cite{Brown2009FunctionI} of inheritance and dynamic dispatch?
+Since we can already use encapsulation in copattern-based definitions, can we also use a functional model \cite{abadi96} of inheritance and dynamic dispatch?
 Our implementation of copattern matching in Scheme includes new facilities for composing code snippets compared to current functional (or object-oriented) languages.
 However, to avoid unwanted surprises, the programmer does have to ask for them.
 This is a small request, and can be done by replacing \scm|define*| with \scm|define-object|, as in the following file system example:

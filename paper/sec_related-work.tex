@@ -8,9 +8,10 @@ The latter is a compiler framework that provides tools to specify different lang
 
 Previously, copatterns have been developed exclusively from the perspective of statically-typed languages.
 Much of the work has been for dependently typed languages like Agda \cite{ElaboratingDependentCopatterns}, which use a type-driven approach to elaborate copatterns \cite{UnnestingCopatterns,ThibodeauMasters}.
-The closest related works are the \cite{jeannin_cocaml_2017}, which implements an OCaml extension that supports regular coinductive data types, and \cite{LaforgueR17}, which implements copatterns as an OCaml macro.
-CoCaml\cite{jeannin_cocaml_2017} supports only a subset of coinductive data types, and \cite{LaforgueR17} is too concerned with type system ramifications.
-Here, we show how to implement copatterns with no typing information and focus instead on composition and equational reasoning.
+The closest related works are about implementing copatterns using macros in OCaml \cite{LaforgueR17,jeannin_cocaml_2017}.
+As with the above work in dependently typed languages, \cite{LaforgueR17} is also concerned with type system ramifications, and
+CoCaml~\cite{jeannin_cocaml_2017} supports only a subset of coinductive data types, called \emph{regular}, with periodic repetitions that allow for finite representation in memory using cyclic structures.
+Here, we show how to implement copatterns with no typing information or restrictions on cyclic structures, and focus instead on composition and equational reasoning.
 The literature also presents other examples of open recursion and inheritance in a functional setting; for instance, \cite{Brown2009FunctionI} implements memorization for monadic computations using inheritance and mixins.
 
 The translation in \cref{fig:translation} is reminiscent of ``double-barreled CPS'' \cite{DoubleBarrelCPS} used to define control effects like delimited control \cite{AbstractingControl} and exceptions \cite{KimYiDanvy98}.

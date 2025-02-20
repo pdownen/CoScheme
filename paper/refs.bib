@@ -8,7 +8,7 @@ author = {Paul Downen},
 title = {Review},
 booktitle = {Oregon Programming Languages Summer School},
 series = {OPLSS},
-month = jun,
+@month = jun,
 year = {2017},
 @url = {https://www.cs.uoregon.edu/research/summerschool/summer17/topics.php#review},
 }
@@ -18,7 +18,7 @@ author = {Paul Downen and Jan Hoffman},
 title = {Foundations of Programming Languages},
 booktitle = {Oregon Programming Languages Summer School},
 series = {OPLSS},
-month = jul,
+@month = jul,
 year = {2018},
 @url = {https://www.cs.uoregon.edu/research/summerschool/summer18/topics.php#review},
 }
@@ -28,7 +28,7 @@ author = {Paul Downen},
 title = {Foundations of Programming Languages},
 booktitle = {Oregon Programming Languages Summer School},
 series = {OPLSS},
-month = jun,
+@month = jun,
 year = {2024},
 @url = {https://www.cs.uoregon.edu/research/summerschool/summer24/topics.php#Downen},
 }
@@ -38,7 +38,7 @@ author = {Paul Downen},
 title = {Abstract Machines and Classical Realizability},
 booktitle = {Oregon Programming Languages Summer School},
 series = {OPLSS},
-month = jun,
+@month = jun,
 year = {2022},
 @url = {https://www.cs.uoregon.edu/research/summerschool/summer22/topics.php#Downen},
 }
@@ -167,7 +167,7 @@ year = {2022},
   author    = {Paul Downen and
                Zena M. Ariola},
   title     = {A Computational Understanding of Classical (Co)Recursion},
-  booktitle = {{PPDP} '20: 22nd International Symposium on Principles and Practice
+  booktitle = {{PPDP}~'20: 22nd International Symposium on Principles and Practice
                of Declarative Programming, Bologna, Italy, 9-10 September, 2020},
   pages     = {5:1--5:13},
   publisher = {{ACM}},
@@ -226,7 +226,7 @@ title = {Making a Faster Curry with Extensional Types},
 booktitle = {Proceedings of the 12th {ACM} {SIGPLAN} International Symposium on Haskell, Haskell@ICFP 2019},
 series = {Haskell~'19},
 pages = {58--70},
-month = aug,
+@month = aug,
 year = 2019,
 location = {Berlin, Germany},
 @url = {http://doi.acm.org/10.1145/3331545.3342594},
@@ -244,7 +244,7 @@ title = {Codata in Action},
 booktitle = {Programming Languages and Systems - 28th European Symposium on Programming, {ESOP} 2019, Held as Part of the European Joint Conferences on Theory and Practice of Software, {ETAPS} 2019},
 series = {ESOP~'19},
 pages = {119--146},
-month = apr,
+@month = apr,
 year = 2019,
 location = {Prague, Czech Republic},
 @url = {https://doi.org/10.1007/978-3-030-17184-1\_5},
@@ -286,7 +286,7 @@ booktitle = {27th {EACSL} Annual Conference on Computer Science Logic},
 series = {CSL~'18},
 location = {Birmingham, {UK}},
 pages = {21:1--21:23},
-month = sep,
+@month = sep,
 year = 2018,
 @url = {https://doi.org/10.4230/LIPIcs.CSL.2018.21},
 doi = {10.4230/LIPIcs.CSL.2018.21},
@@ -305,7 +305,7 @@ booktitle = {Rewriting Logic and Its Applications},
 series = {WRLA~'18},
 pages = {205--225},
 year = 2018,
-month = jun,
+@month = jun,
 location = {Thessaloniki, Greece},
 @url = {https://doi.org/10.1007/978-3-319-99840-4\_12},
 doi = {10.1007/978-3-319-99840-4\_12},
@@ -320,7 +320,7 @@ author = {Maurer, Luke and Downen, Paul and Ariola, Zena M. and Peyton Jones, Si
 title = {Compiling Without Continuations},
 booktitle = {Proceedings of the 38th {ACM} {SIGPLAN} Conference on Programming Language Design and Implementation},
 series = {PLDI~'17},
-month = jun,
+@month = jun,
 year = 2017,
 location = {Barcelona, Spain},
 pages = {482--494},
@@ -369,7 +369,7 @@ author = {Maurer, Luke and Downen, Paul and Ariola, Zena M. and Peyton Jones, Si
 title = {Administrative normal form, continued: Sharing control in direct style},
 booktitle = {The 5th ACM SIGPLAN Workshop on Higher-Order Programming with Effects},
 series = {HOPE~'16},
-month = sep,
+@month = sep,
 year = 2016,
 abstract = {Administrative normal form (ANF) promises to reap the benefits of continuation-passing style (CPS) while retaining the advantages of direct style. However, we believe ANF falls short of this ideal because it does not provide a satisfactory way to describe shared control flow, as CPS does naturally. We show how CPS itself can guide us in adding a control effect to ANF and taming it to regain purity, guaranteeing an efficient implementation. Interestingly, even though CPS is usually used for compiling call-by-value languages, our technique is independent of the evaluation strategy. In short, we propose that the known advantages of CPS can be achieved by extending ANF, or in general a direct-style representation. Does this mean that CPS is finally out? No: whatever the compiler’s chosen representation, we suspect CPS will reveal new insights about program manipulation.}
 }
@@ -410,7 +410,7 @@ author = {Johnson-Freyd, Philip and Downen, Paul and Ariola, Zena M.},
 title = {Control Controls Extensional Execution},
 booktitle = {The 4th ACM SIGPLAN Workshop on Higher-Order Programming with Effects},
 series = {HOPE~'15},
-month = aug,
+@month = aug,
 year = 2015,
 abstract = {Call-by-name evaluation, weak head normal forms, and functional
 extensionality: pick at most two.  All three seem desirable, but are
@@ -484,7 +484,7 @@ author = {Downen, Paul and Ariola, Zena M.},
 title = {Delimited control with multiple prompts in theory and practice},
 booktitle = {The 3rd ACM SIGPLAN Workshop on Higher-Order Programming with Effects},
 series = {HOPE~'14},
-month = aug,
+@month = aug,
 year = 2014,
 abstract = {The versatile and expressive capabilities of delimited control and composable continuations have gained it attention in both the theory and practice of functional programming with effects.  On the more theoretical side, delimited control may be used as a basis for explaining and understanding a wide variety of other computational effects, like mutable state and exceptions, based on Filinski's (1994, 1999) observation that composable continuations can be used to represent any monadic effect.  On the more practical side, forms of delimited control have been implemented in real-world programming languages (Flatt et al., 2007; Dybvig et al. 2007; Kiselyov, 2010), and used in the design of libraries like for creating web servers (Flatt, 2007).
 
@@ -498,7 +498,7 @@ booktitle = {Programming Languages and Systems: 23rd {E}uropean Symposium on Pro
 @series = {ESOP 2014},
 series = {Lecture Notes in Computer Science},
 location = {Grenoble, France},
-month = apr,
+@month = apr,
 year = 2014,
 pages = {249--269},
 volume = 8410,
@@ -534,7 +534,7 @@ booktitle = {Functional and Logic Programming: 11th International Symposium},
 @series = {FLOPS 2012},
 series = {Lecture Notes in Computer Science},
 location = {Kobe, Japan},
-month = may,
+@month = may,
 year = 2012,
 pages = {32--46},
 volume = 7294,
@@ -556,7 +556,7 @@ booktitle = {Programming Languages and Systems: 21st {E}uropean Symposium on Pro
 @series = {ESOP 2012},
 series = {Lecture Notes in Computer Science},
 location = {Tallinn, Estonia},
-month = mar,
+@month = mar,
 year = 2012,
 pages = {234--253},
 volume = 7211,
@@ -585,7 +585,7 @@ author = {de Bruijn, Nicolaas},
 title = {{AUTOMATH}, a Language for Mathematics},
 number = {66-WSK-05},
 institution = {Technological University Eindhoven},
-month = nov,
+@month = nov,
 year = 1968,
 }
 
@@ -625,7 +625,7 @@ issn = {0001-0782},
 doi = {10.1145/363235.363259},
 abstract = {In this paper an attempt is made to explore the logical foundations of computer programming by use of techniques which were first applied in the study of geometry and have later been extended to other branches of mathematics. This involves the elucidation of sets of axioms and rules of inference which can be used in proofs of the properties of computer programs. Examples are given of such axioms and rules, and a formal proof of a simple theorem is displayed. Finally, it is argued that important advantage, both theoretical and practical, may follow from a pursuance of these topics.},
 journal = {Communications of the ACM},
-month = {oct},
+@month = {oct},
 pages = {576–580},
 numpages = {5},
 keywords = {program documentation, formal language definition, theory of programming' proofs of programs, axiomatic method, machine-independent programming, programming language design}
@@ -654,7 +654,7 @@ booktitle = {Proceedings of the 17th ACM SIGPLAN-SIGACT Symposium on Principles 
 pages = {47–58},
 numpages = {12},
 location = {San Francisco, California, USA},
-series = {POPL '90}
+series = {POPL~'90}
 }
 
 @inproceedings{breitner14,
@@ -797,7 +797,7 @@ address = {New York, NY, USA},
   SERIES = {Developments in System Safety Engineering: Proceedings of the Twenty-fifth Safety-critical Systems Symposium},
   PAGES = {163-180},
   YEAR = {2017},
-  MONTH = Feb,
+  @MONTH = Feb,
   PDF = {https://inria.hal.science/hal-01399482/file/SSS2017_kaestner_et_al.pdf},
   HAL_ID = {hal-01399482},
   HAL_VERSION = {v1},
@@ -808,7 +808,7 @@ address = {New York, NY, USA},
                Patrick Hicks},
   title     = {Higher-Order Arity Raising},
   booktitle = {Proceedings of the third {ACM} {SIGPLAN} International Conference
-               on Functional Programming {(ICFP} '98), Baltimore, Maryland, USA,
+               on Functional Programming {(ICFP}~'98), Baltimore, Maryland, USA,
                September 27-29, 1998.},
   pages     = {27--38},
   year      = {1998},
@@ -859,7 +859,7 @@ address = {New York, NY, USA},
  issue_date = {March 2009},
  volume = {19},
  number = {2},
- month = mar,
+ @month = mar,
  year = {2009},
  pages = {227--251},
  doi = {10.1017/S0956796809007175},
@@ -913,7 +913,7 @@ abstract = {We present a particularly simple lazy lambda-calculus machine, which
  journal = {Mathematical Structures in Computer Science},
  volume = {10},
  number = {3},
- month = jun,
+ @month = jun,
  year = {2000},
  issn = {0960-1295},
  pages = {321--359},
@@ -930,7 +930,7 @@ abstract = {We present a particularly simple lazy lambda-calculus machine, which
                Stefano Berardi},
   title     = {A Symmetric Lambda Calculus for ``Classical'' Program Extraction},
   booktitle = {Theoretical Aspects of Computer Software, International Conference
-               {TACS} '94, Sendai, Japan, April 19-22, 1994, Proceedings},
+               {TACS}~'94, Sendai, Japan, April 19-22, 1994, Proceedings},
   pages     = {495--515},
   year      = {1994},
   @url       = {https://doi.org/10.1007/3-540-57887-0\_112},
@@ -941,7 +941,7 @@ abstract = {We present a particularly simple lazy lambda-calculus machine, which
   author    = {John Hannan and
                Patrick Hicks},
   title     = {Higher-Order unCurrying},
-  booktitle = {{POPL} '98, Proceedings of the 25th {ACM} {SIGPLAN-SIGACT} Symposium
+  booktitle = {{POPL}~'98, Proceedings of the 25th {ACM} {SIGPLAN-SIGACT} Symposium
                on Principles of Programming Languages, San Diego, CA, USA, January
                19-21, 1998},
   pages     = {1--11},
@@ -995,7 +995,7 @@ journal = {Lisp and Symbolic Computation},
 issue_date = {Nov. 1993},
 volume = 6,
 number = {3-4},
-month = nov,
+@month = nov,
 year = 1993,
 issn = {0892-4635},
 pages = {289--360},
@@ -1161,7 +1161,7 @@ journal = {Journal of Functional Programming},
 issue_date = {May 1997},
 volume = 7,
 number = 3,
-month = may,
+@month = may,
 year = 1997,
 issn = {0956-7968},
 pages = {265--301},
@@ -1178,7 +1178,7 @@ address = {New York, NY, USA},
                Jan Willem Klop},
   title     = {Cyclic Lambda Graph Rewriting},
   booktitle = {Proceedings of the Ninth Annual Symposium on Logic in Computer Science
-               {(LICS} '94), Paris, France, July 4-7, 1994},
+               {(LICS}~'94), Paris, France, July 4-7, 1994},
   pages     = {416--425},
   year      = {1994},
   @url       = {https://doi.org/10.1109/LICS.1994.316066},
@@ -1240,7 +1240,7 @@ address = {New York, NY, USA},
   author       = {William R. Cook and
                   Jens Palsberg},
   title        = {A Denotational Semantics of Inheritance and Its Correctness},
-  journal      = {Inf. Comput.},
+  journal      = {Information and Computation},
   volume       = {114},
   number       = {2},
   pages        = {329--350},
@@ -1309,7 +1309,7 @@ address = {New York, NY, USA},
 @inproceedings{flatt1998mixin,
   title={Classes and mixins},
   author={Flatt, Matthew and Krishnamurthi, Shriram and Felleisen, Matthias},
-  booktitle={Proceedings of the 25th ACM SIGPLAN-SIGACT symposium on Principles of programming languages},
+  booktitle={Proceedings of the 25th ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages},
   pages={171--183},
   year={1998}
 }
@@ -1328,7 +1328,7 @@ booktitle = {Conference Proceedings on Object-Oriented Programming Systems, Lang
 pages = {347–349},
 numpages = {3},
 location = {Portland, Oregon, USA},
-series = {OOPSLA '86}
+series = {OOPSLA~'86}
 }
 
 @inproceedings{chambers1992,
@@ -1343,11 +1343,11 @@ series = {OOPSLA '86}
 @article{CLOS,
 author = {Gabriel, Richard and White, Jon and Bobrow, Daniel},
 year = {1991},
-month = {09},
+@month = {09},
 pages = {28-38},
 title = {CLOS: Integrating Object-Oriented and Functional Programming.},
 volume = {34},
-journal = {Commun. ACM},
+journal = {Communications of the ACM},
 doi = {10.1145/114669.114671}
 }
 
@@ -1366,7 +1366,7 @@ pages = {270–282},
 numpages = {13},
 keywords = {virtual classes, soundness},
 location = {Charleston, South Carolina, USA},
-series = {POPL '06}
+series = {POPL~'06}
 }
 
 @inproceedings{Ostermann2001OOComposition,
@@ -1383,7 +1383,7 @@ booktitle = {Proceedings of the 16th ACM SIGPLAN Conference on Object-Oriented P
 pages = {283–299},
 numpages = 17,
 location = {Tampa Bay, FL, USA},
-series = {OOPSLA '01}
+series = {OOPSLA~'01}
 }
 
 
@@ -1391,7 +1391,7 @@ series = {OOPSLA '01}
 author = {Robert Harper},
 title = {Parallelism is not Concurrency},
 @journal = {Existential Type},
-month = mar,
+@month = mar,
 year = 2011,
 @url = {https://existentialtype.wordpress.com/2011/03/17/parallelism-is-not-concurrency/},
 }
@@ -1400,7 +1400,7 @@ year = 2011,
 author = {Simon Marlow},
 title = {Parallelism {$\neq$} Concurrency},
 @journal = {{GHC} Mutterings},
-month = oct,
+@month = oct,
 year = 2009,
 @url = {https://ghcmutterings.wordpress.com/2009/10/06/parallelism-concurrency/},
 }
@@ -1411,7 +1411,7 @@ title = {The {Rust} programming language},
 booktitle = {The 4th ACM SIGPLAN Workshop on Higher-Order Programming with Effects},
 series = {HOPE~'15},
 year = 2015,
-month = aug,
+@month = aug,
 }
 
 @inproceedings{Turon17,
@@ -1445,7 +1445,7 @@ month = aug,
 @inproceedings{Honda93TDI,
   author    = {Kohei Honda},
   title     = {Types for Dyadic Interaction},
-  booktitle = {{CONCUR} '93, 4th International Conference on Concurrency Theory,
+  booktitle = {{CONCUR}~'93, 4th International Conference on Concurrency Theory,
                Hildesheim, Germany, August 23-26, 1993, Proceedings},
   pages     = {509--523},
   year      = {1993},
@@ -1497,7 +1497,7 @@ month = aug,
  issue_date = {March 2016},
  volume = {63},
  number = {1},
- month = mar,
+ @month = mar,
  year = {2016},
  issn = {0004-5411},
  pages = {9:1--9:67},
@@ -1618,7 +1618,7 @@ issn = {0164-0925},
 doi = {10.1145/3539656},
 abstract = {Session types statically describe communication protocols between concurrent message-passing processes. Unfortunately, parametric polymorphism even in its restricted prenex form is not fully understood in the context of session types. In this article, we present the metatheory of session types extended with prenex polymorphism and, as a result, nested recursive datatypes. Remarkably, we prove that type equality is decidable by exhibiting a reduction to trace equivalence of deterministic first-order grammars. Recognizing the high theoretical complexity of the latter, we also propose a novel type equality algorithm and prove its soundness. We observe that the algorithm is surprisingly efficient and, despite its incompleteness, sufficient for all our examples. We have implemented our ideas by extending the Rast programming language with nested session types. We conclude with several examples illustrating the expressivity of our enhanced type system.},
 journal = {ACM Trans. Program. Lang. Syst.},
-month = {jul},
+@month = {jul},
 articleno = {19},
 numpages = {45},
 keywords = {Nested types, polymorphism, type equality}
@@ -1711,7 +1711,7 @@ keywords = {Nested types, polymorphism, type equality}
  issue_date = {Dec. 1972},
  volume = {15},
  number = {12},
- month = dec,
+ @month = dec,
  year = {1972},
  issn = {0001-0782},
  pages = {1053--1058},
@@ -1851,7 +1851,7 @@ title = {{$\lambda\mu$}-Calculus: An Algorithmic Interpretation of Classical Nat
 bookTitle = {Logic Programming and Automated Reasoning: International Conference},
 series = {LPAR~'92},
 location = {St. Petersburg, Russia},
-month = jul,
+@month = jul,
 year = 1992,
 publisher = {Springer Berlin Heidelberg},
 address = {Berlin, Heidelberg},
@@ -1982,7 +1982,7 @@ number = {ICFP},
 doi = {10.1145/3236770},
 abstract = {In a dependently typed language, we can guarantee correctness of our programs by providing formal proofs. To check them, the typechecker elaborates these programs and proofs into a low level core language. However, this core language is by nature hard to understand by mere humans, so how can we know we proved the right thing? This question occurs in particular for dependent copattern matching, a powerful language construct for writing programs and proofs by dependent case analysis and mixed induction/coinduction. A definition by copattern matching consists of a list of clauses that are elaborated to a case tree, which can be further translated to primitive eliminators. In previous work this second step has received a lot of attention, but the first step has been mostly ignored so far. We present an algorithm elaborating definitions by dependent copattern matching to a core language with inductive datatypes, coinductive record types, an identity type, and constants defined by well-typed case trees. To ensure correctness, we prove that elaboration preserves the first-match semantics of the user clauses. Based on this theoretical work, we reimplement the algorithm used by Agda to check left-hand sides of definitions by pattern matching. The new implementation is at the same time more general and less complex, and fixes a number of bugs and usability issues with the old version. Thus we take another step towards the formally verified implementation of a practical dependently typed language.},
 journal = {Proceedings of the ACM on Programming Languages},
-month = {jul},
+@month = {jul},
 articleno = {75},
 numpages = {30},
 keywords = {Dependent types, Dependent pattern matching, Copatterns, Agda}
@@ -2113,7 +2113,7 @@ title = {Focalisation and Classical Realisability},
 bookTitle = {Computer Science Logic: 23rd international Workshop, {CSL} 2009, 18th Annual Conference of the {EACSL}},
 series = {CSL 2009},
 location = {Coimbra, Portugal},
-month = sep,
+@month = sep,
 year = 2009,
 @editor = {Gr{\"a}del, Erich and Kahle, Reinhard},
 publisher = {Springer Berlin Heidelberg},
@@ -2130,7 +2130,7 @@ title = {The Duality of Computation Under Focus},
 bookTitle = {Theoretical Computer Science: 6th {IFIP TC 1/WG} 2.2 International Conference, {TCS} 2010, Held as Part of {WCC} 2010},
 series = {TCS 2010},
 location = {Brisbane, Australia},
-month = sep,
+@month = sep,
 year = 2010,
 @editor = {Calude, Cristian S. and Sassone, Vladimiro},
 publisher = {Springer Berlin Heidelberg},
@@ -2154,7 +2154,7 @@ booktitle = {2015 30th Annual {ACM}/{IEEE} Symposium on Logic in Computer Scienc
 title = {Polarised Intermediate Representation of Lambda Calculus with Sums},
 series = {LICS 2015},
 location = {Kyoto, Japan},
-month = jul,
+@month = jul,
 year = 2015,
 pages = {127--140},
 ISSN = {1043-6871},
@@ -2190,7 +2190,7 @@ keywords = {classical logic, continuations, delimited control operators, focaliz
  issue_date = {August 2019},
  volume = {3},
  number = {ICFP},
- month = jul,
+ @month = jul,
  year = {2019},
  issn = {2475-1421},
  pages = {85:1--85:29},
@@ -2221,7 +2221,7 @@ author = {Olivier Laurent},
 title = {{\'E}tude de la polarisation en logique},
 school = {Universit{\'e} de la M{\'e}diterran{\'e}e - Aix-Marseille II},
 @type = {Th\`ese de Doctorat},
-month = mar,
+@month = mar,
 year = 2002,
 }
 
@@ -2239,7 +2239,7 @@ booktitle = {Proceedings of the 1988 ACM Conference on LISP and Functional Progr
 pages = {277–288},
 numpages = {12},
 location = {Snowbird, Utah, USA},
-series = {LFP '88}
+series = {LFP~'88}
 }
 
 @book{OOLisp,
@@ -2280,7 +2280,7 @@ author = {Xavier Leroy and Damien Doligez and Alain Frisch and Jacques Garrigue 
 organization = {INRIA},
 edition = {release 4.14},
 year = 2022,
-month = mar,
+@month = mar,
 }
 
 @book{RustManual,
@@ -2308,7 +2308,7 @@ pages = {103–104},
 numpages = {2},
 keywords = {affine type systems, rust, memory management, systems programming},
 location = {Portland, Oregon, USA},
-series = {HILT '14}
+series = {HILT~'14}
 }
 
 @manual{ScalaManual,
@@ -2374,7 +2374,7 @@ number = {OOPSLA},
 doi = {10.1145/3360571},
 abstract = {The Dependent Object Types (DOT) calculus aims to formalize the Scala programming language with a focus on path-dependent types&nbsp;— types such as x.a1… an.T that depend on the runtime value of a path x.a1… an to an object. Unfortunately, existing formulations of DOT can model only types of the form x.A which depend on variables rather than general paths. This restriction makes it impossible to model nested module dependencies. Nesting small components inside larger ones is a necessary ingredient of a modular, scalable language. DOT’s variable restriction thus undermines its ability to fully formalize a variety of programming-language features including Scala’s module system, family polymorphism, and covariant specialization. This paper presents the pDOT calculus, which generalizes DOT to support types that depend on paths of arbitrary length, as well as singleton types to track path equality. We show that naive approaches to add paths to DOT make it inherently unsound, and present necessary conditions for such a calculus to be sound. We discuss the key changes necessary to adapt the techniques of the DOT soundness proofs so that they can be applied to pDOT. Our paper comes with a Coq-mechanized type-safety proof of pDOT. With support for paths of arbitrary length, pDOT can realize DOT’s full potential for formalizing Scala-like calculi.},
 journal = {Proceedings of the ACM on Programming Languages},
-month = oct,
+@month = oct,
 articleno = 145,
 numpages = 29,
 keywords = {paths, dependent types, Scala, DOT}
@@ -2398,14 +2398,14 @@ keywords = {paths, dependent types, Scala, DOT}
 title = {The {Isabelle/Isar} Reference Manual},
 author = {Makarius Wenzel},
 year = {2021},
-month = {Dec},
+@month = {Dec},
 }
 
 @manual{IsabelleManual,
 title = {The {Isabelle} System Manual},
 author = {Makarius Wenzel},
 year = {2021},
-month = {Dec},
+@month = {Dec},
 }
 
 @article{FStarValueDependentTypes,
@@ -2565,7 +2565,7 @@ abstract = "A new data type declaration mechanism of defining codatatypes is int
 @inproceedings{Rutten1998,
   author    = {Jan J. M. M. Rutten},
   title     = {Automata and Coinduction (An Exercise in Coalgebra)},
-  booktitle = {{CONCUR} '98: Concurrency Theory, 9th International Conference, Nice,
+  booktitle = {{CONCUR}~'98: Concurrency Theory, 9th International Conference, Nice,
                France, September 8-11, 1998, Proceedings},
   pages     = {194--218},
   year      = {1998},
@@ -2673,7 +2673,7 @@ abstract = "Data types may be considered as objects in any suitable category, an
  issue_date = {Oct. 1969},
  volume = {12},
  number = {10},
- month = oct,
+ @month = oct,
  year = {1969},
  issn = {0001-0782},
  pages = {576--580},
@@ -2801,7 +2801,7 @@ PAGES   = "457--504"
  issue_date = {April 1989},
  volume = {32},
  number = {2},
- month = apr,
+ @month = apr,
  year = {1989},
  issn = {0010-4620},
  pages = {98--107},
@@ -2857,7 +2857,7 @@ number = {ICFP},
 doi = {10.1145/3236770},
 abstract = {In a dependently typed language, we can guarantee correctness of our programs by providing formal proofs. To check them, the typechecker elaborates these programs and proofs into a low level core language. However, this core language is by nature hard to understand by mere humans, so how can we know we proved the right thing? This question occurs in particular for dependent copattern matching, a powerful language construct for writing programs and proofs by dependent case analysis and mixed induction/coinduction. A definition by copattern matching consists of a list of clauses that are elaborated to a case tree, which can be further translated to primitive eliminators. In previous work this second step has received a lot of attention, but the first step has been mostly ignored so far. We present an algorithm elaborating definitions by dependent copattern matching to a core language with inductive datatypes, coinductive record types, an identity type, and constants defined by well-typed case trees. To ensure correctness, we prove that elaboration preserves the first-match semantics of the user clauses. Based on this theoretical work, we reimplement the algorithm used by Agda to check left-hand sides of definitions by pattern matching. The new implementation is at the same time more general and less complex, and fixes a number of bugs and usability issues with the old version. Thus we take another step towards the formally verified implementation of a practical dependently typed language.},
 journal = {Proceedings of the {ACM} on Programming Languages},
-month = jul,
+@month = jul,
 articleno = 75,
 numpages = 30,
 keywords = {Agda, Dependent types, Dependent pattern matching, Copatterns}
@@ -2870,7 +2870,7 @@ keywords = {Agda, Dependent types, Dependent pattern matching, Copatterns}
  issue_date = {December  2009},
  volume = {43},
  number = {4},
- month = dec,
+ @month = dec,
  year = {2009},
  issn = {0168-7433},
  pages = {363--446},
@@ -2980,7 +2980,7 @@ keywords = {Agda, Dependent types, Dependent pattern matching, Copatterns}
  issue_date = {January 2019},
  volume = {3},
  number = {POPL},
- month = jan,
+ @month = jan,
  year = {2019},
  issn = {2475-1421},
  pages = {62:1--62:30},
@@ -3054,7 +3054,7 @@ keywords = {Agda, Dependent types, Dependent pattern matching, Copatterns}
   title =        {Independently Extensible Solutions to the Expression Problem},
   booktitle =    {Proc. FOOL 12},
   year =         2005,
-  month =        jan,
+  @month =        jan,
   note =         {\verb@http://homepages.inf.ed.ac.uk/wadler/fool@}
 }
 
@@ -3067,7 +3067,7 @@ address = {New York, NY, USA},
 booktitle = {Proceedings of the Ninth ACM SIGPLAN International Conference on Functional Programming},
 pages = {79–89},
 numpages = {11},
-series = {ICFP '04}
+series = {ICFP~'04}
 }
 
 @article{LengrandMiquel2008CFOSC,
@@ -3141,7 +3141,7 @@ pages = {48–64},
 numpages = {17},
 keywords = {alias protection, containment, ownership, programming language design, representation exposure, sharing},
 location = {Vancouver, British Columbia, Canada},
-series = {OOPSLA '98}
+series = {OOPSLA~'98}
 }
 
 @inproceedings{Cyclone,
@@ -3165,7 +3165,7 @@ booktitle = {Proceedings of the ACM SIGPLAN 2001 Conference on Programming Langu
 pages = {59–69},
 numpages = {11},
 location = {Snowbird, Utah, USA},
-series = {PLDI '01}
+series = {PLDI~'01}
 }
 
 @article{KindlyBentToFreeUs,
@@ -3181,7 +3181,7 @@ number = {ICFP},
 doi = {10.1145/3408985},
 abstract = {Systems programming often requires the manipulation of resources like file handles, network connections, or dynamically allocated memory. Programmers need to follow certain protocols to handle these resources correctly. Violating these protocols causes bugs ranging from type mismatches over data races to use-after-free errors and memory leaks. These bugs often lead to security vulnerabilities. While statically typed programming languages guarantee type soundness and memory safety by design, most of them do not address issues arising from improper handling of resources. An important step towards handling resources is the adoption of linear and affine types that enforce single-threaded resource usage. However, the few languages supporting such types require heavy type annotations. We present Affe, an extension of ML that manages linearity and affinity properties using kinds and constrained types. In addition Affe supports the exclusive and shared borrowing of affine resources, inspired by features of Rust. Moreover, Affe retains the defining features of the ML family: it is an impure, strict, functional expression language with complete principal type inference and type abstraction. does not require any linearity annotations in expressions and supports common functional programming idioms.},
 journal = {Proceedings of the {ACM} on Programming Languages},
-month = {aug},
+@month = {aug},
 articleno = {103},
 numpages = {29},
 keywords = {Linear types, Type inference, Functional programming, Ownership}
@@ -3221,7 +3221,7 @@ booktitle = {Proceedings of the 21st ACM SIGPLAN-SIGACT Symposium on Principles 
 pages = {446–457},
 numpages = {12},
 location = {Portland, Oregon, USA},
-series = {POPL '94}
+series = {POPL~'94}
 }
 
 @inproceedings{RepresentingLayeredMonads,
@@ -3238,7 +3238,7 @@ booktitle = {Proceedings of the 26th ACM SIGPLAN-SIGACT Symposium on Principles 
 pages = {175–188},
 numpages = {14},
 location = {San Antonio, Texas, USA},
-series = {POPL '99}
+series = {POPL~'99}
 }
 
 @techreport{danvy89functional,
@@ -3246,7 +3246,7 @@ series = {POPL '99}
     title = "A Functional Abstraction of Typed Contexts",
     institution = "DIKU, University of Copenhagen, Copenhagen, Denmark",
     number = "89/12",
-    months = " August",
+    @months = " August",
     year = "1989"
 }
 
@@ -3264,7 +3264,7 @@ booktitle = {Proceedings of the 15th ACM SIGPLAN-SIGACT Symposium on Principles 
 pages = {180–190},
 numpages = {11},
 location = {San Diego, California, USA},
-series = {POPL '88}
+series = {POPL~'88}
 }
 
 @article{AriolaBS2009SCAM,
@@ -3322,7 +3322,7 @@ issn = {0892-4635},
 @url = {https://doi.org/10.1007/BF01806126},
 doi = {10.1007/BF01806126},
 journal = {Lisp and Symbolic Computation},
-month = {may},
+@month = {may},
 pages = {67–99},
 numpages = {33}
 }
@@ -3330,7 +3330,7 @@ numpages = {33}
 @inproceedings{AbstractingControl,
   author       = {Olivier Danvy and
                   Andrzej Filinski},
-  editor       = {Gilles Kahn},
+  @editor       = {Gilles Kahn},
   title        = {Abstracting Control},
   booktitle    = {Proceedings of the 1990 {ACM} Conference on {LISP} and Functional
                   Programming, {LFP} 1990, Nice, France, 27-29 June 1990},
@@ -3344,7 +3344,7 @@ numpages = {33}
 @article{DoubleBarrelCPS,
 author = {Thielecke, Hayo},
 year = {2002},
-month = {09},
+@month = {09},
 pages = {141-160},
 title = {Comparing Control Constructs by Double-Barrelled {CPS}},
 volume = {15},
@@ -3367,7 +3367,7 @@ pages = {383–394},
 numpages = {12},
 keywords = {boehm separability, classical logic, delimited control, observational completeness},
 location = {San Francisco, California, USA},
-series = {POPL '08}
+series = {POPL~'08}
 }
 
 @inproceedings{materzok2011subtyping,
@@ -3385,7 +3385,7 @@ pages = {81–93},
 numpages = {13},
 keywords = {continuation-passing style, type system, delimited continuation, subtyping},
 location = {Tokyo, Japan},
-series = {ICFP '11}
+series = {ICFP~'11}
 }
 
 @InProceedings{materzok2012dynamic,
@@ -3413,7 +3413,7 @@ isbn="978-3-642-35182-2"
 
 @inproceedings{SelectiveCPS,
   author       = {Lasse R. Nielsen},
-  editor       = {Stephen D. Brookes and
+  @editor       = {Stephen D. Brookes and
                   Michael W. Mislove},
   title        = {A Selective {CPS} Transformation},
   booktitle    = {Seventeenth Conference on the Mathematical Foundations of Programming
@@ -3481,7 +3481,7 @@ issn = {0164-0925},
 doi = {10.1145/503502.503505},
 abstract = {Several recent studies have introduced lightweight versions of Java: reduced languages in which complex features like threads and reflection are dropped to enable rigorous arguments about key properties such as type safety. We carry this process a step further, omitting almost all features of the full language (including interfaces and even assignment) to obtain a small calculus, Featherweight Java, for which rigorous proofs are not only possible but easy. Featherweight Java bears a similar relation to Java as the lambda-calculus does to languages such as ML and Haskell. It offers a similar computational "feel," providing classes, methods, fields, inheritance, and dynamic typecasts with a semantics closely following Java's. A proof of type safety for Featherweight Java thus illustrates many of the interesting features of a safety proof for the full language, while remaining pleasingly compact. The minimal syntax, typing rules, and operational semantics of Featherweight Java make it a handy tool for studying the consequences of extensions and variations. As an illustration of its utility in this regard, we extend Featherweight Java with generic classes in the style of GJ (Bracha, Odersky, Stoutamire, and Wadler) and give a detailed proof of type safety. The extended system formalizes for the first time some of the key features of GJ.},
 journal = {ACM Transactions on Programming Languages and Systems},
-month = {may},
+@month = {may},
 pages = {396–450},
 numpages = {55},
 keywords = {Compilation, Java, generic classes, language design, language semantics}
@@ -3502,7 +3502,7 @@ pages = {595–608},
 numpages = {14},
 keywords = {product line verification, mechanized metatheory, feature-orientation},
 location = {Portland, Oregon, USA},
-series = {OOPSLA '11}
+series = {OOPSLA~'11}
 }
 
 @inproceedings{EncodingFeatherweightJava,
@@ -3520,7 +3520,7 @@ pages = {11–19},
 numpages = {9},
 keywords = {Coq, automated theorem provers, immutability, type systems},
 location = {Beijing, China},
-series = {FTfJP '12}
+series = {FTfJP~'12}
 }
 
 @inproceedings{InherentFeatherweightJava,
@@ -3538,7 +3538,7 @@ pages = {11–18},
 numpages = {8},
 keywords = {Mechanized Semantics, Featherweight Java, Dependent Types, Agda},
 location = {Salvador, Brazil},
-series = {SBLP '19}
+series = {SBLP~'19}
 }
 
 @article{ExtrinsicFeatherweightJava,
@@ -3578,7 +3578,7 @@ author       =   {Benjamin C. Pierce and Arthur {Azevedo de Amorim}
                   and Vilhelm Sj\"{o}berg and Brent Yorgey},
 title        =   "Logical Foundations",
 series       =  "Software Foundations series, volume 1",
-month        =   jan,
+@month        =   jan,
 year         =   "2024",
 publisher    =   "Electronic textbook",
 plclub       =   yes,
@@ -3597,7 +3597,7 @@ author       =   {Benjamin C. Pierce and Arthur {Azevedo de Amorim}
                   and Vilhelm Sj\"{o}berg and Brent Yorgey},
 title        =   "Logical Foundations",
 series       =  "Software Foundations series, volume 1",
-month        =   May,
+@month        =   May,
 year         =   "2018",
 publisher    =   "Electronic textbook",
 plclub       =   yes,
@@ -3616,7 +3616,7 @@ author       =   {Benjamin C. Pierce and Arthur {Azevedo de Amorim}
                   and Brent Yorgey},
 title        =   "Programming Language Foundations",
 series       =  "Software Foundations series, volume 2",
-month        =   jan,
+@month        =   jan,
 year         =   "2024",
 publisher    =   "Electronic textbook",
 plclub       =   yes,
@@ -3634,7 +3634,7 @@ author       =   {Benjamin C. Pierce and Arthur {Azevedo de Amorim}
                   and Brent Yorgey},
 title        =   "Programming Language Foundations",
 series       =  "Software Foundations series, volume 2",
-month        =   May,
+@month        =   May,
 year         =   "2018",
 publisher    =   "Electronic textbook",
 plclub       =   yes,
@@ -3649,7 +3649,7 @@ japanese     =   {http://proofcafe.org/sf}
 author       =   {Andrew W. Appel},
 title        =   "Verified Functional Algorithms",
 series       =  "Software Foundations series, volume 3",
-month        =   aug,
+@month        =   aug,
 year         =   2023,
 publisher    =   "Electronic textbook",
 plclub       =   yes,
@@ -3663,7 +3663,7 @@ ebook        =   {http://www.cis.upenn.edu/~bcpierce/sf},
 author       =   {Leonidas Lampropoulos and Benjamin C. Pierce},
 title        =   "{QuickChick}: Property-Based Testing in {Coq}",
 series       =  "Software Foundations series, volume 4",
-month        =   aug,
+@month        =   aug,
 year         =   "2023",
 publisher    =   "Electronic textbook",
 plclub       =   yes,
@@ -3677,7 +3677,7 @@ ebook        =   {http://www.cis.upenn.edu/~bcpierce/sf},
 author       =   {Leonidas Lampropoulos and Benjamin C. Pierce},
 title        =   "{QuickChick}: Property-Based Testing in {Coq}",
 series       =  "Software Foundations series, volume 4",
-month        =   Aug,
+@month        =   Aug,
 year         =   "2018",
 publisher    =   "Electronic textbook",
 plclub       =   yes,
@@ -3696,7 +3696,7 @@ ebook        =   {http://www.cis.upenn.edu/~bcpierce/sf},
             Conor McBride},
   title  = {Sexy Types---Are We Done Yet?},
   howpublished = {Software Summit},
-  month  = apr,
+  @month  = apr,
   year   = 2011,
   @url    = {https://research.microsoft.com/apps/video/dl.aspx?id=150045},
 	@quote = {We are obsessed with foundations partly because we are aware of a number of significant foundational problems that we’ve got to get right before we can do anything realistic. The thing I would think of in particular in that respect is coinduction and reasoning about corecursive processes. That’s currently, in all major implementations of type theory, a disaster. And if we’re going to talk about real systems, we’ve got to actually have something sensible to say about that.},
@@ -3779,7 +3779,7 @@ number = {POPL},
 doi = {10.1145/3371126},
 abstract = {There is a critical tension between substitution, dependent elimination and effects in type theory. In this paper, we crystallize this tension in the form of a no-go theorem that constitutes the fire triangle of type theory. To release this tension, we propose ∂CBPV, an extension of call-by-push-value (CBPV) —a general calculus of effects—to dependent types. Then, by extending to ∂CBPV the well-known decompositions of call-by-name and call-by-value into CBPV, we show why, in presence of effects, dependent elimination must be restricted in call-by-name, and substitution must be restricted in call-by-value. To justify ∂CBPV and show that it is general enough to interpret many kinds of effects, we define various effectful syntactic translations from ∂CBPV to Martin-L\"{o}f type theory: the reader, weaning and forcing translations.},
 journal = {Proceedings of the ACM on Programming Languages},
-month = dec,
+@month = dec,
 articleno = 58,
 numpages = 28,
 keywords = {type theory, effects}
@@ -3809,7 +3809,7 @@ numpages = {27}
   HAL_LOCAL_REFERENCE = {ACTI+},
   PAGES = {12},
   YEAR = {2017},
-  MONTH = Jun,
+  @MONTH = Jun,
   DOI = {10.1109/LICS.2017.8005113},
   PDF = {https://inria.hal.science/hal-01441829/file/main.pdf},
   HAL_ID = {hal-01441829},
@@ -3967,20 +3967,18 @@ isbn="978-3-319-89884-1"
 author = {Thielecke, Hayo},
 title = {From control effects to typed continuation passing},
 year = {2003},
-issue_date = {January 2003},
+isbn = {1581136285},
 publisher = {Association for Computing Machinery},
 address = {New York, NY, USA},
-volume = {38},
-number = {1},
-issn = {0362-1340},
-@url = {https://doi.org/10.1145/640128.604144},
-doi = {10.1145/640128.604144},
+@url = {https://doi.org/10.1145/604131.604144},
+doi = {10.1145/604131.604144},
 abstract = {First-class continuations are a powerful computational effect, allowing the programmer to express any form of jumping. Types and effect systems can be used to reason about continuations, both in the source language and in the target language of the continuation-passing transform. In this paper, we establish the connection between an effect system for first-class continuations and typed versions of continuation-passing style. A region in the effect system determines a local answer type for continuations, such that the continuation transforms of pure expressions are parametrically polymorphic in their answer types. We use this polymorphism to derive transforms that make use of effect information, in particular, a mixed linear/non-linear continuation-passing transform, in which expressions without control effects are passed their continuations linearly.},
-journal = {SIGPLAN Not.},
-month = {jan},
+booktitle = {Proceedings of the 30th ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages},
 pages = {139–149},
 numpages = {11},
-keywords = {continuations, control effects, polymorphism, type and effect systems}
+keywords = {continuations, control effects, polymorphism, type and effect systems},
+location = {New Orleans, Louisiana, USA},
+series = {POPL~'03}
 }
 
 
@@ -3999,7 +3997,7 @@ pages = {139–149},
 numpages = {11},
 keywords = {continuations, control effects, polymorphism, type and effect systems},
 location = {New Orleans, Louisiana, USA},
-series = {POPL '03}
+series = {POPL~'03}
 }
 
 @InProceedings{AnswerTypePolyEta,
@@ -4034,7 +4032,7 @@ isbn="978-3-540-76637-7",
 author = {Olle Fredrickson and Daniel Gustaffson},
 title = {A totally {Epic} backend for {Agda}},
 school = {Chalmers University of Technology, University of Gothenburg},
-month = may,
+@month = may,
 year = 2011,
 }
 
@@ -4042,7 +4040,7 @@ year = 2011,
 author = {Nathan Corbyn},
 title = {Proof Synthesis with Free Extensions in Intensional Type Theory},
 school = {King's College, University of Cambridge},
-month = jun,
+@month = jun,
 year = 2021,
 }
 
@@ -4122,7 +4120,7 @@ booktitle = {Proceedings of the 26th Symposium on Operating Systems Principles},
 pages = {270–286},
 numpages = {17},
 location = {Shanghai, China},
-series = {SOSP '17}
+series = {SOSP~'17}
 }
 
 @inproceedings{PPJEC2022,
@@ -4165,7 +4163,7 @@ pages = {179–191},
 numpages = {13},
 keywords = {verified type checking, verified parsing, verified garbage collection., read-eval-print loop, machine code verification, compiler verification, compiler bootstrapping, ML},
 location = {San Diego, California, USA},
-series = {POPL '14}
+series = {POPL~'14}
 }
 
 @inproceedings{BDMT2019,
@@ -4280,7 +4278,7 @@ issn = {0164-0925},
 doi = {10.1145/1516507.1516510},
 abstract = {The origins of bisimulation and bisimilarity are examined, in the three fields where they have been independently discovered: Computer Science, Philosophical Logic (precisely, Modal Logic), Set Theory.Bisimulation and bisimilarity are coinductive notions, and as such are intimately related to fixed points, in particular greatest fixed points. Therefore also the appearance of coinduction and fixed points is discussed, though in this case only within Computer Science. The paper ends with some historical remarks on the main fixed-point theorems (such as Knaster-Tarski) that underpin the fixed-point theory presented.},
 journal = {ACM Transactions on Programming Languages and Systems},
-month = {may},
+@month = {may},
 articleno = {15},
 numpages = {41},
 keywords = {greatest fixed points, fixed points, coinduction, Bisimulation, history}
@@ -4289,7 +4287,7 @@ keywords = {greatest fixed points, fixed points, coinduction, Bisimulation, hist
 @article{Grapham_Gibbons01,
 author = {Hutton, Graham and Gibbons, Jeremy},
 year = {2001},
-month = {08},
+@month = {08},
 pages = {197-201},
 title = {The Generic Approximation Lemma},
 volume = {79},
@@ -4314,7 +4312,7 @@ pages={1132–1152}
 title={The Method of Coalgebra: Exercises in coinduction},
 author={Rutten, Jan},
 year={2019},
-month=feb,
+@month=feb,
 numpages={261},
 publisher={CWI, Amsterdam, The Netherlands},
 isbn={978-90-6196-568-8},
@@ -4340,7 +4338,7 @@ author = {Gordon, Andy},
 title = {A Tutorial on Co-induction and Functional Programming},
 booktitle = {Proceedings of the 1994 Glasgow Workshop on Functional Programming, Ayr, Scotland},
 year = {1994},
-month = {September},
+@month = {September},
 abstract = {Co-induction is an important tool for reasoning about unbounded structures. This tutorial explains the foundations of co-induction, and shows how it justifies intuitive arguments about lazy streams, of central importance to lazy functional programmers. We explain from first principles a theory based on a new formulation of bisimilarity for functional programs, which coincides exactly with Morris-style contextual equivalence. We show how to prove properties of lazy streams by co-induction and derive Bird and Wadler's Take Lemma, a well-known proof technique for lazy streams.},
 publisher = {Springer London},
 @url = {https://www.microsoft.com/en-us/research/publication/a-tutorial-on-co-induction-and-functional-programming/},
@@ -4352,7 +4350,7 @@ edition = {Proceedings of the 1994 Glasgow Workshop on Functional Programming, A
 @article{ProofMethodsCorecursive,
 author = {Gibbons, Jeremy and Hutton, Graham},
 year = {2005},
-month = {04},
+@month = {04},
 pages = {353-366},
 title = {Proof Methods for Corecursive Programs},
 volume = {66},
@@ -4382,7 +4380,7 @@ booktitle = {Proceedings of the Third ACM SIGPLAN International Conference on Fu
 pages = {280–288},
 numpages = {9},
 location = {Baltimore, Maryland, USA},
-series = {ICFP '98}
+series = {ICFP~'98}
 }
 
 @INPROCEEDINGS{GeuversIterationRecursion,
@@ -4416,7 +4414,7 @@ title = {The Stack Calculus},
 booktitle = {Proceedings Seventh Workshop on Logical and Semantic Frameworks, with Applications},
 series = {{LSFA} 2012},
 location = {Rio de Janeiro, Brazil},
-@month = sep,
+@@month = sep,
 year = {2012},
 pages = {93--108},
 @url = {http://dx.doi.org/10.4204/EPTCS.113.10},
@@ -4436,7 +4434,7 @@ Year = {2014},
 @article{Meertens92,
 author = {Meertens, Lambert},
 year = {1992},
-month = {09},
+@month = {09},
 pages = {},
 title = {Paramorphisms},
 volume = {4},
@@ -4465,7 +4463,7 @@ series = {POPL ’13}
  author = {Liskov, Barbara},
  title = {Keynote Address-Data Abstraction and Hierarchy},
  booktitle = {Addendum to the Proceedings on Object-oriented Programming Systems, Languages and Applications (Addendum)},
- series = {OOPSLA '87},
+ series = {OOPSLA~'87},
  year = {1987},
  isbn = {0-89791-266-7},
  location = {Orlando, Florida, USA},
@@ -4604,7 +4602,7 @@ address = {USA},
 abstract = {Records and dependent records are a powerful toolfor programming, representing mathematical concepts, andprogram verification. In the last decade several type systemswith records as primitive types were proposed. Thequestion is arose: whether it is possible to define recordtype in existent type theories using standard types withoutintroducing new primitives.It was known that independent records can be defined intype theories with dependent functions or intersection. Onthe other hand dependent records cannot be formed usingstandard types. Hickey introduced a complex notion of verydependent functions to represent dependent records. In thecurrent paper we extend Martin-L\"{o}f's type theory with asimpler type constructor dependent intersection, i.e., the intersectionof two types, where the second type may dependon elements of the first one (not to be confused with the intersectionof a family of types). This new type constructorallows us to define dependent records in a very simple way.It also allows us to define the set type constructor.},
 booktitle = {Proceedings of the 18th Annual IEEE Symposium on Logic in Computer Science},
 pages = {86},
-series = {LICS '03}
+series = {LICS~'03}
 }
 
 @book{Nuprl,
@@ -4665,7 +4663,7 @@ chapter = {Origami programming},
 title = {The Fun of Programming},
 @editors = {Gibbons, Jeremy and de Moor, Oege},
 year = {2003},
-month = {01},
+@month = {01},
 pages = {41-60},
 isbn = {978-0-333-99285-2},
 doi = {10.1007/978-1-349-91518-7_3}
@@ -4746,7 +4744,7 @@ articleno = {2},
 numpages = {7},
 keywords = {Java, coinduction, programming paradigms, regular terms},
 location = {Montpellier, France},
-series = {FTfJP '13},
+series = {FTfJP~'13},
 }
 
 @inproceedings{AZ-CoLP12,
@@ -4794,7 +4792,7 @@ pages = {3–10},
 numpages = {8},
 keywords = {Java-like languages, coinduction, programming paradigms, regular terms},
 location = {Beijing, China},
-series = {FTfJP '12},
+series = {FTfJP~'12},
 }
 
 @inproceedings{LiquidHaskell22,
@@ -4847,7 +4845,7 @@ publisher={Cambridge University Press},
   @editor       = {David B. MacQueen and
                   Luca Cardelli},
   title        = {Security Properties of Typed Applets},
-  booktitle    = {{POPL} '98, Proceedings of the 25th {ACM} {SIGPLAN-SIGACT} Symposium
+  booktitle    = {{POPL}~'98, Proceedings of the 25th {ACM} {SIGPLAN-SIGACT} Symposium
                   on Principles of Programming Languages, San Diego, CA, USA, January
                   19-21, 1998},
   pages        = {391--403},
@@ -4887,7 +4885,7 @@ booktitle = {Proceedings of the 38th Annual ACM SIGPLAN-SIGACT Symposium on Prin
 pages = {385–398},
 numpages = {14},
 location = {Austin, Texas, USA},
-series = {POPL '11},
+series = {POPL~'11},
 }
 
 @article{ITrees,
@@ -4992,7 +4990,7 @@ series = {CPP 2019}
                   Radhia Cousot},
   title        = {Checking {NFA} equivalence with bisimulations up to congruence},
   booktitle    = {The 40th Annual {ACM} {SIGPLAN-SIGACT} Symposium on Principles of
-                  Programming Languages, {POPL} '13, Rome, Italy - January 23 - 25,
+                  Programming Languages, {POPL}~'13, Rome, Italy - January 23 - 25,
                   2013},
   pages        = {457--468},
   publisher    = {{ACM}},
@@ -5029,7 +5027,7 @@ series = {CPP 2019}
   title        = {On coinductive equivalences for higher-order probabilistic functional
                   programs},
   booktitle    = {The 41st Annual {ACM} {SIGPLAN-SIGACT} Symposium on Principles of
-                  Programming Languages, {POPL} '14, San Diego, CA, USA, January 20-21,
+                  Programming Languages, {POPL}~'14, San Diego, CA, USA, January 20-21,
                   2014},
   pages        = {297--308},
   publisher    = {{ACM}},
@@ -5093,14 +5091,14 @@ isbn="978-3-540-70722-6"
 @inproceedings{FStar,
 author = {Swamy, Nikhil and Hriţcu, Cătălin and Keller, Chantal and Rastogi, Aseem and Delignat-Lavaud, Antoine and Forest, Simon and Bhargavan, Karthikeyan and Fournet, Cédric and Strub,  	Pierre-Yves and Kohlweiss, Markulf and Zinzindohoue, Jean-Karim and Zanella-Béguelin, Santiago},
 title = {Dependent Types and Multi-Monadic Effects in F*},
-booktitle = {POPL '16 Proceedings of the 43rd Annual ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages},
+booktitle = {POPL~'16 Proceedings of the 43rd Annual ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages},
 year = {2016},
-month = {January},
+@month = {January},
 abstract = {We present a new, completely redesigned, version of F*, a language that works both as a proof assistant as well as a general-purpose, verification-oriented, effectful programming language. In support of these complementary roles, F* is a dependently typed, higher-order, call-by-value language with _primitive_ effects including state, exceptions, divergence and IO. Although primitive, programmers choose the granularity at which to specify effects by equipping each effect with a monadic, predicate transformer semantics. F* uses this to efficiently compute weakest preconditions and discharges the resulting proof obligations using a combination of SMT solving and manual proofs. Isolated from the effects, the core of F* is a language of pure functions used to write specifications and proof terms---its consistency is maintained by a semantic termination check based on a well-founded order. We evaluate our design on more than 55,000 lines of F* we have authored in the last year, focusing on three main case studies. Showcasing its use as a general-purpose programming language, F* is programmed (but not verified) in F*, and bootstraps in both OCaml and F#. Our experience confirms F*'s pay-as-you-go cost model: writing idiomatic ML-like code with no finer specifications imposes no user burden. As a verification-oriented language, our most significant evaluation of F* is in verifying several key modules in an implementation of the TLS-1.2 protocol standard. For the modules we considered, we are able to prove more properties, with fewer annotations using F* than in a prior verified implementation of TLS-1.2. Finally, as a proof assistant, we discuss our use of F* in mechanizing the metatheory of a range of lambda calculi, starting from the simply typed lambda calculus to System F-omega and even micro-F*, a sizeable fragment of F* itself---these proofs make essential use of F*'s flexible combination of SMT automation and constructive proofs, enabling a tactic-free style of programming and proving at a relatively large scale.},
 @url = {https://www.microsoft.com/en-us/research/publication/dependent-types-multi-monadic-effects-f/},
 pages = {256-270},
 isbn = {978-1-4503-3549-2},
-edition = {POPL '16 Proceedings of the 43rd Annual ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages},
+edition = {POPL~'16 Proceedings of the 43rd Annual ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages},
 }
 
 @techreport{IndexedEffects,
@@ -5109,7 +5107,7 @@ edition = {POPL '16 Proceedings of the 43rd Annual ACM SIGPLAN-SIGACT Symposium 
   @URL = {https://inria.hal.science/hal-04256360},
   INSTITUTION = {{Microsoft Research}},
   YEAR = {2020},
-  MONTH = Oct,
+  @MONTH = Oct,
   PDF = {https://inria.hal.science/hal-04256360/file/indexedeffects.pdf},
   HAL_ID = {hal-04256360},
   HAL_VERSION = {v1},
@@ -5128,7 +5126,7 @@ number = {ICFP},
 doi = {10.1145/3409003},
 abstract = {Much recent research has been devoted to modeling effects within type theory. Building on this work, we observe that effectful type theories can provide a foundation on which to build semantics for more complex programming constructs and program logics, extending the reasoning principles that apply within the host effectful type theory itself. Concretely, our main contribution is a semantics for concurrent separation logic (CSL) within the F⋆ proof assistant in a manner that enables dependently typed, effectful F⋆ programs to make use of concurrency and to be specified and verified using a full-featured, extensible CSL. In contrast to prior approaches, we directly derive the partial-correctness Hoare rules for CSL from the denotation of computations in the effectful semantics of non-deterministically interleaved atomic actions. Demonstrating the flexibility of our semantics, we build generic, verified libraries that support various concurrency constructs, ranging from dynamically allocated, storable spin locks, to protocol-indexed channels. We conclude that our effectful semantics provides a simple yet expressive basis on which to layer domain-specific languages and logics for verified, concurrent programming.},
 journal = {Proceedings of the ACM on Programming Languages},
-month = {aug},
+@month = {aug},
 articleno = {121},
 numpages = {30},
 keywords = {Concurrency, Program Proofs, Separation Logic}
@@ -5149,7 +5147,7 @@ pages = {387–398},
 numpages = {12},
 keywords = {dynamic languages, hoare monad, predicate transformer, refinement types},
 location = {Seattle, Washington, USA},
-series = {PLDI '13}
+series = {PLDI~'13}
 }
 
 @article{Next700CompilerCorrectness,
@@ -5165,7 +5163,7 @@ number = {ICFP},
 doi = {10.1145/3341689},
 abstract = {Compiler correctness is an old problem, with results stretching back beyond the last half-century. Founding the field, John McCarthy and James Painter set out to build a "completely trustworthy compiler". And yet, until quite recently, even despite truly impressive verification efforts, the theorems being proved were only about the compilation of whole programs, a theoretically quite appealing but practically unrealistic simplification. For a compiler correctness theorem to assure complete trust, the theorem must reflect the reality of how the compiler will be used. There has been much recent work on more realistic "compositional" compiler correctness aimed at proving correct compilation of components while supporting linking with components compiled from different languages using different compilers. However, the variety of theorems, stated in remarkably different ways, raises questions about what researchers even mean by a "compiler is correct." In this pearl, we develop a new framework with which to understand compiler correctness theorems in the presence of linking, and apply it to understanding and comparing this diversity of results. In doing so, not only are we better able to assess their relative strengths and weaknesses, but gain insight into what we as a community should expect from compiler correctness theorems of the future.},
 journal = {Proceedings of the ACM on Programming Languages},
-month = {jul},
+@month = {jul},
 articleno = {85},
 numpages = {29},
 keywords = {compilers, verification}
@@ -5185,7 +5183,7 @@ keywords = {compilers, verification}
   @editor       = {David B. MacQueen and
                   Luca Cardelli},
   title        = {Local Type Inference},
-  booktitle    = {{POPL} '98, Proceedings of the 25th {ACM} {SIGPLAN-SIGACT} Symposium
+  booktitle    = {{POPL}~'98, Proceedings of the 25th {ACM} {SIGPLAN-SIGACT} Symposium
                   on Principles of Programming Languages, San Diego, CA, USA, January
                   19-21, 1998},
   pages        = {252--265},
@@ -5209,7 +5207,7 @@ issn = {0164-0925},
 doi = {10.1145/345099.345100},
 abstract = {We study two partial type inference methods for a language combining subtyping and impredicative polymorphism. Both methods are local in the sense that missing annotations are recovered using only information from adjacent nodes in the syntax tree, without long-distance constraints such as unification variables. One method infers type arguments in polymorphic applications using a local constraint solver. The other infers annotations on bound variables in function abstractions by propagating type constraints downward from enclosing application nodes. We motivate our design choices by a statistical analysis of the uses of type inference in a sizable body of existing ML code.},
 journal = {ACM Transactions on Programming Languages and Systems},
-month = {jan},
+@month = {jan},
 pages = {1–44},
 numpages = {44},
 keywords = {type inference, subtyping, polymorphism}
@@ -5229,7 +5227,7 @@ issn = {0360-0300},
 doi = {10.1145/3450952},
 abstract = {Bidirectional typing combines two modes of typing: type checking, which checks that a program satisfies a known type, and type synthesis, which determines a type from the program. Using checking enables bidirectional typing to support features for which inference is undecidable; using synthesis enables bidirectional typing to avoid the large annotation burden of explicitly typed languages. In addition, bidirectional typing improves error locality. We highlight the design principles that underlie bidirectional type systems, survey the development of bidirectional typing from the prehistoric period before Pierce and Turner’s local type inference to the present day, and provide guidance for future investigations.},
 journal = {ACM Computing Surveys},
-month = {may},
+@month = {may},
 articleno = {98},
 numpages = {38},
 keywords = {type inference, Type checking}
@@ -5250,7 +5248,7 @@ pages = {281–292},
 numpages = {12},
 keywords = {union types, type refinements, intersection types, dependent types},
 location = {Venice, Italy},
-series = {POPL '04}
+series = {POPL~'04}
 }
 
 @inproceedings{AMO2012DOT,
@@ -5275,7 +5273,7 @@ pages = {233–249},
 numpages = {17},
 keywords = {calculus, dependent types, objects},
 location = {Portland, Oregon, USA},
-series = {OOPSLA '14}
+series = {OOPSLA~'14}
 }
 
 @article{RompfAmin2015FtoDOT,
@@ -5351,7 +5349,7 @@ pages = {666–679},
 numpages = {14},
 keywords = {type soundness, dependent object types, Scala, Definitional interpreters, DOT},
 location = {Paris, France},
-series = {POPL '17}
+series = {POPL~'17}
 }
 
 @article{RL2019PathToDOT,
@@ -5367,7 +5365,7 @@ number = {OOPSLA},
 doi = {10.1145/3360571},
 abstract = {The Dependent Object Types (DOT) calculus aims to formalize the Scala programming language with a focus on path-dependent types — types such as x.a1… an.T that depend on the runtime value of a path x.a1… an to an object. Unfortunately, existing formulations of DOT can model only types of the form x.A which depend on variables rather than general paths. This restriction makes it impossible to model nested module dependencies. Nesting small components inside larger ones is a necessary ingredient of a modular, scalable language. DOT’s variable restriction thus undermines its ability to fully formalize a variety of programming-language features including Scala’s module system, family polymorphism, and covariant specialization. This paper presents the pDOT calculus, which generalizes DOT to support types that depend on paths of arbitrary length, as well as singleton types to track path equality. We show that naive approaches to add paths to DOT make it inherently unsound, and present necessary conditions for such a calculus to be sound. We discuss the key changes necessary to adapt the techniques of the DOT soundness proofs so that they can be applied to pDOT. Our paper comes with a Coq-mechanized type-safety proof of pDOT. With support for paths of arbitrary length, pDOT can realize DOT’s full potential for formalizing Scala-like calculi.},
 journal = {Proceedings of the ACM on Programming Languages},
-month = {oct},
+@month = {oct},
 articleno = {145},
 numpages = {29},
 keywords = {DOT, Scala, dependent types, paths}
@@ -5386,7 +5384,7 @@ number = {POPL},
 doi = {10.1145/3371134},
 abstract = {Path dependent types have long served as an expressive component of the Scala programming language. They allow for the modelling of both bounded polymorphism and a degree of nominal subtyping. Nominality in turn provides the ability to capture first class modules. Thus a single language feature gives rise to a rich array of expressiveness. Recent work has proven path dependent types sound in the presence of both intersection and recursive types, but unfortunately typing remains undecidable, posing problems for programmers who rely on the results of type checkers. The Wyvern programming language is an object oriented language with path dependent types, recursive types and first class modules. In this paper we define two variants of Wyvern that feature decidable typing, along with machine checked proofs of decidability. Despite the restrictions, our approaches retain the ability to encode the parameteric polymorphism of Java generics along with many idioms of the Scala module system.},
 journal = {Proceedings of the ACM on Programming Languages},
-month = {dec},
+@month = {dec},
 articleno = {66},
 numpages = {27},
 keywords = {Wyvern, Subtyping, Structural Subtyping, Scala, Path Dependent Types, Object Oriented Languages, Nominal Subtyping, Language Design, Functional Languages, Decidability}
@@ -5448,7 +5446,7 @@ articleno = {4},
 numpages = {13},
 keywords = {algebraic effect handlers, delimited control operators, effect instances, macro expressibility, prompt tags},
 location = {Lisboa, Portugal},
-series = {PPDP '23}
+series = {PPDP~'23}
 }
 
 @article{BrachthauserSO20Capabilities,
@@ -5506,7 +5504,7 @@ series = {PPDP '23}
   @editor       = {Ranjit Jhala and
                   Isil Dillig},
   title        = {A typed continuation-passing translation for lexical effect handlers},
-  booktitle    = {{PLDI} '22: 43rd {ACM} {SIGPLAN} International Conference on Programming
+  booktitle    = {{PLDI}~'22: 43rd {ACM} {SIGPLAN} International Conference on Programming
                   Language Design and Implementation, San Diego, CA, USA, June 13 -
                   17, 2022},
   pages        = {566--579},
@@ -5537,20 +5535,18 @@ series = {PPDP '23}
 author = {O'Connor, Liam and Chen, Zilin and Rizkallah, Christine and Amani, Sidney and Lim, Japheth and Murray, Toby and Nagashima, Yutaka and Sewell, Thomas and Klein, Gerwin},
 title = {Refinement through restraint: bringing down the cost of verification},
 year = {2016},
-issue_date = {September 2016},
+isbn = {9781450342193},
 publisher = {Association for Computing Machinery},
 address = {New York, NY, USA},
-volume = {51},
-number = {9},
-issn = {0362-1340},
-@url = {https://doi.org/10.1145/3022670.2951940},
-doi = {10.1145/3022670.2951940},
+@url = {https://doi.org/10.1145/2951913.2951940},
+doi = {10.1145/2951913.2951940},
 abstract = {We present a framework aimed at significantly reducing the cost of verifying certain classes of systems software, such as file systems. Our framework allows for equational reasoning about systems code written in our new language, Cogent. Cogent is a restricted, polymorphic, higher-order, and purely functional language with linear types and without the need for a trusted runtime or garbage collector. Linear types allow us to assign two semantics to the language: one imperative, suitable for efficient C code generation; and one functional, suitable for equational reasoning and verification. As Cogent is a restricted language, it is designed to easily interoperate with existing C functions and to connect to existing C verification frameworks. Our framework is based on certifying compilation: For a well-typed Cogent program, our compiler produces C code, a high-level shallow embedding of its semantics in Isabelle/HOL, and a proof that the C code correctly refines this embedding. Thus one can reason about the full semantics of real-world systems code productively and equationally, while retaining the interoperability and leanness of C. The compiler certificate is a series of language-level proofs and per-program translation validation phases, combined into one coherent top-level theorem in Isabelle/HOL.},
-journal = {SIGPLAN Not.},
-month = {sep},
+booktitle = {Proceedings of the 21st ACM SIGPLAN International Conference on Functional Programming},
 pages = {89–102},
 numpages = {14},
-keywords = {Isabelle/HOL, file systems, linear types, programming languages, semantics, verification}
+keywords = {verification, semantics, programming languages, linear types, file systems, Isabelle/HOL},
+location = {Nara, Japan},
+series = {ICFP 2016}
 }
 
 
@@ -5578,7 +5574,7 @@ series = {ICFP 2016}
                   Brigitte Pientka},
   title        = {Idris: Implementing a Dependently Typed Programming Language},
   booktitle    = {Proceedings of the 2014 International Workshop on Logical Frameworks
-                  and Meta-languages: Theory and Practice, {LFMTP} '14, Vienna, Austria,
+                  and Meta-languages: Theory and Practice, {LFMTP}~'14, Vienna, Austria,
                   July 17, 2014},
   pages        = {2: 1},
   publisher    = {{ACM}},
@@ -5674,7 +5670,7 @@ numpages = {26}
                   University of Massachusetts Lowell},
   title    = {Departmental {BPC} Plan},
   year     = 2024,
-	month    = may,
+	@month    = may,
 	@url      = {https://plans.bpcnet.org/UniversityOfMassachusettsLowell_Computer&InformationSciences_DepartmentalBPCPlan.pdf},
 }
 
@@ -5693,25 +5689,27 @@ issn = {0001-0782},
 doi = {10.1145/3127323},
 abstract = {As the software industry enters the era of language-oriented programming, it needs programmable programming languages.},
 journal = {Communications of the {ACM}},
-month = feb,
+@month = feb,
 pages = {62–71},
 numpages = {10}
 }
 
-@article{LanguageLibrary,
-	title = {Languages as libraries},
-	volume = {46},
-	issn = {0362-1340},
-	@url = {https://doi.org/10.1145/1993316.1993514},
-	doi = {10.1145/1993316.1993514},
-	abstract = {Programming language design benefits from constructs for extending the syntax and semantics of a host language. While C's string-based macros empower programmers to introduce notational shorthands, the parser-level macros of Lisp encourage experimentation with domain-specific languages. The Scheme programming language improves on Lisp with macros that respect lexical scope. The design of Racket---a descendant of Scheme---goes even further with the introduction of a full-fledged interface to the static semantics of the language. A Racket extension programmer can thus add constructs that are indistinguishable from "native" notation, large and complex embedded domain-specific languages, and even optimizing transformations for the compiler backend. This power to experiment with language design has been used to create a series of sub-languages for programming with first-class classes and modules, numerous languages for implementing the Racket system, and the creation of a complete and fully integrated typed sister language to Racket's untyped base language.This paper explains Racket's language extension {API} via an implementation of a small typed sister language. The new language provides a rich type system that accommodates the idioms of untyped Racket. Furthermore, modules in this typed language can safely exchange values with untyped modules. Last but not least, the implementation includes a type-based optimizer that achieves promising speedups. Although these extensions are complex, their Racket implementation is just a library, like any other library, requiring no changes to the Racket implementation.},
-	pages = {132--141},
-	number = {6},
-	journaltitle = {{SIGPLAN} Not.},
-	author = {Tobin-Hochstadt, Sam and St-Amour, Vincent and Culpepper, Ryan and Flatt, Matthew and Felleisen, Matthias},
-	@urldate = {2025-01-10},
-	date = {2011-06-04},
-  year= {2011},
+@inproceedings{LanguageLibrary,
+author = {Tobin-Hochstadt, Sam and St-Amour, Vincent and Culpepper, Ryan and Flatt, Matthew and Felleisen, Matthias},
+title = {Languages as libraries},
+year = {2011},
+isbn = {9781450306638},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+@url = {https://doi.org/10.1145/1993498.1993514},
+doi = {10.1145/1993498.1993514},
+abstract = {Programming language design benefits from constructs for extending the syntax and semantics of a host language. While C's string-based macros empower programmers to introduce notational shorthands, the parser-level macros of Lisp encourage experimentation with domain-specific languages. The Scheme programming language improves on Lisp with macros that respect lexical scope. The design of Racket---a descendant of Scheme---goes even further with the introduction of a full-fledged interface to the static semantics of the language. A Racket extension programmer can thus add constructs that are indistinguishable from "native" notation, large and complex embedded domain-specific languages, and even optimizing transformations for the compiler backend. This power to experiment with language design has been used to create a series of sub-languages for programming with first-class classes and modules, numerous languages for implementing the Racket system, and the creation of a complete and fully integrated typed sister language to Racket's untyped base language.This paper explains Racket's language extension API via an implementation of a small typed sister language. The new language provides a rich type system that accommodates the idioms of untyped Racket. Furthermore, modules in this typed language can safely exchange values with untyped modules. Last but not least, the implementation includes a type-based optimizer that achieves promising speedups. Although these extensions are complex, their Racket implementation is just a library, like any other library, requiring no changes to the Racket implementation.},
+booktitle = {Proceedings of the 32nd ACM SIGPLAN Conference on Programming Language Design and Implementation},
+pages = {132–141},
+numpages = {10},
+keywords = {extensible languages, macros, modules, typed racket},
+location = {San Jose, California, USA},
+series = {PLDI~'11},
 }
 
 
@@ -5724,6 +5722,7 @@ numpages = {10}
 	publisher = {Wordware Publishing, Inc.},
 	author = {Lasater, Christopher G.},
 	date = {2006-10-01},
+	year = {2006},
 	langid = {english},
 	keywords = {Computers / Languages / General},
   year={2006},
@@ -5741,12 +5740,12 @@ numpages = {10}
             This article explains {JavaGI} and motivates its design. Moreover, it formalizes a core calculus for {JavaGI} and proves type soundness, decidability of typechecking, and determinacy of evaluation. The article also presents the implementation of a {JavaGI} compiler and an accompanying run-time system. The compiler, based on the Eclipse Compiler for Java, offers mostly modular static typechecking and fully modular code generation. It defers certain well-formedness checks until load time to increase flexibility and to enable full support for dynamic loading. Benchmarks show that the code generated by the compiler offers good performance. Several case studies demonstrate the practical utility of the language and its implementation.},
 	pages = {1--83},
 	number = {4},
-	journaltitle = {{ACM} Transactions on Programming Languages and Systems},
+	journal = {{ACM} Transactions on Programming Languages and Systems},
 	shortjournal = {{ACM} Trans. Program. Lang. Syst.},
 	author = {Wehr, Stefan and Thiemann, Peter},
 	@urldate = {2025-02-16},
 	date = {2011-07},
-  year={2011},
+	year = {2011},
 	langid = {english},
 }
 
@@ -5761,15 +5760,15 @@ numpages = {10}
 	booktitle = {{ECOOP} 2012 – Object-Oriented Programming},
 	publisher = {Springer Berlin Heidelberg},
 	author = {Oliveira, Bruno C. D. S. and Cook, William R.},
-	editor = {Noble, James},
-	editorb = {Hutchison, David and Kanade, Takeo and Kittler, Josef and Kleinberg, Jon M. and Mattern, Friedemann and Mitchell, John C. and Naor, Moni and Nierstrasz, Oscar and Pandu Rangan, C. and Steffen, Bernhard and Sudan, Madhu and Terzopoulos, Demetri and Tygar, Doug and Vardi, Moshe Y. and Weikum, Gerhard},
-	editorbtype = {redactor},
+	@editor = {Noble, James},
+	@editorb = {Hutchison, David and Kanade, Takeo and Kittler, Josef and Kleinberg, Jon M. and Mattern, Friedemann and Mitchell, John C. and Naor, Moni and Nierstrasz, Oscar and Pandu Rangan, C. and Steffen, Bernhard and Sudan, Madhu and Terzopoulos, Demetri and Tygar, Doug and Vardi, Moshe Y. and Weikum, Gerhard},
+	@editorbtype = {redactor},
 	@urldate = {2025-02-16},
-	date = {2012},
+	year = {2012},
 	langid = {english},
   year={2012},
 	doi = {10.1007/978-3-642-31057-7_2},
-	note = {Series Title: Lecture Notes in Computer Science},
+	@note = {Series Title: Lecture Notes in Computer Science},
 }
 
 
@@ -5781,12 +5780,12 @@ numpages = {10}
 	doi = {10.1017/S0956796808006758},
 	abstract = {This paper describes a technique for assembling both data types and functions from isolated individual components. We also explore how the same technology can be used to combine free monads and, as a result, structure Haskell’s monolithic {IO} monad.},
 	number = {4},
-	journaltitle = {Journal of Functional Programming},
+	journal = {Journal of Functional Programming},
 	shortjournal = {J. Funct. Prog.},
 	author = {Swierstra, Wouter},
 	@urldate = {2025-02-16},
-	date = {2008-07},
-  year={2008},
+	@date = {2008-07},
+	year = {2008},
 	langid = {english},
 }
 
@@ -5796,7 +5795,7 @@ numpages = {10}
 	isbn = {978-1-4503-2326-0},
 	@url = {https://doi.org/10.1145/2500365.2500618},
 	doi = {10.1145/2500365.2500618},
-	series = {{ICFP} '13},
+	series = {{ICFP}~'13},
 	abstract = {Contemporary compilers must typically handle sophisticated high-level source languages, generate efficient code for multiple hardware architectures and operating systems, and support source-level debugging, profiling, and other program development tools. As a result, compilers tend to be among the most complex of software systems. Nanopass frameworks are designed to help manage this complexity. A nanopass compiler is comprised of many single-task passes with formally defined intermediate languages. The perceived downside of a nanopass compiler is that the extra passes will lead to substantially longer compilation times. To determine whether this is the case, we have created a plug replacement for the commercial Chez Scheme compiler, implemented using an updated nanopass framework, and we have compared the speed of the new compiler and the code it generates against the original compiler for a large set of benchmark programs. This paper describes the updated nanopass framework, the new compiler, and the results of our experiments. The compiler produces faster code than the original, averaging 15-27\% depending on architecture and optimization level, due to a more sophisticated but slower register allocator and improvements to several optimizations. Compilation times average well within a factor of two of the original compiler, despite the slower register allocator and the replacement of five passes of the original 10 with over 50 nanopasses.},
 	pages = {343--350},
 	booktitle = {Proceedings of the 18th {ACM} {SIGPLAN} international conference on Functional programming},
@@ -5805,22 +5804,23 @@ numpages = {10}
 	@urldate = {2025-02-15},
   year={2013},
 	date = {2013-09-25},
+	year = {2013},
 }
 
 
 @article{wadler_critique_1987,
-	title = {A critique of Abelson and Sussman or why calculating is better than scheming},
+	title = {A critique of {Abelson} and {Sussman} or why calculating is better than scheming},
 	volume = {22},
 	issn = {0362-1340},
 	@url = {https://dl.acm.org/doi/10.1145/24697.24706},
 	doi = {10.1145/24697.24706},
 	pages = {83--94},
 	number = {3},
-	journaltitle = {{SIGPLAN} Not.},
+	journal = {{SIGPLAN} Not.},
 	author = {Wadler, P},
 	@urldate = {2025-02-16},
 	date = {1987-03-01},
-  year = {1987}
+	year = {1987},
 }
 
 @inproceedings{Brown2009FunctionI,
@@ -5843,7 +5843,7 @@ booktitle = {Proceedings of the ACM SIGPLAN 1999 Conference on Programming Langu
 pages = {25–36},
 numpages = {12},
 location = {Atlanta, Georgia, USA},
-series = {PLDI '99}
+series = {PLDI~'99}
 }
 
 

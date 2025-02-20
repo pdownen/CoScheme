@@ -13,7 +13,7 @@ CoCaml\cite{jeannin_cocaml_2017} supports only a subset of coinductive data type
 Here, we show how to implement copatterns with no typing information and focus instead on composition and equational reasoning.
 The literature also presents other examples of open recursion and inheritance in a functional setting; for instance, \cite{Brown2009FunctionI} implements memorization for monadic computations using inheritance and mixins.
 
-The translation in \cref{fig:translation} is reminiscent of ``double-barrelled CPS'' \cite{DoubleBarrelCPS} used to define control effects like delimited control \cite{AbstractingControl} and exceptions \cite{KimYiDanvy98}.
+The translation in \cref{fig:translation} is reminiscent of ``double-barreled CPS'' \cite{DoubleBarrelCPS} used to define control effects like delimited control \cite{AbstractingControl} and exceptions \cite{KimYiDanvy98}.
 In our case, rather than a ``successful return path'' continuation, there is a ``resume recursion'' continuation.
 Expressions that return successfully just return as normal, similar to a selective CPS \cite{SelectiveCPS}, which makes it possible to implement as a macro expansion.
 % In this sense, copatterns preserve the expressive power of the language \cite{ExpressivePower}.

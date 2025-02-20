@@ -33,7 +33,7 @@ The patterns' specifics are surprisingly not essential to the main copattern tra
 
 For simplicity, this translation begins from a smaller source language with copatterns (given in \cref{fig:source-syntax}) separated into three main syntactic categories that reflect the different groups of values from the macro library:
 \begin{itemize}
-\item[($M, N$)] \emph{Term} syntax represents all ordinary expressions of the host langauge as well as the new first-class \emph{objects} of the library.
+\item[($M, N$)] \emph{Term} syntax represents all ordinary expressions of the host language as well as the new first-class \emph{objects} of the library.
   The new forms of terms are $\lamstar B$, which gives a self-referential copattern-matching object, along with $\Template B$ and $\Extension O$ which include the other two syntactic categories as first-class values that can be applied as functions to instantiate their open-ended recursion and composition.
 \item[($B$)] \emph{Template} syntax represents a simplified grammar supported by \scm|template| and similar macros specified as \scm|TemplateStx| in \cref{fig:macro-syntax}.
   Including some extension cases in a template is written as $O; B$, the catch-all clause which may continue the loop again via a recursive object bound to $x$ is written as $\Continue x \to M$, and the closed case where the catch-all clause raises an error is the empty string $\varepsilon$.

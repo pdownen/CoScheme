@@ -7,11 +7,12 @@ That means nesting multiple copatterns in sequence might not give the expected r
 Nevertheless, if we want the parameter in the hole of every copattern context to reflect the object at that point in time --- that is, be assigned the value given by the partial applications given by the preceding copatterns --- we can define a new operation, \scm|nest|.
 This can be useful because nesting copatterns in a sequence gives us a shorthand for the common functional idiom of a ``local'' loop that closes over some parameters that never change, such as this definition of mapping a function over a list:
 \begin{minted}{scheme}
-(define* [(map* f xs) = ((map* f) xs)]
- [(map* f) (nest)
- (extension
- [(go null)        = null]
- [(go (cons x xs)) = (cons (f x) (go xs))])])
+(define*
+  [(map* f xs) = ((map* f) xs)]
+  [(map* f) (nest)
+    (extension
+     [(go `())         = `()]
+     [(go `(,x . ,xs)) = `(,(f x) . ,(go xs))])])
 \end{minted}
 The \scm|map*| function supports both curried and uncurried applications, and they are defined to be equal.
 Its real code is given in the curried case, where the function parameter \scm|f| is bound first and never changes.
@@ -36,7 +37,6 @@ Finally, the translation of the $\den{\Nest O}$ operation is defined by recursiv
   E\den{\Nest O}
   &=
   \lambda b. \lambda s. \Rec s' = E\den{O} ~ (\lambda \_. b ~ s) ~ (\lambda x. s' ~ x)
-  \\
 \end{align*}
 
 

@@ -139,11 +139,11 @@ Note that the multiple extension modifiers are composed together using ordinary 
 The empty inheritance \scm|(<:)| is the same as if no inheritance constraint is given.
 Furthermore, the normal inheritance \scm|(<: Expr ...)| is the same as a literal inheritance \scm|(!<: meta Expr ...)| adding \scm|meta| which is the implicit superclass of ``all'' objects.% 
 \footnote{The library implementation stores this choice of the default superclass in a mutable parameter \scm|default-superclass| that can be changed by the programmer.}
-Literal inheritance \scm|(!<: Expr ...)| is instead iterpreted exactly as-is, with no added defaults.
+Literal inheritance \scm|(!<: Expr ...)| is instead interpreted exactly as-is, with no added defaults.
 
 The default \scm|meta| superclass provides the extra code for composition seen in the examples, including \scm|'compose| and \scm|'unplug|.
 How does it work?
-Since the superclasses used by the object inheritence mechanism are just extension transformers, we can implement \scm|meta| directly as a function that composes the extension value making up an object with extra methods for manipulating it:
+Since the superclasses used by the object inheritance mechanism are just extension transformers, we can implement \scm|meta| directly as a function that composes the extension value making up an object with extra methods for manipulating it:
 \begin{minted}{scheme}
 (define (meta ext)
   (compose ext
@@ -221,7 +221,7 @@ In reality, both of these forms desugar directly into plain $\lambda$-abstractio
 (continue x Expr) = (λ(x) Expr)
 \end{minted}
 Common special cases include the self-contained forms:
-the non-recursive template \scm|(non-rec Expr)| and the fully-commited extension \scm|(always-is Expr)| that evaluate and run \scm|Expr| without failing to the next case or looping back to the beginning.
+the non-recursive template \scm|(non-rec Expr)| and the fully-committed extension \scm|(always-is Expr)| that evaluate and run \scm|Expr| without failing to the next case or looping back to the beginning.
 Both forms are shorthand for the above abstractions that just never use the bound variable.
 \begin{minted}{scheme}
 (non-rec Expr)   = (continue _ Expr)

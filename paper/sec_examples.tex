@@ -1,3 +1,6 @@
+All examples shown below are executable Scheme and Racket code.
+You can follow along and interact with the code using the supporting library found online at \url{https://github.com/pdownen/CoScheme}.
+
 \subsection{Infinite streams}
 
 % One of the uses of Copatterns is to define codata, and infinite streams are the cliché example.
@@ -74,8 +77,8 @@ This stream can be defined by copattern matching equations:
 So that \scm|(takes (stutter 1) 10) = '(1 1 2 2 3 3 4 4 5 5)|,% 
 \footnote{
   Try it!
-  \url{https://github.com/pdownen/CoScheme} has implementations of \scm|define*| and related macros.
-  All examples shown here are executable Scheme and Racket code.
+  \url{https://github.com/pdownen/CoScheme} has implementations of \scm|define*| and related macros used by these examples.
+  % All examples shown here are executable Scheme and Racket code.
 }
 because the first and second elements --- \scm|((stutter n) 'head)| and \scm|(((stutter n) 'tail) 'head)| respectively --- return the same \scm|n| before incrementing.
 
@@ -511,7 +514,7 @@ And running \scm|(constant-fold 'eval expr3)| on the expression
 \end{minted}
 simplifies it down to \scm|'(add 2 (mul (var x) 10))|.
 To add other operations, like subtraction, we can easily define similar \scm|eval-sub-safe| and \scm|reform-subtraction|, and \scm|'compose| them with \scm|constant-fold| without having to rewrite any code.
-All examples shown here are in the supplemental materials.
+% All examples shown here are in the supplemental materials.
 
 %%% Local Variables:
 %%% mode: LaTeX

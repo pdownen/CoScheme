@@ -32,9 +32,10 @@ Third, we have \emph{circular}, which allows us to recurse back on the entire co
 Our primary contributions are organized as follows:
 \begin{itemize}
 \item \Cref{sec-examples} shows examples of programming with copattern equations in Scheme-like languages, including new forms of program composition --- vertical and horizontal --- that allows us to solve familiar examples of the expression problem~\cite{ExpressionProblem} through a fusion of functional and object-oriented techniques.
+\item \Cref{sec-api} exposes the challenges related to implementing copatterns in this scenario, introduces our library API, shows how we can desugar our abstractions into a set of primitives and how the implementations differ between Racket and a standard R${}^6$RS-compliant Scheme.
+% \item \Cref{sec-macro} explains how to implement the high-level translation above in real code, and specifically how the implementation differs between Racket and a standard R${}^6$RS-compliant Scheme.
 \item \Cref{sec-translation} presents a theory for how to translate copatterns into a small core target language --- untyped $\lambda$-calculus with recursion and patterns --- with a local double-barrel transformation reminiscent of selective continuation-passing style transformation.
   Importantly, only the new language constructs are transformed, while existing ones in the target language are unchanged.
-\item \Cref{sec-macro} explains how to implement the high-level translation above in real code, and specifically how the implementation differs between Racket and a standard R${}^6$RS-compliant Scheme.
 \item \Cref{sec-correctness} demonstrates correctness in terms of an equational theory for reasoning about copattern-matching code in the source language, which is a conservative extension of the target language, and we prove that it is sound with respect to translation.
 \end{itemize} 
 % The remainder of the article has the following structure: First, we introduce our implementation by explaining meaningful examples (Section \ref{sec-examples}).

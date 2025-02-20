@@ -23,7 +23,7 @@ Must we give up on the approach entirely, or is there an alternate solution that
 
 In contrast, \emph{codata} describes types defined by primitive \emph{destructors} that \emph{use} values of the codata type --- as opposed to the primitive constructors that define how to build values of a data type --- and lets us easily model infinite data in eager languages, too.
 For example, the usual \agda|Stream a| codata type of infinite \agda|a|'s is defined by two destructors: \agda|Head : Stream a -> a| extracts the first element and \agda|Tail : Stream a -> Stream a| discards the first element and returns the rest.
-To define new streams, we can describe how they react to different combinations of \agda|Head| and \agda|Tail| destructions using \emph{copatterns}~\cite{APTS2013C}.
+To define new streams, we can describe how they react to different combinations of \agda|Head| and \agda|Tail| destructors using \emph{copatterns}~\cite{APTS2013C}.
 Borrowing Agda's syntax, a possible copattern-based definition of the same \agda|fibs| function above is:
 \begin{minted}{agda}
 fibs : Stream Nat
@@ -98,7 +98,7 @@ Thus, we can apply a few steps of equational reasoning to derive the expected an
 So these three examples work, but is every case really covered?
 The \scm|Stream Nat| interface that \scm|stutter|'s output follows allows for any number of \scm|'tail| projections followed by a final application to \scm|'head| that returns a natural number.
 \scm|stutter| works its way through these projections in groups of two, eliminating a pair of \scm|'tail| projections at a time until it gets to the end case, which is either a \scm|'head| (if the total number of \scm|'tail|s is even) or a \scm|'tail| followed by \scm|'head| (if the total number of \scm|'tail|s is odd).
-So \scm|stutter| behavior is defined no matter what is asked of it.
+So, \scm|stutter| behavior is defined no matter what is asked of it.
 Even with other observations like \scm|takes|, which passes around partial applications of \scm|stutter| as a first-class value, internally \scm|stutter| only ``sees'' the \scm|'head| and \scm|'tail| applications from \scm|takes|, and is dormant otherwise.
 
 Reasoning about the coverage of our copatterns is important since our implementation does not provide coverage analysis.
@@ -147,7 +147,7 @@ To illustrate this, consider the following queue example, which internally refer
   [((self in  out) 'deq)   = (cons (car out) (self in (cdr out)))])
 \end{minted}
 This reflects the purely functional queue implementation in using two lists (an inbox and an outbox) as internal states.
-We externally bound this declaration to the name \scm{queue}, but internal recursion is through the name \scm|self|.
+We externally bound this declaration to the name \scm{queue}, but the internal recursion is through the name \scm|self|.
 This \scm|queue| object responds to three methods: \scm|'new| returns a new empty queue, \scm|'enq x| puts the \scm|x| to the end of the queue (\ie the top of the inbox), and \scm|'deq| returns the oldest enqueued element (from the top of the outbox or bottom of the inbox, as appropriate).
 Thus, \scm|((((queue 'new) 'enq 1) 'enq 2) 'deq)| returns the oldest element \scm|1| and a queue object containing only \scm|2|.
 
@@ -157,7 +157,7 @@ Here, \scm|queue| itself can only directly respond to one message --- \scm|'new|
 From there, the initialized \scm|queue| object now only responds to the \scm|'enq x| and \scm|'deq| messages which can read and update the object's internal state.
 However, besides these two messages, there is no other way to manipulate the internal state of an initialized \scm|queue| object;
 the \scm|in| and \scm|out| lists are completely hidden within an opaque procedural abstraction, enforcing an encapsulation of private state.
-Given an initialized \scm|queue| object, it would not be possible to, for instance, break the first-in-first-out ordering by taking an element from the \scm|in| list or put an element on the \scm|out| list.
+Given an initialized \scm|queue| object, it would not be possible, for instance, to break the first-in-first-out ordering by taking an element from the \scm|in| list or to put an element on the \scm|out| list.
 
 Since we can already use encapsulation in copattern-based definitions, can we also use a functional model \cite{abadi96} of inheritance and dynamic dispatch?
 Our implementation of copattern matching in Scheme includes new facilities for composing code snippets compared to current functional (or object-oriented) languages.
@@ -179,7 +179,7 @@ This is a small request, and can be done by replacing \scm|define*| with \scm|de
               (map (λ(o) (o 'size)) ((apply dir p cts) 'contents)))])
 \end{minted}
 This example emulates some functionality of a filesystem, specifically calculating various sizes.
-Every filesystem object has a path, which is captured by the \scm|fs-object| object that only knows to calculating its \scm|'path| by returning the first piece of information it was given, and ignoring the rest of the object's internal data.
+Every filesystem object has a path, which is captured by the \scm|fs-object| object that only knows how to calculate its \scm|'path| by returning the first piece of information it was given and ignoring the rest of the object's internal data.
 Filesystem objects all also have a size, but calculating it requires more object-specific information.
 This additional functionality is spelled out by more specific filesystem objects:
 \begin{itemize}
@@ -201,9 +201,9 @@ The last possibility is an explicit external name with no extensions, such as th
 
 While these definitions are functional, they contain some undesirable redundancy.
 In particular, we have to repeat the same initialization forms --- \scm|(file p txt)| and \scm|(apply dir p cts)| --- in front of every equational definition because the object must be initialized with parameters before it is used.
-What's worse, every time we want to ask a question about the object itself by recursively passing it a message, we have to repeat this same initialization again exactly as it occurred, leading to longer and more error-prone code.
+What is worse, every time we want to ask a question about the object itself by recursively passing it a message, we have to repeat this same initialization again exactly as it occurred, leading to longer and more error-prone code.
 It would be better here to follow the common object-oriented factorization of steps:
-\emph{first} the object is initialized with some internal data at the time of its construction and \emph{then} we get an object with can (recursively) respond to methods.
+\emph{first} the object is initialized with some internal data at the time of its construction, and \emph{then} we get an object that can (recursively) respond to methods.
 This can be done by factoring out the common construction phase in the above definitions using a \scm|construct| clause like so:
 \begin{minted}{scheme}
 (define-object (<: (import-object fs-object))
@@ -212,7 +212,7 @@ This can be done by factoring out the common construction phase in the above def
     [(self 'text) = txt]
     [(self 'size) = (string-length (self 'text))])])
 
-(define-object (directory <: (import-object fs-object))
+(define-object (directory* <: (import-object fs-object))
   [(apply dir p cts) (construct (cons p cts))
    (object
     [(self 'contents) = cts]
@@ -230,8 +230,8 @@ Factoring out the common copattern leads to shorter code, the definitions descri
 
 So far, we have only shaved off small parts of shared code: the common \scm|'path| method and the initial initialization copattern.
 Where this coding style starts to pay off is when we override some methods to automatically influence the result of others.
-For example, we might have a fancier type of directory structure that replicates the exact same behavior as a normal directory but its \scm|'overhead| is \scm|128| instead of \scm|8|.
-Or we might have static links that acts like a normal \scm|file|, except that only contains a path to the real place its text is stored, so it always has fixed size (\scm|8|).
+For example, we might have a fancier type of directory structure that replicates the exact same behavior as a normal directory, but its \scm|'overhead| is \scm|128| instead of \scm|8|.
+Or we might have static links that act like a normal \scm|file|, except that they only contain a path to the real place its text is stored, so it always has a fixed size (\scm|8|).
 These specialized revisions of directories and files can be implemented by importing from the original definitions and modifying certain lines like so (where we omit the code for looking up the text for a static link):
 \begin{minted}{scheme}
 (define-object (fancy-directory <: (import-object directory))
@@ -245,7 +245,7 @@ These specialized revisions of directories and files can be implemented by impor
     [(_ 'size) = 8])])
 \end{minted}
 Although \scm|fancy-directory| has only one defining equation about its \scm|'overhead|, the implication is that its \scm|'size| should be \scm|120| larger than a regular \scm|directory| due to the \scm|'overhead| increase.
-We can test out this use of inheritance and dynamic dispatch by simulating a small directory structure
+We can test out this use of inheritance and dynamic dispatch by simulating a small directory structure:
 \begin{minted}{scheme}
 (define ham (file "hamlet.txt" "Words, words, words...."))
 (define guide (file "guide.txt" "Don't Panic"))
@@ -253,7 +253,7 @@ We can test out this use of inheritance and dynamic dispatch by simulating a sma
 (define shortcut (static-link "shortcut.txt" "Books/guide.txt"))
 (define docs (fancy-directory "Documents" shortcut books))
 \end{minted}
-and calculating the sizes of each filesystem object:
+and calculating the sizes of each file system object:
 \begin{minted}{scheme}
 (ham      'size) = 23  = (string-length "Words, words, words....")
 (guide    'size) = 11  = (string-length "Don't Panic")
@@ -269,7 +269,7 @@ This is why the internal and external names can be different --- like in \scm|qu
 In the same way, the internal names used in each clause are fully independent and can also differ from one another.
 This difference of using open recursion to leave internal names temporarily unbound also applies to definitions where the external name is inferred: although the external names \scm|file| and \scm|static-link| are inferred from the internal names in the copatterns, the internal variables are left unbound until the externally-visible name gets bound to the object value.
 
-Thankfully, this whole framework is still build on purely functional idioms, which make it easier to reason about code.
+Thankfully, this whole framework is still built on purely functional idioms, which makes it easier to reason about code.
 How can we understand what inheritance should do?
 The answer should be familiar to functional programmers: inheritance is composition and substitution!
 For example, the inheritance dependencies can be fully inlined as-is into \scm|fancy-directory| to bring the full definition into one place by copying the inherited code into place like so:
@@ -284,7 +284,7 @@ For example, the inheritance dependencies can be fully inlined as-is into \scm|f
   [((fs-object p . _)   'path)     = p])
 \end{minted}
 After na\"ive inlining, there are some irrelevant differences: there are three different internal names (\scm|fancy-dir|, \scm|dir|, and \scm|fs-object|) used in various clauses, and we use two equivalent syntaxes  (\scm|(fancy-dir p . cts)| and \scm|(apply dir p cts)|) for copatterns that bind arbitrary-length argument sequences to \scm|cts|.
-Cleaning up these differences by rewriting each initializing copattern to \scm|(apply self p cts)| and renaming as necessary gives the more uniform code:
+Cleaning up these differences by rewriting each initializing copattern to \scm|(apply self p cts)| and renaming as necessary gives a more uniform code:
 \begin{minted}{scheme}
 (define-object fancy-directory
   [((apply self p cts) 'overhead) = 128]
@@ -395,7 +395,7 @@ Now, if we want to extend the functionality of existing operations --- like eval
 So for an expression \scm|(define expr1 '(add (mul 2 3) 4))|, the extended code correctly yields \scm|(eval-arith expr1) = 10| and \scm|(list-nums-arith expr1) = '(2 3 4)| whereas the original code fails at the \scm|'mul| case.%
 \footnote{
   The astute reader might notice the open recursion at work here: the recursive calls to \scm|eval-mul| cannot be specifically tied to this definition because it only says what to do with multiplication and fails to handle the other cases.
-  Instead, recursive calls to \scm|eval-mul| must \emph{also} open to invoking the other code associated with \scm|eval-num| and \scm|eval-add| even though it not known to be associated with them yet.}
+  Instead, recursive calls to \scm|eval-mul| must \emph{also} open to invoking the other code associated with \scm|eval-num| and \scm|eval-add| even though it is not known to be associated with them yet.}
 %
 Note that this composition automatically generates \emph{new} functions and leaves the original code intact, which can still be used for the smaller expression language with only numbers and addition.
 
@@ -450,7 +450,7 @@ In other words, the evaluator might return a blocked expression if it cannot ful
 Ideally, we would like to extend our existing evaluator as-is, with the additional cases when blocked expressions are encountered.  
 However, as written, the equation handling \scm|(eval `(add ,l ,r))| already commits to a real numeric addition, even if evaluating \scm|l| or \scm|r| does not give a numeric result.
 
-To avoid over-committing before we know whether evaluation will successfully calculate a final number or not, we can --- at the first glance --- rewrite the basic clauses of evaluation in a more defensive style.
+To avoid over-committing before we know whether evaluation will successfully calculate a final number or not, we can --- at first glance --- rewrite the basic clauses of evaluation in a more defensive style.
 Essentially, this splits evaluation into two separate steps:
 \begin{enumerate*}[(1)]
 \item check which operation we are supposed to do and evaluate the two sub-expressions,

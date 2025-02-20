@@ -50,8 +50,8 @@ For example, consider this reordering of the \scm|stutter| stream from \cref{sec
 Since none of the copatterns overlap, its behavior is exactly the same as before.
 But notice the extra complication here: calling \scm|((stutter 10) 'head)| with two arguments (\scm|10| and \scm|'head|) should immediately return \scm|10|.
 However, the first equation is waiting for three arguments (an \scm|n| and two \scm|'tail|s passed separately).
-That means the underlying code implementing \scm|stutter| \emph{cannot} ask for three arguments in three different calls and then check that the last two are \scm|'tail|.
-Instead, it has to eagerly match the arguments its given against the patterns and try each of the guards to see if the current line fails --- and only \emph{after} that all succeed, it may ask for more arguments and continue the copattern match.
+That means that the underlying code implementing \scm|stutter| \emph{cannot} ask for three arguments in three different calls and then checks that the last two are \scm|'tail|.
+Instead, it has to eagerly match the arguments that it is given against the patterns and try each of the guards to see if the current line fails --- and only \emph{after} that all succeed, it may ask for more arguments and continue the copattern match.
 
 \subsubsection{Composition and the dimensions of extensibility}
 \label{sec:composition-challenges}
@@ -61,7 +61,7 @@ In particular, we want to be able to combine objects in two different directions
 \begin{itemize}
 \item
   \emph{vertical composition} is an ``either or'' combination of two or more objects, such as \scm|(o1 'compose o2 ...)| that acts like \scm|o1| or \scm|o2|, \etc[,] depending on which one knows how to respond to the context.
-  Textually, vertical composition of \scm|(object line-a1 ...)| and \scm|(object line-b1 ...)| behaves as if we copied all each line of copattern-matching equations internally used to define the two objects and pasted them vertically into the newly-composed object as:
+  Textually, the vertical composition of \scm|(object line-a1 ...)| and \scm|(object line-b1 ...)| behaves as if we copied all each line of copattern-matching equations internally used to define the two objects and pasted them vertically into the newly-composed object as:
 \begin{minted}{scheme}
 (object line-a1
         ...

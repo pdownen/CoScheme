@@ -422,9 +422,9 @@
 \begin{proof}
   The proof strategy follows from proposition 2 of \cite{DownenAriola2014CSCC}.
 
-  Suppose we have a free occurence of $x$ in a term $M$ which is decomposed as $C[x]$, where $C$ does not capture $x$.
-  Because the translation is compositional (\cref{thm:compositional-translation}), we can decompose every occurence of a variable from its surrounding context as $\den{C[x]} = \den{C}{[x]}$.
-  Then, because the translation is hygeniec (\cref{thm:hygienic-translation}), we know $\den{C}$ does not capture $x$.
+  Suppose we have a free occurrence of $x$ in a term $M$ which is decomposed as $C[x]$, where $C$ does not capture $x$.
+  Because the translation is compositional (\cref{thm:compositional-translation}), we can decompose every occurrence of a variable from its surrounding context as $\den{C[x]} = \den{C}{[x]}$.
+  Then, because the translation is hygienic (\cref{thm:hygienic-translation}), we know $\den{C}$ does not capture $x$.
   Thus,
   \begin{align*}
     \den{C[x]}\subst{x}{\den{V}}
@@ -439,9 +439,9 @@
     \den{C[V]}\subst{x}{\den{V}}
     &(\cref{thm:compositional-translation})
   \end{align*}
-  This replacement can then be iterated for each free occurence of $x$ in the term, until $x$ no longer appears free in the final term $M'$, in which the substitution is $\den{M'}\subst{x}{\den{V}} = \den{M'}$.
+  This replacement can then be iterated for each free occurrence of $x$ in the term, until $x$ no longer appears free in the final term $M'$, in which the substitution is $\den{M'}\subst{x}{\den{V}} = \den{M'}$.
 
-  The same procedure applies for free occurences of variables in templates and extensions.
+  The same procedure applies for free occurrences of variables in templates and extensions.
   %
   \qed
 \end{proof}

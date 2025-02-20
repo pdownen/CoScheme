@@ -88,7 +88,7 @@ There are two main styles of top-level definitions.  The simplest one is when an
 \end{minted}
 This style can be used to evoke an object-oriented flavor of code, in which an object is externally named \scm|x| to the outside world, but internally refers to itself by some other name like \scm|self| or \scm|this| for recursive calls.
 
-In a more functional style of code, recursive function definitions use the same name for both external callers as well as internal recusive calls, so there is no need to declare the name another time.
+In a more functional style of code, recursive function definitions use the same name for both external callers as well as internal recursive calls, so there is no need to declare the name another time.
 We support this style of definition, too, by looking for the ``root'' of the initial copattern on the left-hand side, which gives a name to the function itself in the context of some application.
 Following the syntax of \scm|Copattern|s in \cref{fig:macro-syntax}, the root of the identifier \scm|x| is just \scm|x|, the anonymous wildcard \scm|_| has no root, and the root of any other nested copattern is the root of its inner \scm|Copattern|.
 Eliding the full details of digging into a copattern to reveal its root, if the name \scm|x| is the root of first \scm|Copattern| inside \scm|TemplateStx| or \scm|ExtensionStx|, then the implicitly-named definitional forms expand into the explicitly-named ones by copying that first recursive name:%
@@ -138,12 +138,12 @@ These modifiers are themselves transformations on extensions --- first-class fun
 Note that the multiple extension modifiers are composed together using ordinary function composition, so the left-most one has precedence (being the final function in the chain).
 The empty inheritance \scm|(<:)| is the same as if no inheritance constraint is given.
 Furthermore, the normal inheritance \scm|(<: Expr ...)| is the same as a literal inheritance \scm|(!<: meta Expr ...)| adding \scm|meta| which is the implicit superclass of ``all'' objects.% 
-\footnote{The library implemenation stores this choice of the default superclass in a mutable parameter \scm|default-superclass| that can be changed by the programmer.}
-Literal inheritance \scm|(!<: Expr ...)| is instead iterpreted exactly as-is, with no added defaults.
+\footnote{The library implementation stores this choice of the default superclass in a mutable parameter \scm|default-superclass| that can be changed by the programmer.}
+Literal inheritance \scm|(!<: Expr ...)| is instead interpreted exactly as-is, with no added defaults.
 
 The default \scm|meta| superclass provides the extra code for composition seen in the examples, including \scm|'compose| and \scm|'unplug|.
 How does it work?
-Since the superclasses used by the object inheritence mechanism are just extension transformers, we can implement \scm|meta| directly as a function that composes the extension value making up an object with extra methods for manipulating it:
+Since the superclasses used by the object inheritance mechanism are just extension transformers, we can implement \scm|meta| directly as a function that composes the extension value making up an object with extra methods for manipulating it:
 \begin{minted}{scheme}
 (define (meta ext)
   (compose ext
@@ -221,7 +221,7 @@ In reality, both of these forms desugar directly into plain $\lambda$-abstractio
 (continue x Expr) = (λ(x) Expr)
 \end{minted}
 Common special cases include the self-contained forms:
-the non-recursive template \scm|(non-rec Expr)| and the fully-commited extension \scm|(always-is Expr)| that evaluate and run \scm|Expr| without failing to the next case or looping back to the beginning.
+the non-recursive template \scm|(non-rec Expr)| and the fully-committed extension \scm|(always-is Expr)| that evaluate and run \scm|Expr| without failing to the next case or looping back to the beginning.
 Both forms are shorthand for the above abstractions that just never use the bound variable.
 \begin{minted}{scheme}
 (non-rec Expr)   = (continue _ Expr)
@@ -252,7 +252,7 @@ The pattern-matching guard \scm|try-if| operates similarly, but generalizes the 
            [_ (next self)]))
 \end{minted}
 
-The most complicated single combinator is the the \scm|try-λ| functional abstraction over an extension.
+The most complicated single combinator is the \scm|try-λ| functional abstraction over an extension.
 This form presents a functional interface that can pattern-match against its arguments:
 if the match succeeds then the variables in the pattern are bound while trying to execute the underlying extension,
 but if the match fails the extension is never tried at all.
@@ -295,7 +295,7 @@ Attempting to recursively tie the knot directly as
 =/= (letrec ([self (Template self)])
       self)
 \end{minted}
-will cause a run-time error: since Scheme is a call-by-value langauge, it will try to evaluate \scm|self| before it is actually bound to a value yet.
+will cause a run-time error: since Scheme is a call-by-value language, it will try to evaluate \scm|self| before it is actually bound to a value yet.
 So instead, we have to delay the self-reference just by one step by $\eta$-expanding, since $\lambda$-abstractions return values without evaluating their bodies.
 \begin{minted}{scheme}
 (introspect Template)

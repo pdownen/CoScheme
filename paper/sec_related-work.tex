@@ -11,7 +11,7 @@ Much of the work has been for dependently typed languages like Agda \cite{Elabor
 The closest related work is the implementation of copatterns as an OCaml macro \cite{LaforgueR17}, but this, too, is concerned with type system ramifications.
 Here, we show how to implement copatterns with no typing information and focus instead on composition and equational reasoning.
 
-The translation in \cref{fig:translation} is reminiscent of ``double-barrelled CPS'' \cite{DoubleBarrelCPS} used to define control effects like delimited control \cite{AbstractingControl} and exceptions \cite{KimYiDanvy98}.
+The translation in \cref{fig:translation} is reminiscent of ``double-barreled CPS'' \cite{DoubleBarrelCPS} used to define control effects like delimited control \cite{AbstractingControl} and exceptions \cite{KimYiDanvy98}.
 In our case, rather than a ``successful return path'' continuation, there is a ``resume recursion'' continuation.
 Expressions that return successfully just return as normal, similar to a selective CPS \cite{SelectiveCPS}, which makes it possible to implement as a macro expansion.
 % In this sense, copatterns preserve the expressive power of the language \cite{ExpressivePower}.

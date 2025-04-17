@@ -127,13 +127,10 @@ These modifiers are themselves transformations on extensions --- first-class fun
 \begin{minted}{scheme}
 (object ExtensionStx)
 = (object (<:) ExtensionStx)
-
 (object (<: Expr ...) ExtensionStx)
 = (object (!<: meta Expr ...) ExtensionStx)
-
 (object (!<: Expr ...) ExtensionStx)
 = (plug ((compose Expr ...) (extension ExtensionStx)))
-
 \end{minted}
 Note that the multiple extension modifiers are composed together using ordinary function composition, so the left-most one has precedence (being the final function in the chain).
 The empty inheritance \scm|(<:)| is the same as if no inheritance constraint is given.
@@ -258,7 +255,7 @@ if the match succeeds then the variables in the pattern are bound while trying t
 but if the match fails the extension is never tried at all.
 The pattern-matching component can be factored out of \scm|try-λ| via horizontal composition by first just binding the arguments as is, and then matching them against the given patterns in a second step like so:%
 \footnote{This equation is more of a specification than an efficient implementation.
-  In practice, the followup \scm|try-match| operations are only generated if the given pattern is non-trivial.}
+  In practice, the \scm|try-match| operations are only generated if the given pattern is non-trivial.}
 \begin{minted}{scheme}
 (try-λ (Pattern ...) Extension)
 = (try-λ (x ...) (chain (try-match x Pattern) ... Extension))

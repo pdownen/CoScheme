@@ -459,7 +459,7 @@ Essentially, this splits evaluation into two separate steps:
 \item check which operation we are supposed to do and evaluate the two sub-expressions,
 \item combine the two expressions according to that operation.
 \end{enumerate*}
-For example, the two steps for addition and multiplication look like:
+For example, the steps for addition and multiplication look like:
 \begin{minted}{scheme} 
 (define-object eval-add-safe
   [(self 'eval ('add l r))
@@ -507,10 +507,9 @@ The final constant-folding algorithm can be composed from this ``safe'' version 
 So now \scm|(constant-fold 'eval expr2)| successfully returns \scm|expr2| itself (because there are no operations to perform without knowing the values of variables \scm|x| and \scm|y|).
 And running \scm|(constant-fold 'eval expr3)| on the expression
 \begin{minted}{scheme}
-(define expr3
-  '(add (add 1 1)
-        (mul (var x)
-             (mul 2 (add 2 3)))))
+(define expr3 '(add (add 1 1)
+                    (mul (var x)
+                         (mul 2 (add 2 3)))))
 \end{minted}
 simplifies it down to \scm|'(add 2 (mul (var x) 10))|.
 To add other operations, like subtraction, we can easily define similar \scm|eval-sub-safe| and \scm|reform-subtraction|, and \scm|'compose| them with \scm|constant-fold| without having to rewrite any code.

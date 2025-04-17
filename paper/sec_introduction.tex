@@ -20,14 +20,14 @@ For example, Agda gives the most full-fledged implementation of copatterns in a 
 However, Agda is primarily a proof assistant rather than a general-purpose programming language, and as such, has different concerns than an ordinary functional programmer.
 There is also some support for copatterns in OCaml~\cite{LaforgueR17}, but as an unofficial extension that has not been merged into the main compiler.
 
-The copatterns implemented here are also implemented as macros like \cite{LaforgueR17}, however, we present a different encoding that focuses on providing new methods of extensibility that were not available before, and can be desugared without any static typing information.
+The copatterns implemented here are also implemented as macros like \cite{LaforgueR17}; however, we present a different encoding that focuses on providing new methods of extensibility that were not available before, and can be desugared without any static typing information.
 To achieve that, and to fully integrate it into a practical general-purpose programming language, we choose a programmable programming language~\cite{ProgrammablePL} and provide a new language extension as a library~\cite{LanguageLibrary}.
 We focus, in particular, on Scheme and Racket, which offers a robust macro system for seamlessly implementing new language features.
 
 Our extension presents three different composition flavors, allowing us to capture some ``design patterns'' used by functional programmers as first-class abstractions.
 First, we have \emph{vertical} composition, which permits us to gather a collection of alternative options with failure handling.
 Second, we have \emph{horizontal} composition, which permits us to compose a sequence of steps, parameters, matching, or guards.
-Third, we have \emph{circular}, which allows us to recurse back on the entire composition itself.
+Third, we have \emph{circular} composition, which allows us to recurse back on the entire composition itself.
 
 Our primary contributions are organized as follows:
 \begin{itemize}

@@ -121,7 +121,7 @@ Non-total configurations, akin to partial functions, are not always undesirable.
 %   [(((zigzag xs ys) 'tail) 'tail) = (zigzag (xs 'tail) (ys 'tail))])
 % \end{minted}
 
-With this practice under our belt, we can now directly translate canonical Fibonacci example from Agda to Scheme like so:
+With this practice under our belt, we can now directly translate the canonical Fibonacci example from Agda to Scheme like so:
 \begin{minted}{scheme}
 ;; zips-with : ((a, b) -> c, Stream a, Stream b) -> Stream c
 (define*

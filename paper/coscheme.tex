@@ -33,12 +33,13 @@
 \usepackage{braket}
 \usepackage{proof}
 
-\usepackage{minted}
+\usepackage{listings}
 
 \usepackage{hyperref}
 \usepackage{cleveref}
 
 \usepackage{preamble}
+
 
 % If you use the hyperref package, please uncomment the following two lines
 % to display URLs in blue roman font according to Springer's eBook style:
@@ -49,10 +50,10 @@
 % Unicode characters:
 \DeclareUnicodeCharacter{3BB}{$\lambda$}
 
-% Code settings:
-\setminted{fontsize=\footnotesize}
-
 \begin{document}
+% Code settings:
+\input{listings.tex}
+
 %
 \title{CoScheme: Compositional Copatterns in Scheme}
 %

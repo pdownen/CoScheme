@@ -1,0 +1,178 @@
+% I am using dialects and literate to add new stuff
+\lstset{
+  basicstyle=\ttfamily\small,
+  keepspaces=true,
+  tabsize=2,
+  identifierstyle=\color{ColorId},
+  keywordstyle=\color{ColorKw},
+  commentstyle=\itshape\color{ColorCmt},
+  stringstyle=\color{ColorStr},
+  columns=fullflexible,
+  literate=*
+    {0}{{{\color{ColorLit}0}}}{1}
+    {1}{{{\color{ColorLit}1}}}{1}
+    {2}{{{\color{ColorLit}2}}}{1}
+    {3}{{{\color{ColorLit}3}}}{1}
+    {4}{{{\color{ColorLit}4}}}{1}
+    {5}{{{\color{ColorLit}5}}}{1}
+    {6}{{{\color{ColorLit}6}}}{1}
+    {7}{{{\color{ColorLit}7}}}{1}
+    {8}{{{\color{ColorLit}8}}}{1}
+    {9}{{{\color{ColorLit}9}}}{1}
+    {...}{{{\color{ColorLit}\ldots}}}{3}
+}
+
+
+\lstdefinelanguage{Hs}{
+  morekeywords = [1]{data},
+  keywordstyle = [1]\color{ColorKw},
+  morekeywords = [2]{zipWith},
+  keywordstyle = [2]\color{ColorId},
+  morekeywords = [3]{a, \_, n, l, r, next},
+  keywordstyle = [3]\color{black},
+  morekeywords = [4]{Head, Tail, Stream, Nat, Int, Expr, Add, Num},
+  keywordstyle = [4]\color{ColorConst},
+  literate=*
+    {=}{{{\color{ColorOp}=}}}{1}
+    {->}{{{\color{ColorOp}->}}}{2}
+    {::}{{{\color{ColorOp}->}}}{2}
+    {:}{{{\color{ColorOp}:}}}{1}
+    {+}{{{\color{ColorOp}+}}}{1}
+    {0}{{{\color{ColorLit}0}}}{1}
+    {1}{{{\color{ColorLit}1}}}{1}
+    {2}{{{\color{ColorLit}2}}}{1}
+    {3}{{{\color{ColorLit}3}}}{1}
+    {4}{{{\color{ColorLit}4}}}{1}
+    {5}{{{\color{ColorLit}5}}}{1}
+    {6}{{{\color{ColorLit}6}}}{1}
+    {7}{{{\color{ColorLit}7}}}{1}
+    {8}{{{\color{ColorLit}8}}}{1}
+    {9}{{{\color{ColorLit}9}}}{1}
+    {...}{{{\color{ColorLit}\ldots}}}{3}
+    {PatA1}{{{\color{ColorConst}PatA1}}}{5}
+    {PatA2}{{{\color{ColorConst}PatA2}}}{5}
+    {PatB1}{{{\color{ColorConst}PatB1}}}{5}
+    {PatB2}{{{\color{ColorConst}PatB2}}}{5}
+    {x1}{{{\color{black}x1}}}{2}
+    {x2}{{{\color{black}x2}}}{2}
+}
+
+\lstdefinelanguage{Agda}[]{Hs}{
+  morekeywords = [3]{a, \_},
+  keywordstyle = [3]\color{black},
+}
+
+% \lstdefinelanguage{Scm}[]{Lisp}{
+\lstdefinelanguage{Scm}{
+  extendedchars,
+  morecomment=[l]{;;},
+  morecomment=[l]{;},
+  morekeywords = {define, cons, error, reverse, car, cdr, apply, \_, map,
+                  construct, list, append, and, not, nest, plug, object,
+                  introspect, template, continue, extension, comatch, chain,
+                  try, compose, else, op, meta, letrec, let, remember}, % built-in + lib
+  morekeywords = [3]{a}, % ty var
+  keywordstyle = [3]\color{black},
+  morekeywords = [4]{List, Stream}, % Types constructors
+  keywordstyle = [4]\color{ColorConst},
+  morekeywords = [5]{head, tail, s, n, x, in, out, enq, deq, new, p, txt, text,
+                     size, cts, contents, overhead, path, dir, lnk, link, ham,
+                     guide, books, shortcut, docs, l, r, env, expr,
+                     unplug, eval, add, mul, y, num, var, z, get, f, xs,
+                     TemplateStx, ExtensionStx, Expr, ExtensionStx, Extension,
+                     Template, Object, Copattern, ResponseStx, Pattern, Params, QQPat,
+                     adapt, mod, os, o}, % Symbols and parameters
+  keywordstyle = [5]\color{ColorSym},
+  stringstyle=\color{ColorStr},
+  showstringspaces=false,
+  morestring=*[d]{"},
+  columns=fullflexible,
+  literate=*
+    {λ}{{{\color{ColorKw}$\lambda$}}}{1}
+    {'}{{{\color{ColorLit}\textquotesingle}}}{1}
+    {`}{{{\color{ColorLit}\textasciigrave}}}{1}
+    {!}{{{\color{ColorKw}!}}}{1}
+    {?}{{{\color{ColorId}?}}}{1}
+    {=}{{{\color{ColorKw}=}}}{1}
+    {>=}{{{\color{ColorKw}>=}}}{2}
+    {<=}{{{\color{ColorKw}<=}}}{2}
+    {-}{{{\color{ColorKw}-}}}{1}
+    {+}{{{\color{ColorKw}+}}}{1}
+    {*}{{{\color{ColorKw}*}}}{1}
+    {/}{{{\color{ColorKw}/}}}{1}
+    {>}{{{\color{ColorKw}>}}}{1}
+    {<}{{{\color{ColorKw}<}}}{1}
+    {<:}{{{\color{ColorKw}<:}}}{2}
+    {define*}{{{\color{ColorKw}define*}}}{7}
+    {define-object}{{{\color{ColorKw}define-object}}}{13}
+    {string-length}{{{\color{ColorKw}string-length}}}{13}
+    {import-object}{{{\color{ColorKw}import-object}}}{13}
+    {with-self}{{{\color{ColorKw}with-self}}}{9}
+    {number?}{{{\color{ColorKw}number?}}}{7}
+    {try-if}{{{\color{ColorKw}try-if}}}{6}
+    {override-}{{{\color{ColorKw}override-}}}{9}
+    {override-lambda*}{{{\color{ColorKw}override-lambda*}}}{16}
+    {try-apply-forget}{{{\color{ColorKw}try-apply-forget}}}{16}
+    {try-match}{{{\color{ColorKw}try-match}}}{9}
+    {lambda*}{{{\color{ColorKw}lambda*}}}{7}
+    {non-rec}{{{\color{ColorKw}non-rec}}}{7}
+    {closed-cases}{{{\color{ColorKw}closed-cases}}}{12}
+    {always-is}{{{\color{ColorKw}always-is}}}{9}
+    {default-superclass}{{{\color{ColorKw}default-superclass}}}{18}
+    {match-}{{{\color{ColorKw}match-}}}{6}
+    {case-}{{{\color{ColorKw}case-}}}{5}
+    {super-}{{{\color{ColorId}super-}}}{6}
+    {sub-}{{{\color{ColorId}sub-}}}{4}
+    {new-self}{{{\color{ColorId}new-self}}}{8}
+    {fs-object}{{{\color{ColorId}fs-object}}}{9}
+    {directory*}{{{\color{ColorId}directory*}}}{10}
+    {fancy-directory}{{{\color{ColorId}fancy-directory}}}{15}
+    {static-link}{{{\color{ColorId}static-link}}}{11}
+    {fancy-dir}{{{\color{ColorId}fancy-dir}}}{9}
+    {list-nums}{{{\color{ColorId}list-nums}}}{9}
+    {list-nums*}{{{\color{ColorId}list-nums*}}}{10}
+    {list-mul}{{{\color{ColorId}list-mul}}}{8}
+    {list-nums-arith}{{{\color{ColorId}list-nums-arith}}}{15}
+    {eval*}{{{\color{ColorId}eval*}}}{5}
+    {eval-num}{{{\color{ColorId}eval-num}}}{8}
+    {eval-add}{{{\color{ColorId}eval-add}}}{8}
+    {eval-var}{{{\color{ColorId}eval-var}}}{8}
+    {eval-mul}{{{\color{ColorId}eval-mul}}}{8}
+    {eval-arith}{{{\color{ColorId}eval-arith}}}{10}
+    {eval-ext}{{{\color{ColorSym}eval-ext}}}{8}
+    {sub-expr}{{{\color{ColorSym}sub-expr}}}{8}
+    {eval-add-safe}{{{\color{ColorId}eval-add-safe}}}{13}
+    {eval-mul-safe}{{{\color{ColorId}eval-mul-safe}}}{13}
+    {eval-arith-safe}{{{\color{ColorId}eval-arith-safe}}}{15}
+    {leave-variables}{{{\color{ColorId}leave-variables}}}{15}
+    {reform-operations}{{{\color{ColorId}reform-operations}}}{17}
+    {constant-fold}{{{\color{ColorId}constant-fold}}}{13}
+    {eval-add-ext1}{{{\color{ColorId}eval-add-ext1}}}{13}
+    {eval-add-ext2}{{{\color{ColorId}eval-add-ext2}}}{13}
+    {map*}{{{\color{ColorId}map*}}}{4}
+    {expr1}{{{\color{ColorId}expr1}}}{5}
+    {expr2}{{{\color{ColorId}expr2}}}{5}
+    {expr3}{{{\color{ColorId}expr3}}}{5}
+    {method1}{{{\color{ColorSym}method1}}}{7}
+    {line-a1}{{{\color{ColorSym}line-a1}}}{7}
+    {line-b1}{{{\color{ColorSym}line-b1}}}{7}
+    {c0}{{{\color{ColorId}c0}}}{2}
+    {c1}{{{\color{ColorId}c1}}}{2}
+    {o1}{{{\color{ColorId}o1}}}{2}
+    {o2}{{{\color{ColorId}o2}}}{2}
+    {Q1}{{{\color{ColorSym}Q1}}}{2}
+    {Q2}{{{\color{ColorSym}Q2}}}{2}
+    {response1}{{{\color{ColorSym}response1}}}{9}
+    {response2}{{{\color{ColorSym}response2}}}{9}
+    {'compose}{{{\color{ColorSym}\textquotesingle{}compose}}}{8}
+    {0}{{{\color{ColorLit}0}}}{1}
+    {1}{{{\color{ColorLit}1}}}{1}
+    {2}{{{\color{ColorLit}2}}}{1}
+    {3}{{{\color{ColorLit}3}}}{1}
+    {4}{{{\color{ColorLit}4}}}{1}
+    {5}{{{\color{ColorLit}5}}}{1}
+    {6}{{{\color{ColorLit}6}}}{1}
+    {7}{{{\color{ColorLit}7}}}{1}
+    {8}{{{\color{ColorLit}8}}}{1}
+    {9}{{{\color{ColorLit}9}}}{1}
+}

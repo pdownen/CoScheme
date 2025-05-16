@@ -1,6 +1,17 @@
 \ProvidesPackage{preamble}
 \RequirePackage{xargs}
 
+%% Colors
+\definecolor{ColorKw}{RGB}{0,128,0}
+\definecolor{ColorId}{RGB}{0,0,255}
+% \definecolor{ColorSym}{RGB}{176, 0, 64}
+\definecolor{ColorOp}{RGB}{170,34,255}
+\definecolor{ColorLit}{RGB}{113,113,113}
+\definecolor{ColorCmt}{RGB}{61,123,123}
+\definecolor{ColorStr}{RGB}{186,33,82}
+% \definecolor{ColorConst}{RGB}{136,0,0}
+\definecolor{ColorConst}{RGB}{176,5,67}
+\definecolor{ColorSym}{RGB}{26,23,125}
 %% Annotations
 
 \newcommand{\paul}[1]{{\color{purple} \emph{Paul}: #1}}
@@ -280,10 +291,13 @@
 
 %% Minted environments
 
-\newmintinline[scm]{scheme}{}
+% \newmintinline[scm]{scheme}{}
+% \newmintinline[rkt]{racket}{}
+% \newmintinline[hs]{haskell}{}
+% \newmintinline[agda]{agda}{}
 
-\newmintinline[rkt]{racket}{}
+\newcommand{\scm}{\lstinline[language=Scm]}
+\newcommand{\rkt}{\lstinline[language=Scm]}
+\newcommand{\hs}{\lstinline[language=Hs]}
+\newcommand{\agda}{\lstinline[language=Agda]}
 
-\newmintinline[hs]{haskell}{}
-
-\newmintinline[agda]{agda}{}

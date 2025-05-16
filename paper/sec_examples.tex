@@ -17,9 +17,13 @@ But how does a program handle infinite amounts of information, that cannot possi
 
 One method of modeling infinite information is through laziness, as in the Haskell programming language.
 For example, consider the usual infinite list of Fibonacci numbers in Haskell:
-\begin{minted}{haskell}
-fibs = 0 : 1 : zipWith (+) fib (tail fib)
-\end{minted}
+
+\begin{lstlisting}[language=Hs]
+fibs :: [Int]
+fibs = 0 : 1 : zipWith (+) fibs (tail fibs)
+\end{lstlisting}
+
+% \hs|fibs| cannot be fully evaluated because it has no base case --- it would eventually expand out to \hs|0 : 1 : 1 : 2 : 3 : 5 : 8 : ...| forever --- but this is no problem in a non-strict language that only evaluates as much as needed.
 \hs|fibs| cannot be fully evaluated because it has no base case --- it would eventually expand out to \hs|0 : 1 : 1 : 2 : 3 : 5 : 8 : ...| forever --- but this is no problem in a non-strict language that only evaluates as much as needed.
 But what if we are working within a strict language without laziness built in?
 Must we give up on the approach entirely, or is there an alternate solution that works just as well with eager and lazy evaluation?
@@ -28,12 +32,12 @@ In contrast, \emph{codata} describes types defined by primitive \emph{destructor
 For example, the usual \agda|Stream a| codata type of infinite \agda|a|'s is defined by two destructors: \agda|Head : Stream a -> a| extracts the first element and \agda|Tail : Stream a -> Stream a| discards the first element and returns the rest.
 To define new streams, we can describe how they react to different combinations of \agda|Head| and \agda|Tail| destructors using \emph{copatterns}~\cite{APTS2013C}.
 Borrowing Agda's syntax, a possible copattern-based definition of the same \agda|fibs| function above is:
-\begin{minted}{agda}
+\begin{lstlisting}[language=Agda]
 fibs : Stream Nat
 Head fibs = 0
 Head (Tail fibs) = 1
 Tail (Tail fibs) = zipWith _+_ fibs (Tail fibs)
-\end{minted}
+\end{lstlisting}
 However, at the moment, Agda currently does not understand if \agda|fibs| is well-founded --- it is --- and so \agda|fibs| is rejected.
 As a proof assistant, Agda has demanding requirements on all definitions to ensure well-foundedness:
 they must never have unproductive infinite loops, and they must cover every possible case (when matching on arguments or copatterns, as in \agda|fibs|).
@@ -44,36 +48,36 @@ In this kind of setting, the language does not enforce --- and indeed, our imple
 Let us now consider some examples of programming by equational reasoning to get familiar with copatterns and how we can use them in Scheme.
 % Deletion candidate
 % In these examples, it can help to think about types informally to keep ourselves oriented.
-For example, even in a dynamically-typed language like Scheme, linked lists can be thought of as an inductively-defined type combining two constructed forms: \scm#List a = null | (cons a (List a))#.
-Likewise, infinite streams can be understood as the type of a procedure that exhibits two different behaviors at the same time: \scm#Stream a = 'head -> a & 'tail -> Stream a#.
+For example, even in a dynamically-typed language like Scheme, linked lists can be thought of as an inductively-defined type combining two constructed forms: \scm!List a = null | (cons a (List a))!.
+Likewise, infinite streams can be understood as the type of a procedure that exhibits two different behaviors at the same time: \scm!Stream a = 'head -> a & 'tail -> Stream a!.
 In other words, any \scm|Stream a| is a procedure that takes one argument, and its response depends on the exact value: given \scm|'head| an \scm|a| is returned, and given \scm|'tail| another \scm|Stream a| is returned.
 
 In order to define new coinductive processes, one of the main entry points is the top-level, multi-line \scm{define*} macro.
 This macro enables us to declare codata objects through a list of equations between a copattern on the left-hand side and an expression on the right-hand side.
 At the root of every copattern is a name for the object \emph{itself}, which can be inside any number of applications --- the applications may just list parameter names or more specific patterns, narrowing down the concrete arguments that match.
 Using \scm{define*}, we can define the trivial \scm|zeroes| stream  --- whose \scm|'head| is \scm|0| and whose \scm|'tail| is more \scm|zeroes| --- as:
-\begin{minted}{scheme}
+\begin{lstlisting}[language=Scm]
 ;; zeroes : Stream nat
 (define* [(zeroes 'head) = 0]
          [(zeroes 'tail) = zeroes])
-\end{minted}
+\end{lstlisting}
 Streams like \scm|zeroes| are black boxes that can only be observed by passing \scm|'head| or \scm|'tail| as arguments to get their response.
 Still, this is enough for many useful operations, like taking the first \scm|n| elements, which can be \scm|define*|d as:
-\begin{minted}{scheme}
+\begin{lstlisting}[language=Scm]
 ;; takes : (Stream a, nat) -> List a
 (define* [(takes s 0) = '()]
          [(takes s n) = (cons (s 'head) (takes (s 'tail) (- n 1)))])
-\end{minted}
+\end{lstlisting}
 % So that \scm|(takes zeroes 5) = '(0 0 0 0 0)|.
 A constant stream is not particularly useful; more interesting streams will change over time.
 For example, imagine a ``stuttering'' stream ($0, 0, 1, 1, 2, 2, 3, 3, \dots$) that repeats numbers twice before moving on.
 This stream can be defined by copattern matching equations:
-\begin{minted}{scheme}
+\begin{lstlisting}[language=Scm]
 ;; stutter : nat -> Stream nat
 (define* [ ((stutter n) 'head)        = n]
          [(((stutter n) 'tail) 'head) = n]
          [(((stutter n) 'tail) 'tail) = (stutter (+ n 1))])
-\end{minted}
+\end{lstlisting}
 So that \scm|(takes (stutter 1) 10) = '(1 1 2 2 3 3 4 4 5 5)|,% 
 \footnote{
   Try it!
@@ -89,11 +93,11 @@ Similarly, the second element is \scm|(((stutter 1) 'tail) 'head) = 1| as well.
 The third element is accessed by two \scm|'tail| projections and then a \scm|'head| as the nested applications \scm|((((stutter 1) 'tail) 'tail) 'head)|, which doesn't exactly match any left-hand side.
 However, equality holds in any context, and the inner application \scm|(((stutter 1) 'tail) 'tail)| \emph{does} match the third equation.
 Thus, we can apply a few steps of equational reasoning to derive the expected answer \scm|2|:
-\begin{minted}{scheme}
+\begin{lstlisting}[language=Scm]
 ((((stutter 1) 'tail) 'tail) 'head) = ((stutter (+ 1 1)) 'tail)  ; line 3
                                     = ((stutter 2) 'head)        ; +
                                     = 2                          ; line 1
-\end{minted}
+\end{lstlisting}
 % \begin{minted}{scheme}
 %    ((((stutter 1) 'tail) 'tail) 'head) = ((stutter (+ 1 1)) 'tail)
 %   = ((stutter 2) 'head)                =  2                                      
@@ -122,7 +126,7 @@ Non-total configurations, akin to partial functions, are not always undesirable.
 % \end{minted}
 
 With this practice under our belt, we can now directly translate the canonical Fibonacci example from Agda to Scheme like so:
-\begin{minted}{scheme}
+\begin{lstlisting}[language=Scm]
 ;; zips-with : ((a, b) -> c, Stream a, Stream b) -> Stream c
 (define*
   [((zips-with f xs ys) 'head) = (f (xs 'head) (ys 'head))]
@@ -133,7 +137,7 @@ With this practice under our belt, we can now directly translate the canonical F
   [ (fibs 'head)        = 0]
   [((fibs 'tail) 'head) = 1]
   [((fibs 'tail) 'tail) = (zips-with + fibs (fibs 'tail))])
-\end{minted}
+\end{lstlisting}
 so that \scm|(takes fibs 10)| is \scm|'(0 1 1 2 3 5 8 13 21 34)|.
 
 \subsection{Self-referential objects}
@@ -141,14 +145,14 @@ so that \scm|(takes fibs 10)| is \scm|'(0 1 1 2 3 5 8 13 21 34)|.
 Codata can also be used to implement an abstract interface over regular finite data.
 As an alternate syntax for \scm|define*|, we can explicitly give a top-level name to bind the definition to for external use, and on each equation give a hidden internal for self-reference and recursion.
 To illustrate this, consider the following queue example, which internally refers to itself by the name \scm|self| for an object-oriented feel:
-\begin{minted}{scheme}
+\begin{lstlisting}[language=Scm]
 (define* queue
   [ (self 'new)            = (self '() '())]
   [((self in  out) 'enq x) = (self (cons x in) out)]
   [((self '() '()) 'deq)   = (error "Invalid dequeue: empty queue")]
   [((self in  '()) 'deq)   = ((self '() (reverse in)) 'deq)]
   [((self in  out) 'deq)   = (cons (car out) (self in (cdr out)))])
-\end{minted}
+\end{lstlisting}
 This reflects the purely functional queue implementation in using two lists (an inbox and an outbox) as internal states.
 We externally bound this declaration to the name \scm{queue}, but the internal recursion is through the name \scm|self|.
 This \scm|queue| object responds to three methods: \scm|'new| returns a new empty queue, \scm|'enq x| puts the \scm|x| to the end of the queue (\ie the top of the inbox), and \scm|'deq| returns the oldest enqueued element (from the top of the outbox or bottom of the inbox, as appropriate).
@@ -166,7 +170,7 @@ Since we can already use encapsulation in copattern-based definitions, can we al
 Our implementation of copattern matching in Scheme includes new facilities for composing code snippets compared to current functional (or object-oriented) languages.
 However, to avoid unwanted surprises, the programmer does have to ask for them.
 This is a small request, and can be done by replacing \scm|define*| with \scm|define-object|, as in the following file system example:
-\begin{minted}{scheme}
+\begin{lstlisting}[language=Scm]
 (define-object
   [((fs-object p . _) 'path) = p])
 
@@ -180,7 +184,7 @@ This is a small request, and can be done by replacing \scm|define*| with \scm|de
   [((apply dir p cts) 'size)
    = (apply + ((apply dir p cts) 'overhead)
               (map (λ(o) (o 'size)) ((apply dir p cts) 'contents)))])
-\end{minted}
+\end{lstlisting}
 This example emulates some functionality of a filesystem, specifically calculating various sizes.
 Every filesystem object has a path, which is captured by the \scm|fs-object| object that only knows how to calculate its \scm|'path| by returning the first piece of information it was given and ignoring the rest of the object's internal data.
 Filesystem objects all also have a size, but calculating it requires more object-specific information.
@@ -193,14 +197,14 @@ Both \scm|file| and \scm|directory| objects inherit the code for calculating it'
 Note that these three object definitions exercise three of the four possible definition forms, based on whether the external name is given explicitly or inferred, and on whether there is an extension clause is included:
 \begin{itemize}
 \item \scm|fs-object|'s external name is inferred from the internal name in its copattern equation, and it has no listed extension clause,
-\item \scm|file|'s external name is inferred from its internal one and it extends \scm|fs-object|,
+\item \scm|file|'s external name is taken from its internal one and it extends \scm|fs-object|,
 \item \scm|directory|'s external name is given explicitly (and is different from its internal name) and it extends \scm|fs-object|.
 \end{itemize}
 The last possibility is an explicit external name with no extensions, such as the following equivalent definition of \scm|fs-object| that elaborates the naming inference:
-\begin{minted}{scheme}
+\begin{lstlisting}[language=Scm]
 (define-object fs-object
   [((fs-object p . _) 'path) = p])
-\end{minted}
+\end{lstlisting}
 
 While these definitions are functional, they contain some undesirable redundancy.
 In particular, we have to repeat the same initialization forms --- \scm|(file p txt)| and \scm|(apply dir p cts)| --- in front of every equational definition because the object must be initialized with parameters before it is used.
@@ -208,7 +212,7 @@ What is worse, every time we want to ask a question about the object itself by r
 It would be better here to follow the common object-oriented factorization of steps:
 \emph{first} the object is initialized with some internal data at the time of its construction, and \emph{then} we get an object that can (recursively) respond to methods.
 This can be done by factoring out the common construction phase in the above definitions using a \scm|construct| clause like so:
-\begin{minted}{scheme}
+\begin{lstlisting}[language=Scm]
 (define-object (<: (import-object fs-object))
   [(file p txt) (construct (list p txt))
    (object
@@ -223,7 +227,7 @@ This can be done by factoring out the common construction phase in the above def
     [(self 'size)
      = (apply + (self 'overhead)
                 (map (λ(o) (o 'size)) (self 'contents)))])])
-\end{minted}
+\end{lstlisting}
 The \scm|construct| operation lists its internal parameters given at the time of
 initialization.
 After this step, we describe a first-class anonymous \scm|object| that knows
@@ -236,7 +240,7 @@ Where this coding style starts to pay off is when we override some methods to au
 For example, we might have a fancier type of directory structure that replicates the exact same behavior as a normal directory, but its \scm|'overhead| is \scm|128| instead of \scm|8|.
 Or we might have static links that act like a normal \scm|file|, except that they only contain a path to the real place its text is stored, so it always has a fixed size (\scm|8|).
 These specialized revisions of directories and files can be implemented by importing from the original definitions and modifying certain lines like so (where we omit the code for looking up the text for a static link):
-\begin{minted}{scheme}
+\begin{lstlisting}[language=Scm]
 (define-object (fancy-directory <: (import-object directory))
   [((fancy-dir p . cts) 'overhead) = 128])
 
@@ -246,24 +250,24 @@ These specialized revisions of directories and files can be implemented by impor
     [(_ 'link) = lnk]
     [(_ 'text) = "..."]
     [(_ 'size) = 8])])
-\end{minted}
+\end{lstlisting}
 Although \scm|fancy-directory| has only one defining equation about its \scm|'overhead|, the implication is that its \scm|'size| should be \scm|120| larger than a regular \scm|directory| due to the \scm|'overhead| increase.
 We can test out this use of inheritance and dynamic dispatch by simulating a small directory structure:
-\begin{minted}{scheme}
-(define ham (file "hamlet.txt" "Words, words, words...."))
-(define guide (file "guide.txt" "Don't Panic"))
+\begin{lstlisting}[language=Scm]
+(define ham (file "hamlet.md" "Words, words, words...."))
+(define guide (file "Guide.md" "Don't Panic"))
 (define books (directory* "Books" ham guide))
-(define shortcut (static-link "shortcut.txt" "Books/guide.txt"))
+(define shortcut (static-link "Guide.md" "Books/Guide.md"))
 (define docs (fancy-directory "Documents" shortcut books))
-\end{minted}
+\end{lstlisting}
 and calculating the sizes of each file system object:
-\begin{minted}{scheme}
+\begin{lstlisting}[language=Scm]
 (ham      'size) = 23  = (string-length "Words, words, words....")
 (guide    'size) = 11  = (string-length "Don't Panic")
 (books    'size) = 42  = (+ 8 23 11)
 (shortcut 'size) = 8
 (docs     'size) = 178 = (+ 128 8 42)
-\end{minted}
+\end{lstlisting}
 
 The question is: how were we able to inject new code in the middle of an object like \scm|directory| to change its behavior?
 The key issue is that, within \scm|directory|, recursive calls to \scm|((apply dir p cts) 'overhead)| --- or just simply \scm|(self 'overhead)| in the second version --- cannot be tied to \emph{this} definition of \scm|directory|.
@@ -276,7 +280,7 @@ Thankfully, this whole framework is still built on purely functional idioms, whi
 How can we understand what inheritance should do?
 The answer should be familiar to functional programmers: inheritance is composition and substitution!
 For example, the inheritance dependencies can be fully inlined as-is into \scm|fancy-directory| to bring the full definition into one place by copying the inherited code into place like so:
-\begin{minted}{scheme}
+\begin{lstlisting}[language=Scm]
 (define-object fancy-directory
   [((fancy-dir p . cts) 'overhead) = 128]
   [((apply dir p cts)   'overhead) = 8]
@@ -285,10 +289,10 @@ For example, the inheritance dependencies can be fully inlined as-is into \scm|f
    = (apply + ((apply dir p cts) 'overhead)
               (map (λ(o) (o 'size)) ((apply dir p cts) 'contents)))]
   [((fs-object p . _)   'path)     = p])
-\end{minted}
+\end{lstlisting}
 After na\"ive inlining, there are some irrelevant differences: there are three different internal names (\scm|fancy-dir|, \scm|dir|, and \scm|fs-object|) used in various clauses, and we use two equivalent syntaxes  (\scm|(fancy-dir p . cts)| and \scm|(apply dir p cts)|) for copatterns that bind arbitrary-length argument sequences to \scm|cts|.
 Cleaning up these differences by rewriting each initializing copattern to \scm|(apply self p cts)| and renaming as necessary gives a more uniform code:
-\begin{minted}{scheme}
+\begin{lstlisting}[language=Scm]
 (define-object fancy-directory
   [((apply self p cts) 'overhead) = 128]
   [((apply self p cts) 'overhead) = 8]
@@ -297,17 +301,17 @@ Cleaning up these differences by rewriting each initializing copattern to \scm|(
    = (apply + ((apply self p cts) 'overhead)
               (map (λ(o) (o 'size)) ((apply self p cts) 'contents)))]
   [((apply self p _)   'path)     = p])
-\end{minted}
+\end{lstlisting}
 From here, it becomes more obvious that the two different equations defining \scm|(... 'overhead)| overlap, so the first one takes precedence and the second one is dead code that can be completely erased.
 Furthermore, when there are no more future extensions, we can inline the recursive calls at this point, to get the simpler closed definition that reveals exactly what each method will do:
-\begin{minted}{scheme}
+\begin{lstlisting}[language=Scm]
 (define* fancy-directory
   [((apply self p cts) 'overhead) = 128]
   [((apply self p cts) 'contents) = cts]
   [((apply self p cts) 'size)
    = (apply + 128 (map (λ(o) (o 'size)) cts))]
   [((apply self p _)   'path)     = p])
-\end{minted}
+\end{lstlisting}
 
 \subsection{Decomposing the expression problem}
 
@@ -327,50 +331,50 @@ Furthermore, when there are no more future extensions, we can inline the recursi
 Our notion of compositional copatterns can capture some object-oriented styles of code (de)composition with encapsulation, inheritance, and dynamic dispatch.
 How can this new capability for composition influence the kinds of functional programs we write?
 For example, consider the usual definition of a simple arithmetic expression evaluator in typed functional languages like Haskell and OCaml (we use Haskell syntax here):
-\begin{minted}{haskell}
+\begin{lstlisting}[language=Hs]
 data Expr = Num Int | Add Expr Expr
 
 eval :: Expr -> Int
 eval (Num n)   = n
 eval (Add l r) = eval l + eval r
-\end{minted}
+\end{lstlisting}
 While Scheme does not have algebraic data types, we can encode complex constructor expressions as a list starting with the constructor name as a quoted symbol and the arguments as the remainder of the list, and when unambiguous, leave atomic data alone.
 So \hs|Num 5| could just be represented as the plain number \scm|5|, and \scm|Add l r| would be represented as the \emph{quasiquote} \scm|`(add ,l ,r)| which plugs in the values bound to variables \scm|l| and \scm|r| as the second and third elements of the list (denoted by the ``unquote'' comma \scm|,| before the variable names).
 We can then use the facilities of \scm|define*| to write almost identical code in Scheme like so, using the \emph{guard} \scm|try-if| to test if the argument is a number:
-\begin{minted}{scheme}
+\begin{lstlisting}[language=Scm]
 ;; eval : Expr -> Number
 (define*
   [(eval n) (try-if (number? n)) = n]
   [(eval `(add ,l ,r))           = (+ (eval l) (eval r))])
-\end{minted}
+\end{lstlisting}
 Fantastic, it works!
 Both the Scheme and Haskell code have the same structure.
 And on the surface, they both share the same strengths and weaknesses.
 From the lens of the \emph{expression problem}~\cite{ExpressionProblem}, it is easy to add new operations to existing expressions --- such as listing the numeric literals in an expression
-\begin{minted}{scheme}
+\begin{lstlisting}[language=Scm]
 ;; list-nums : Expr -> List num
 (define*
   [(list-nums n)
    (try-if (number? n))     = (list n)]
   [(list-nums `(add ,l ,r)) = (append (list-nums l) (list-nums r))])
-\end{minted}
+\end{lstlisting}
 --- but adding new classes of expressions is hard.
 For example, if we wanted to support multiplication, we could add a \hs|Mult| constructor to the \hs|Expr| data type, but this would require modifying \emph{all} existing operations and case-splitting expressions over \hs|Expr| values.
 Even worse, if we wanted to support both expression languages --- with or without multiplication --- we would have to copy the code and maintain both versions.
 
 Thankfully, our implementation of copattern matching in Scheme includes new facilities for composing code snippets.
 As we previously saw with the object-oriented examples, we can turn ordinary functional code into a more extensional form by using \scm|define-object| instead of \scm|define*|.
-\begin{minted}{scheme}
+\begin{lstlisting}[language=Scm]
 ;; list-nums* : Expr -> List num
 (define-object
   [(list-nums* n)
    (try-if (number? n))      = (list n)]
   [(list-nums* `(add ,l ,r)) = (append (list-nums* l) (list-nums* r))])
-\end{minted}
+\end{lstlisting}
 The \scm|list-nums*| object behaves exactly like \scm|list-nums| in all the same contexts it works in, but in addition, it implicitly inherits additional functionality for composition defined elsewhere.
 This new composition lets us break existing multi-line definitions into individual parts, and recompose them later.
 For example, the evaluator can be composed in terms of separate objects for each line like so:
-\begin{minted}{scheme}
+\begin{lstlisting}[language=Scm]
 (define-object
   [(eval-num n) (try-if (number? n)) = n])
 
@@ -379,11 +383,11 @@ For example, the evaluator can be composed in terms of separate objects for each
 
 ;; eval* : Expr -> num
 (define eval* (eval-num 'compose eval-add))
-\end{minted}
+\end{lstlisting}
 So \scm|(eval expr)| is the same as \scm|(eval* expr)| for any well-formed expression argument.
 Why program in this way?
 Now, if we want to extend the functionality of existing operations --- like evaluation and listing literals --- to support a new class of expression, we can define the new special cases separately as a patch and then \emph{compose} them with the existing code as-is like so:
-\begin{minted}{scheme}
+\begin{lstlisting}[language=Scm]
 (define-object
   [(eval-mul `(mul ,l ,r)) = (* (eval-mul l) (eval-mul r))])
 (define-object
@@ -394,7 +398,7 @@ Now, if we want to extend the functionality of existing operations --- like eval
 
 ;; eval-arith : Expr+Mul -> List num
 (define list-nums-arith (list-nums* 'compose list-mul))
-\end{minted}
+\end{lstlisting}
 So for an expression \scm|(define expr1 '(add (mul 2 3) 4))|, the extended code correctly yields \scm|(eval-arith expr1) = 10| and \scm|(list-nums-arith expr1) = '(2 3 4)| whereas the original code fails at the \scm|'mul| case.%
 \footnote{
   The astute reader might notice the open recursion at work here: the recursive calls to \scm|eval-mul| cannot be specifically tied to this definition because it only says what to do with multiplication and fails to handle the other cases.
@@ -408,9 +412,9 @@ We call combinations like \scm|(eval-num 'compose eval-add eval-mul)| \emph{vert
 Not all types of language extensions are this simple, though.
 Consider what happens if we want to support algebraic expressions which might have variables in them.
 To evaluate a variable, we need a given environment --- mapping names to numbers --- which we can use to look up the variable's value.
-\begin{minted}{scheme}
+\begin{lstlisting}[language=Scm]
 (define-object [(eval-var env `(var ,x)) = (lookup env x)])
-\end{minted}
+\end{lstlisting}
 However, it is wrong to just vertically compose this variable evaluator with the previous code because the arithmetic evaluator only takes a single expression as an argument, whereas the variable evaluator needs \emph{both} an environment and an expression.
 The manual way to perform this extension is routine for functional programmers: in addition to adding a new case, we have to add an extra parameter to each case, which gets passed along on all recursive calls.
 % On an individual equation, this transformation looks like:
@@ -424,7 +428,7 @@ It would be highly disappointing to have to rewrite our existing code in-place t
 Fortunately, our copattern language allows for another type of composition --- \emph{horizontal composition} --- which allows us to combine sequences of steps, one after another, and automatically fall through to the next case if something fails.
 For this example, we can define a general procedure \scm|with-environment| to perform the above transformation, taking any extensible evaluator object expecting just an expression and threading an environment along each recursive call.
 This lets us patch our existing arithmetic evaluator with an environment and then compose it with variable evaluation like so:
-\begin{minted}{scheme}
+\begin{lstlisting}[language=Scm]
 (define (with-environment eval-ext)
   (object [(self env expr)
            (with-self (override-lambda* self
@@ -436,7 +440,7 @@ This lets us patch our existing arithmetic evaluator with an environment and the
 ;; eval-alg : (Env, Expr+Mul+Var) -> num
 (define eval-alg
   ((with-environment (eval-arith 'unplug)) 'compose eval-var))
-\end{minted}
+\end{lstlisting}
 % TODO: Maybe resume this part
 The \scm|with-environment| function is the most complex code we have seen so far, but it just spells out the usual steps a functional programmer uses to modify existing code with an environment.
 \begin{itemize}
@@ -460,7 +464,7 @@ Essentially, this splits evaluation into two separate steps:
 \item combine the two expressions according to that operation.
 \end{enumerate*}
 For example, the steps for addition and multiplication look like:
-\begin{minted}{scheme} 
+\begin{lstlisting}[language=Scm]
 (define-object eval-add-safe
   [(self 'eval ('add l r))
   = (self 'add (self 'eval l) (self 'eval r))]
@@ -473,44 +477,44 @@ For example, the steps for addition and multiplication look like:
   [(self 'mul x y)
    (try-if (and (number? x) (number? y)))
    = (* x y)])
-\end{minted}
+\end{lstlisting}
 Here, the evaluation step is explicated by a \scm|'eval| tag, to help distinguish from the other operation \scm|'add| for adding the left and right results.
 Note that in this code, the \scm|'add| clause only performs a numeric addition \scm|+| if it knows for sure that \emph{both} of the arguments are actually numbers.
 We can now compose the original base-case for evaluating numbers with this ``safer'' version of addition that fails to match cases where sub-expressions don't evaluate to numbers (multiplication could be added as well in a similar style):
-\begin{minted}{scheme}
+\begin{lstlisting}[language=Scm]
 ;; eval-arith-safe : ('eval, Expr+Mul) -> num
 ;;                 & ('add, num, num) -> num
 ;;                 & ('mul, num, num) -> num
 (define eval-arith-safe (eval-num 'compose eval-add-safe eval-mul-safe))
-\end{minted}
+\end{lstlisting}
 So \scm|(eval-arith-safe expr1)| still evaluates to \scm|70|, but \scm|(eval-arith-safe expr2)| fails when it finds a variable sub-expression.
 
 If it finds a variable, constant folding will just leave it alone and return an unevaluated expression rather than a final number.
 Because the \scm|'eval| operation might return a (partially) unevaluated expression, we now need to handle cases where the left or right (or both) sub-expressions do not evaluate to numbers.
 In each of those cases, we must reform the addition expression out of what we find, converting numbers \scm|n| into a syntax tree of the form \scm|`(num ,n)|.
-\begin{minted}{scheme}
+\begin{lstlisting}[language=Scm]
 (define-object
   [(leave-variables 'eval ('var x)) = (list 'var x)])
 
 (define-object reform-operations
   [(reform 'add l r) = (list 'add l r)]
   [(reform 'mul l r) = (list 'mul l r)])
-\end{minted}
+\end{lstlisting}
 The final constant-folding algorithm can be composed from this ``safe'' version of evaluation, along with the cases for leaving variables alone and reforming partially-evaluated additions and multiplications.
-\begin{minted}{scheme}
+\begin{lstlisting}[language=Scm]
 ;; constant-fold : ('eval, Expr+Mul+Var) -> Expr+Mul+Var
 ;;               & ('add, Expr+Mul+Var, Expr+Mul+Var) -> Expr+Mul+Var
 ;;               & ('mul, Expr+Mul+Var, Expr+Mul+Var) -> Expr+Mul+Var
 (define constant-fold
   (eval-arith-safe 'compose leave-variables reform-operations))
-\end{minted}
+\end{lstlisting}
 So now \scm|(constant-fold 'eval expr2)| successfully returns \scm|expr2| itself (because there are no operations to perform without knowing the values of variables \scm|x| and \scm|y|).
 And running \scm|(constant-fold 'eval expr3)| on the expression
-\begin{minted}{scheme}
+\begin{lstlisting}[language=Scm]
 (define expr3 '(add (add 1 1)
                     (mul (var x)
                          (mul 2 (add 2 3)))))
-\end{minted}
+\end{lstlisting}
 simplifies it down to \scm|'(add 2 (mul (var x) 10))|.
 To add other operations, like subtraction, we can easily define similar \scm|eval-sub-safe| and \scm|reform-subtraction|, and \scm|'compose| them with \scm|constant-fold| without having to rewrite any code.
 % All examples shown here are in the supplemental materials.
